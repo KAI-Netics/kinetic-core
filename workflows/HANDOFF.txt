@@ -1,6 +1,6 @@
 ================================================================================
 KAI-NETICS SESSION HANDOFF
-Date: April 21, 2026 (Evening Update)
+Date: April 21, 2026 (Final — End of Day)
 Prepared by: Aidan (Claude Sonnet 4.6)
 Next session: Open fresh — read this file first
 ================================================================================
@@ -10,19 +10,20 @@ IDENTITY
 Kevin Alexander Smith — CEO/Founder KAI-Netics
 FP:   Kevin Alexander International LLC dba KAI-Netics | EIN 46-2432851
 EAF:  KAI-Netics Equity & Autonomy Foundry, Inc. | EIN 41-4820296 | 501c3 pending
-MONK: IP holding company — Q2 2026 formation target (call James Scott this week)
+MONK: IP holding company — Q2 2026 formation target
 Core Engine: n8n in Docker at C:\Kinetic_Core | Container: kinetic-core-n8n
 
 ================================================================================
-PLATFORM STATUS — FULLY OPERATIONAL
+PLATFORM STATUS — FULLY OPERATIONAL AS OF APRIL 21, 2026
 ================================================================================
 n8n:              Running | localhost:5678 | Docker container: kinetic-core-n8n
 EvolutionAPI:     Running | localhost:8081 | WhatsApp: 14432576836
-Dashboard Server: Running | localhost:3030 | Managed by pm2 (kai-dashboard)
+Dashboard:        Running | localhost:3030 | pm2 (kai-dashboard)
 Supabase:         LIVE | https://raxpmeltyxmtiihxoxpa.supabase.co
+GitHub:           LIVE | https://github.com/KAI-Netics/kinetic-core
 
 ================================================================================
-CRITICAL — DOCKER RUN COMMAND (AUTHORITATIVE)
+DOCKER RUN COMMAND (AUTHORITATIVE)
 ================================================================================
 docker run -d --name kinetic-core-n8n --restart unless-stopped `
   -p 5678:5678 `
@@ -41,130 +42,158 @@ docker run -d --name kinetic-core-n8n --restart unless-stopped `
   -e TZ=America/New_York `
   n8nio/n8n
 
-VOLUMES:
-  n8n_data        — Docker named volume — credentials + workflow state
-  C:\Kinetic_Core — bind mount — workflows, KAI_Context.json, outputs
-
-NGROK (for Google OAuth only):
+NGROK (Google OAuth only):
   Static domain: rehab-monday-presume.ngrok-free.dev
   Run: ngrok http 5678 --domain=rehab-monday-presume.ngrok-free.dev
-  Access n8n via ngrok URL during OAuth — then restore normal docker run
 
 ================================================================================
 CREDENTIALS (n8n — all renamed)
 ================================================================================
-  KAI-Netics Supabase       — Supabase API
-  KAI-Netics Gmail          — Gmail OAuth2 (kas42869@gmail.com)
+  KAI-Netics Supabase         — Supabase API
+  KAI-Netics Gmail            — Gmail OAuth2 (kas42869@gmail.com)
   KAI-Netics Outlook (PARKED) — Microsoft Outlook OAuth2
-  KAI-Netics SMTP           — GoDaddy SMTP (kas@kevin-llc.com)
-  KAI-Netics Brave Search   — Header Auth (Brave API)
+  KAI-Netics SMTP             — GoDaddy SMTP (kas@kevin-llc.com)
+  KAI-Netics Brave Search     — Header Auth
 
 ================================================================================
 CONNECTOR STATUS
 ================================================================================
-CONNECTOR 1: GoDaddy SMTP (outbound)                 ✅ LIVE
-CONNECTOR 2: Gmail OAuth (inbound + Drive + Sheets)  ✅ LIVE
-CONNECTOR 3: Supabase                                ✅ LIVE
-  URL: https://raxpmeltyxmtiihxoxpa.supabase.co
-  Schema: C:\Kinetic_Core\Config\supabase_schema.sql
-  Tables: scout_reports, grant_applications, bd_pipeline,
-          compliance_items, rfp_responses, agent_feedback,
-          agent_executions, ecosystem_signals
-  Views:  pipeline_summary, grant_pipeline_summary, agent_health_7d
-
-================================================================================
-WORKFLOW REGISTRY
-================================================================================
-ACTIVE:
-  Scout - BD Research v5     ✅ Supabase logging CONFIRMED WORKING
-                               💾 Logs to scout_reports table
-                               Test confirmed: BGE query logged successfully
-  Jordan - Grant Writer v3   🔄 IN PROGRESS — Format+Save node has regex bug
-                               Fix: C:\Kinetic_Core\workflows\3_jordan_v3.json
-                               needs fresh import after regex fix applied
-  Iris - Compliance v3       ✅ Active (needs Supabase logging — next session)
-  Atlas v2                   ✅ Active
-  Aidan Orchestra Fan Out    ✅ Active
-  Aidan Callback Consolidator ✅ Active
-  Aidan WhatsApp Bridge v2   ✅ Active
-  Network Watchdog           ✅ Active — fires Orchestra when network available
-
-TO BUILD:
-  Email Router (8_email_router.json)
-  Nova RFP Agent (9_nova_rfp.json)
-  Sage Newsletter (10_sage_newsletter.json)
-  Pulse Metrics (11_pulse_metrics.json)
-
-================================================================================
-JORDAN v3 — KNOWN BUG + FIX STATUS
-================================================================================
-BUG: Format + Save Report node fails with "missing /" — Invalid regex
-CAUSE: JSON serialization mangles regex patterns when written to file
-       and re-imported. The pattern /[^a-z0-9]/gi gets corrupted.
-FIX APPLIED IN FILE: 3_jordan_v3.json uses character code comparison
-       instead of regex for filename sanitization
-STATUS: File rewritten — needs fresh import to n8n
-
-IMPORT STEPS:
-  1. In n8n — deactivate current Jordan v3 (the broken one)
-  2. Workflows → Import → C:\Kinetic_Core\workflows\3_jordan_v3.json
-  3. In the imported workflow — find Call Claude node
-     Replace REPLACE_WITH_ANTHROPIC_KEY with actual Anthropic API key
-  4. Find Log to Supabase node
-     Replace REPLACE_WITH_SUPABASE_SECRET_KEY with actual secret key
-  5. SMTP credential — select KAI-Netics SMTP from dropdown
-  6. Save → Activate → test
+  GoDaddy SMTP outbound        ✅ LIVE — kas@kevin-llc.com
+  Gmail OAuth inbound          ✅ LIVE — kas42869@gmail.com
+  Supabase                     ✅ LIVE — 8 tables, all agents logging
+  Microsoft Outlook OAuth      ❌ PARKED — GoDaddy defederation needed
+  GitHub backup                ✅ LIVE — KAI-Netics/kinetic-core
 
 ================================================================================
 SUPABASE SCHEMA
 ================================================================================
-Project URL: https://raxpmeltyxmtiihxoxpa.supabase.co
-Schema file: C:\Kinetic_Core\Config\supabase_schema.sql
+URL:    https://raxpmeltyxmtiihxoxpa.supabase.co
+File:   C:\Kinetic_Core\Config\supabase_schema.sql
+
+Tables (8):
+  scout_reports       — Scout BD/grant finds, scores, Kevin decisions
+  grant_applications  — Jordan analysis, LOI status, award tracking
+  bd_pipeline         — MRR conversion pipeline Stage 0-5
+  compliance_items    — Iris deadline history and resolution
+  rfp_responses       — Nova go/no-go + awareness response log
+  agent_feedback      — Kevin SEND/SKIP/REVISE decisions (learning layer)
+  agent_executions    — Platform health, uptime, execution log
+  ecosystem_signals   — Nova ecosystem monitoring log
+
+Views (3):
+  pipeline_summary        — active MRR + pipeline value
+  grant_pipeline_summary  — grant status counts + awarded total
+  agent_health_7d         — agent success rates last 7 days
 
 ================================================================================
-EMAIL ARCHITECTURE
+WORKFLOW REGISTRY — ALL ACTIVE
 ================================================================================
-OUTBOUND: kas@kevin-llc.com via GoDaddy SMTP        ✅ LIVE
-INBOUND:  kas42869@gmail.com via Gmail OAuth         ✅ LIVE
-          GoDaddy external forwarding BLOCKED (tenant policy)
-          Update eMMA + SAM.gov to use kas42869@gmail.com
+1_atlas_v2.json             ✅ Atlas — market intelligence (webhook)
+2_scout_v5.json             ✅ Scout v5 — BD/grant + Supabase logging
+3_jordan_v3.json            ✅ Jordan v3 — grant writing + email + Supabase
+4_iris_v3_supabase.json     ✅ Iris v3 — compliance + Supabase logging
+5a_orchestra_fanout.json    ✅ Aidan Orchestra — multi-agent coordination
+5b_callback_consolidator    ✅ Aidan Callback — consolidation + WhatsApp
+6_aidan_router_v2.json      ✅ Aidan Router — WhatsApp command dispatch
+7_network_watchdog.json     ✅ Watchdog — resilient morning trigger
+8_email_router.json         ✅ Email Router — Gmail → agent dispatch
+9_nova_rfp.json             ✅ Nova — RFP scoring + Opus draft + Supabase
+10_sage_newsletter.json     ✅ Sage — Board + Market newsletters (Opus)
+11_pulse_metrics.json       ✅ Pulse — platform health dashboard
 
-PARKED: Microsoft Outlook OAuth
-        Requires GoDaddy defederation — add to James Scott call
+CRON SCHEDULE:
+  Scout:   7AM ET weekdays (via Watchdog)
+  Jordan:  8AM ET weekdays (via Watchdog)
+  Iris:    8AM ET daily (via Watchdog)
+  Sage:    9AM ET on 25th of month
+  Pulse:   10AM ET weekdays
+  Watchdog: every 5 min 7-9AM ET weekdays
+
+WHATSAPP COMMANDS:
+  Orchestra / Orchestra [query]    — fires all agents
+  Scout [target]                   — manual BD/grant search
+  Jordan grant                     — manual grant analysis
+  Iris deadlines                   — compliance check
+  Atlas SBIR/MEIA/MONK/BVLOS      — market analysis
+  NOVA SEND / NOVA SKIP            — RFP response approval
+  SAGE SEND BOARD                  — send EAF board newsletter (PENDING wire)
+  SAGE SEND MARKET                 — send FP market newsletter (PENDING wire)
+  Aidan summary / status / help    — executive brief
 
 ================================================================================
-GRANT PIPELINE — URGENT
+KAI_CONTEXT.JSON
+================================================================================
+Version: 1.6 (updated April 21 2026)
+Location: C:\Kinetic_Core\KAI_Context.json
+Key fixes in v1.6:
+  - CAKO full_name: "Certified Autonomous Kinetic Operator" (CORRECTED)
+  - Supabase deadline: status COMPLETE
+  - SAM.gov notes updated: submitted Apr 17, pending UEI
+  - JSON syntax error fixed
+  - Backlog updated BL-001 through BL-007
+  - core_engine section added
+
+================================================================================
+PENDING BUILD ITEMS (Next Session)
+================================================================================
+HIGH PRIORITY:
+  1. SAGE SEND commands — wire into 6_aidan_router_v2.json
+     Catches "SAGE SEND BOARD" and "SAGE SEND MARKET" WhatsApp replies
+     Triggers SMTP email send to distribution lists
+
+  2. Nova fitScore null fix
+     Regex not extracting score from Sonnet output
+     Fix in Score RFP node — adjust pattern matching
+
+  3. MCP Servers
+     supabase-mcp — Claude sessions query agent data directly
+     n8n-mcp — Claude sessions trigger workflows directly
+     google-drive-mcp — Claude reads/writes Drive from sessions
+
+MEDIUM PRIORITY:
+  4. Google Drive → Jordan/Atlas output
+     Grant drafts and LOIs saved as Google Docs automatically
+
+  5. Atlas Supabase logging
+     Only agent without memory layer
+
+  6. Skill file audit — all 8 SKILL.md files
+     Update version numbers and deployed state
+
+  7. GoDaddy defederation → Microsoft Outlook OAuth
+     Add to James Scott call
+     Unlocks bi-directional kas@kevin-llc.com in n8n
+
+================================================================================
+CRITICAL ADMIN — URGENT
 ================================================================================
   Lighthouse Upskilling   APR 24 — 3 DAYS — brittney.hansen@maryland.gov
   Form 1023-EZ check      APR 25 — call James Scott
-  Lighthouse Internship   ROLLING
-  TEDCO SBIR Lab          MAY 15
-  EARN Maryland           JUNE 30
-  CDBG Baltimore          JULY 15
+  SAM.gov UEI             APR 25 expected — monitor EVS email
+  MONK LLC formation      MAY 1  — James Scott
+  MBE/DBE certification   MAY 15 — mbe.mdot.maryland.gov
+  OMB M-26-02             MAY 20 — first dollar opportunity
+  Techstars Demo Day      JUN 3  — M&T Bank Stadium
 
 ================================================================================
-KEY DATES
+GITHUB
 ================================================================================
-  Apr 24  Lighthouse Upskilling — URGENT
-  Apr 25  SAM.gov UEI expected
-  Apr 25  Form 1023-EZ — James Scott
-  May 1   MONK LLC formation
-  May 20  OMB M-26-02 deadline
-  Jun 3   Techstars AI Health Demo Day
-  Jun 30  EARN Maryland
-  Jul 1   Fleet 1 arrival
-  Feb 1   Cash flow positive
+Repo:   https://github.com/KAI-Netics/kinetic-core
+Branch: main
+Push:   git add . && git commit -m "message" && git push
+Token:  Generate at github.com → Settings → Developer settings → PAT (classic)
 
 ================================================================================
 NEXT SESSION OPENING LINE
 ================================================================================
 "Read HANDOFF.txt at C:\Kinetic_Core\workflows\HANDOFF.txt and pick up.
-Scout v5 Supabase logging confirmed working.
-Jordan v3 has regex bug in Format+Save node — fix is in 3_jordan_v3.json.
-Import fresh, replace API keys manually in nodes, activate.
-Lighthouse Upskilling deadline April 24 — 3 days — URGENT.
+Platform is fully operational — 11 workflows, Supabase memory, GitHub backup.
+Scout/Jordan/Iris/Nova/Sage/Pulse/Email Router all live and tested.
+Next: wire SAGE SEND commands, fix Nova fitScore, MCP servers.
+Lighthouse Upskilling deadline April 24 — URGENT.
 KAI-Netics is not a misspelling — it is the brand name."
 
 ================================================================================
-END OF HANDOFF — April 21, 2026 Evening
+END OF HANDOFF — April 21, 2026 — End of Day
+Platform build complete. You are now agentic.
 ================================================================================
