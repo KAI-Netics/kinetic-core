@@ -1,0 +1,28 @@
+{
+  "name": "Aidan - Orchestra Fan Out",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "aidan-orchestra", "responseMode": "lastNode", "options": {} },
+      "type": "n8n-nodes-base.webhook", "typeVersion": 2.1, "position": [0, 0],
+      "id": "fanout-001", "name": "Orchestra Trigger", "webhookId": "aidan-orchestra-trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs'), http = require('http');\nconst raw = $input.first().json;\nconst body = raw.body || raw;\n\n// If this is an agent callback, save it and exit — do NOT fan out\nif (body.agent && ['Scout','Jordan','Iris','Atlas','Nova','Sage','Pulse'].includes(body.agent)) {\n  fs.mkdirSync('/data/Aidan_Outputs/Callbacks', { recursive: true });\n  const ts = body.timestamp || new Date().toISOString();\n  fs.writeFileSync(`/data/Aidan_Outputs/Callbacks/${body.agent}_${ts.replace(/[:.]/g,'-')}.json`, JSON.stringify(body, null, 2), 'utf8');\n  return [{ json: { _isCallback: true, agent: body.agent, saved: true } }];\n}\n\nconst masterQuery = String(body.query || body.command || 'Full platform status — compliance, BD targets, grant status, MEIA readiness.');\nconst sessionId = 'orch_' + Date.now();\nfs.mkdirSync('/data/Aidan_Outputs/Orchestra', { recursive: true });\nfs.writeFileSync(`/data/Aidan_Outputs/Orchestra/session_${sessionId}.json`, JSON.stringify({ sessionId, masterQuery, startTime: new Date().toISOString(), agents: { Atlas: null, Scout: null, Jordan: null, Iris: null } }, null, 2), 'utf8');\n\nconst agentCalls = [\n  { path: '/webhook/atlas-architect', payload: { command: 'Atlas MEIA', detail: masterQuery, sessionId } },\n  { path: '/webhook/scout-research', payload: { query: masterQuery + ' — top 3 DMV contract opportunities', sessionId } },\n  { path: '/webhook/grant-writer', payload: { trigger: 'orchestra', query: masterQuery, sessionId } },\n  { path: '/webhook/iris-monitor', payload: { trigger: 'orchestra', sessionId } }\n];\n\nconst fireAgent = (agentPath, payload) => new Promise(resolve => {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: 'host.docker.internal', port: 5678, path: agentPath, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bodyStr) } };\n  const req = http.request(opts, res => { res.on('data',()=>{}); res.on('end', () => resolve({ path: agentPath, fired: true })); });\n  req.on('error', e => resolve({ path: agentPath, fired: false, error: e.message }));\n  req.write(bodyStr); req.end();\n});\n\nconst results = await Promise.all(agentCalls.map(a => fireAgent(a.path, a.payload)));\nconst agentNames = ['Atlas','Scout','Jordan','Iris'];\nconst launchMsg = `🎼 ORCHESTRA LAUNCHED\\n\\n${agentNames.map((a,i) => `${results[i].fired?'✅':'❌'} ${a}`).join('\\n')}\\n\\nQuery: ${masterQuery.substring(0,80)}\\n\\nConsolidated brief incoming ~90 seconds.`;\n\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: launchMsg } });\nconst waOpts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) } };\nawait new Promise(r => { const req = http.request(waOpts, res => { res.on('data',()=>{}); res.on('end',r); }); req.on('error',r); req.write(msgBody); req.end(); });\n\nreturn [{ json: { sessionId, masterQuery, results, launched: true } }];"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [220, 0],
+      "id": "fanout-002", "name": "Fan Out to All Agents"
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={\"status\":\"ok\",\"agent\":\"Aidan Orchestra\"}" },
+      "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [440, 0],
+      "id": "fanout-003", "name": "ACK"
+    }
+  ],
+  "connections": {
+    "Orchestra Trigger": { "main": [[{ "node": "Fan Out to All Agents", "type": "main", "index": 0 }]] },
+    "Fan Out to All Agents": { "main": [[{ "node": "ACK", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "KAI-Netics" }, { "name": "Aidan" }, { "name": "Orchestrator" }]
+}

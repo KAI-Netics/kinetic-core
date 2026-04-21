@@ -1,0 +1,69 @@
+ATLAS v2 — KAI-NETICS
+Command: Atlas MEIA
+Generated: 2026-04-09T16:31:01.072Z
+Words: 339
+
+# MEIA CAPSTONE READINESS CHECK
+## Status: 126 days to delivery | April 14, 2026
+
+---
+
+## COMPLIANCE STATUS ✅
+
+### ENTITY SEGREGATION
+- **FP-EAF FIREWALL**: ✅ Zero funds flow maintained
+- **MONK IP ISOLATION**: ✅ MONK LLC formation in progress, IP ring-fenced
+- **NDAA FLEET SEPARATION**: ✅ Green UAS inventory segregated for gov contracts
+- **DJI M350 RESTRICTION**: ✅ Private sector only, never government
+
+### REGULATORY ALIGNMENT
+- **Part 107 CURRENT**: ✅ #5250157 active
+- **OMB M-26-02 READY**: ⚠️ 126 days to May 20 deadline
+- **Part 108 POSITIONED**: ✅ MONK architecture = compliance case
+- **SBIR ELIGIBLE**: ⚠️ Pending Congressional reauthorization
+
+---
+
+## BOARD TARGETS 🎯
+
+### PRIMARY PROSPECTS
+1. **MARYLAND ECONOMIC DEVELOPMENT CORP** - Infrastructure + workforce angle
+2. **BALTIMORE DEVELOPMENT CORP** - Port automation, V2 warehouse ops
+3. **CAKO (Charles/Anne/Kent/Queen Anne's)** - Rural workforce development
+4. **HARFORD COUNTY EDC** - APG proximity, defense contractor pipeline
+
+### SECONDARY PROSPECTS
+1. **UNDER ARMOUR** (Plank) - Distribution center automation
+2. **T. ROWE PRICE** - Corporate venture arm
+3. **LOCKHEED MARTIN** - Defense tech partnership
+4. **NORTHROP GRUMMAN** - Autonomous systems synergy
+
+---
+
+## GRANT OPPORTUNITIES 💰
+
+### IMMEDIATE (Q1 2026)
+- **DHS S&T SBIR** - $175K Phase I for MONK | Status: Awaiting reauthorization
+- **FEMA C-UAS GRANTS** - V4 entertainment compliance support
+- **MARYLAND TEDCO** - $50-250K tech commercialization
+
+### PIPELINE (Q2-Q3 2026)
+- **NIST MEP** - Manufacturing extension for MONK production
+- **SBA FAST** - Federal tech transfer acceleration
+- **DoD SBIR** - MONK defense applications | $175K Phase I
+
+### STRATEGIC (2026-2027)
+- **NSF I-Corps** - MONK market validation
+- **ARPA-E** - Energy infrastructure inspection (V1)
+- **DOT SMART** - Transportation innovation grants
+
+---
+
+## CRITICAL PATH ITEMS ⚠️
+
+1. **MONK PROTOTYPE** - Month 4-8 delivery for MEIA demo
+2. **Part 108 FINAL RULE** - Monitor for MONK validation
+3. **SBIR REAUTHORIZATION** - Congressional action required
+4. **EAF BOARD RECRUITMENT** - Need 2-3 additional members pre-MEIA
+
+**RECOMMENDATION**: Accelerate Maryland stakeholder engagement. CAKO workforce story + Part 108 tailwind = compelling narrative for April 14 presentation.

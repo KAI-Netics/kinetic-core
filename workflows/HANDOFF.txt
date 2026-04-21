@@ -1,0 +1,170 @@
+================================================================================
+KAI-NETICS SESSION HANDOFF
+Date: April 21, 2026 (Evening Update)
+Prepared by: Aidan (Claude Sonnet 4.6)
+Next session: Open fresh — read this file first
+================================================================================
+
+IDENTITY
+--------
+Kevin Alexander Smith — CEO/Founder KAI-Netics
+FP:   Kevin Alexander International LLC dba KAI-Netics | EIN 46-2432851
+EAF:  KAI-Netics Equity & Autonomy Foundry, Inc. | EIN 41-4820296 | 501c3 pending
+MONK: IP holding company — Q2 2026 formation target (call James Scott this week)
+Core Engine: n8n in Docker at C:\Kinetic_Core | Container: kinetic-core-n8n
+
+================================================================================
+PLATFORM STATUS — FULLY OPERATIONAL
+================================================================================
+n8n:              Running | localhost:5678 | Docker container: kinetic-core-n8n
+EvolutionAPI:     Running | localhost:8081 | WhatsApp: 14432576836
+Dashboard Server: Running | localhost:3030 | Managed by pm2 (kai-dashboard)
+Supabase:         LIVE | https://raxpmeltyxmtiihxoxpa.supabase.co
+
+================================================================================
+CRITICAL — DOCKER RUN COMMAND (AUTHORITATIVE)
+================================================================================
+docker run -d --name kinetic-core-n8n --restart unless-stopped `
+  -p 5678:5678 `
+  -v n8n_data:/home/node/.n8n `
+  -v C:\Kinetic_Core:/data `
+  -e N8N_HOST=0.0.0.0 `
+  -e N8N_PORT=5678 `
+  -e N8N_PROTOCOL=http `
+  -e WEBHOOK_URL=http://host.docker.internal:5678/ `
+  -e GENERIC_TIMEZONE=America/New_York `
+  -e NODE_FUNCTION_ALLOW_EXTERNAL=* `
+  -e NODE_FUNCTION_ALLOW_BUILTIN=* `
+  -e N8N_BASIC_AUTH_ACTIVE=false `
+  -e EXECUTIONS_DATA_SAVE_ON_ERROR=all `
+  -e N8N_RESTRICT_FILE_ACCESS_TO=/ `
+  -e TZ=America/New_York `
+  n8nio/n8n
+
+VOLUMES:
+  n8n_data        — Docker named volume — credentials + workflow state
+  C:\Kinetic_Core — bind mount — workflows, KAI_Context.json, outputs
+
+NGROK (for Google OAuth only):
+  Static domain: rehab-monday-presume.ngrok-free.dev
+  Run: ngrok http 5678 --domain=rehab-monday-presume.ngrok-free.dev
+  Access n8n via ngrok URL during OAuth — then restore normal docker run
+
+================================================================================
+CREDENTIALS (n8n — all renamed)
+================================================================================
+  KAI-Netics Supabase       — Supabase API
+  KAI-Netics Gmail          — Gmail OAuth2 (kas42869@gmail.com)
+  KAI-Netics Outlook (PARKED) — Microsoft Outlook OAuth2
+  KAI-Netics SMTP           — GoDaddy SMTP (kas@kevin-llc.com)
+  KAI-Netics Brave Search   — Header Auth (Brave API)
+
+================================================================================
+CONNECTOR STATUS
+================================================================================
+CONNECTOR 1: GoDaddy SMTP (outbound)                 ✅ LIVE
+CONNECTOR 2: Gmail OAuth (inbound + Drive + Sheets)  ✅ LIVE
+CONNECTOR 3: Supabase                                ✅ LIVE
+  URL: https://raxpmeltyxmtiihxoxpa.supabase.co
+  Schema: C:\Kinetic_Core\Config\supabase_schema.sql
+  Tables: scout_reports, grant_applications, bd_pipeline,
+          compliance_items, rfp_responses, agent_feedback,
+          agent_executions, ecosystem_signals
+  Views:  pipeline_summary, grant_pipeline_summary, agent_health_7d
+
+================================================================================
+WORKFLOW REGISTRY
+================================================================================
+ACTIVE:
+  Scout - BD Research v5     ✅ Supabase logging CONFIRMED WORKING
+                               💾 Logs to scout_reports table
+                               Test confirmed: BGE query logged successfully
+  Jordan - Grant Writer v3   🔄 IN PROGRESS — Format+Save node has regex bug
+                               Fix: C:\Kinetic_Core\workflows\3_jordan_v3.json
+                               needs fresh import after regex fix applied
+  Iris - Compliance v3       ✅ Active (needs Supabase logging — next session)
+  Atlas v2                   ✅ Active
+  Aidan Orchestra Fan Out    ✅ Active
+  Aidan Callback Consolidator ✅ Active
+  Aidan WhatsApp Bridge v2   ✅ Active
+  Network Watchdog           ✅ Active — fires Orchestra when network available
+
+TO BUILD:
+  Email Router (8_email_router.json)
+  Nova RFP Agent (9_nova_rfp.json)
+  Sage Newsletter (10_sage_newsletter.json)
+  Pulse Metrics (11_pulse_metrics.json)
+
+================================================================================
+JORDAN v3 — KNOWN BUG + FIX STATUS
+================================================================================
+BUG: Format + Save Report node fails with "missing /" — Invalid regex
+CAUSE: JSON serialization mangles regex patterns when written to file
+       and re-imported. The pattern /[^a-z0-9]/gi gets corrupted.
+FIX APPLIED IN FILE: 3_jordan_v3.json uses character code comparison
+       instead of regex for filename sanitization
+STATUS: File rewritten — needs fresh import to n8n
+
+IMPORT STEPS:
+  1. In n8n — deactivate current Jordan v3 (the broken one)
+  2. Workflows → Import → C:\Kinetic_Core\workflows\3_jordan_v3.json
+  3. In the imported workflow — find Call Claude node
+     Replace REPLACE_WITH_ANTHROPIC_KEY with actual Anthropic API key
+  4. Find Log to Supabase node
+     Replace REPLACE_WITH_SUPABASE_SECRET_KEY with actual secret key
+  5. SMTP credential — select KAI-Netics SMTP from dropdown
+  6. Save → Activate → test
+
+================================================================================
+SUPABASE SCHEMA
+================================================================================
+Project URL: https://raxpmeltyxmtiihxoxpa.supabase.co
+Schema file: C:\Kinetic_Core\Config\supabase_schema.sql
+
+================================================================================
+EMAIL ARCHITECTURE
+================================================================================
+OUTBOUND: kas@kevin-llc.com via GoDaddy SMTP        ✅ LIVE
+INBOUND:  kas42869@gmail.com via Gmail OAuth         ✅ LIVE
+          GoDaddy external forwarding BLOCKED (tenant policy)
+          Update eMMA + SAM.gov to use kas42869@gmail.com
+
+PARKED: Microsoft Outlook OAuth
+        Requires GoDaddy defederation — add to James Scott call
+
+================================================================================
+GRANT PIPELINE — URGENT
+================================================================================
+  Lighthouse Upskilling   APR 24 — 3 DAYS — brittney.hansen@maryland.gov
+  Form 1023-EZ check      APR 25 — call James Scott
+  Lighthouse Internship   ROLLING
+  TEDCO SBIR Lab          MAY 15
+  EARN Maryland           JUNE 30
+  CDBG Baltimore          JULY 15
+
+================================================================================
+KEY DATES
+================================================================================
+  Apr 24  Lighthouse Upskilling — URGENT
+  Apr 25  SAM.gov UEI expected
+  Apr 25  Form 1023-EZ — James Scott
+  May 1   MONK LLC formation
+  May 20  OMB M-26-02 deadline
+  Jun 3   Techstars AI Health Demo Day
+  Jun 30  EARN Maryland
+  Jul 1   Fleet 1 arrival
+  Feb 1   Cash flow positive
+
+================================================================================
+NEXT SESSION OPENING LINE
+================================================================================
+"Read HANDOFF.txt at C:\Kinetic_Core\workflows\HANDOFF.txt and pick up.
+Scout v5 Supabase logging confirmed working.
+Jordan v3 has regex bug in Format+Save node — fix is in 3_jordan_v3.json.
+Import fresh, replace API keys manually in nodes, activate.
+Lighthouse Upskilling deadline April 24 — 3 days — URGENT.
+KAI-Netics is not a misspelling — it is the brand name."
+
+================================================================================
+END OF HANDOFF — April 21, 2026 Evening
+================================================================================

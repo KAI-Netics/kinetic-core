@@ -1,0 +1,28 @@
+{
+  "name": "Scout - BD Research v2",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "scout-research", "options": {} },
+      "type": "n8n-nodes-base.webhook", "typeVersion": 2.1, "position": [0, 0],
+      "id": "scout-001", "name": "Webhook Trigger", "webhookId": "bad5071c-c38c-4e8b-99ec-21573ac025ed"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs'), https = require('https');\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8')); } catch(e) { ctx = {}; }\nconst raw = $input.first().json;\nconst body = raw.body || raw;\nconst query = String(body.query || raw.query || 'Maryland drone infrastructure inspection contracts 2026');\nconst founder = ctx.founder || {};\nconst verticals = ctx.verticals || {};\nconst entities = ctx.entities || {};\nconst naics = ctx.naics || {};\nconst verticalList = Object.entries(verticals).map(([k,v]) => `${k}: ${v.name} | Pricing: ${v.pricing || v.revenue_projection || 'TBD'} | Margin: ${v.margin || 'TBD'}`).join('\\n');\nconst systemMessage = `You are Scout, BD Research Agent for KAI-Netics (${entities.FP?.name}).\nFounder: ${founder.name} — ${(founder.credentials||[]).join(', ')}\nBackground: ${founder.background}\nSeven verticals:\\n${verticalList}\nTarget geography: Baltimore City, Anne Arundel, Howard, Baltimore County, PG County, Montgomery County, DC Metro, Northern Virginia.\nTarget customers: 24 MD county DPW offices, BGE/PEPCO/Delmarva, Crown Castle/American Tower, MDSHA (2500+ bridges), DC DDOT (245 bridges), Amazon/Home Depot/Target warehouses, municipal fire/police DFR.\nNAICS registered: ${(naics.registered||[]).map(n=>n.code+' '+n.description).join(', ')}\nCompliance hooks: FHWA 23 CFR 650, PHMSA 49 CFR 192, OMB M-26-02 deadline May 20 2026, NDAA fleet cert, NERC FAC-001/003.\nFor each BD query: (1) identify target org and decision maker role (2) find procurement portal and contract vehicle (3) fit score 0-100% (4) draft 2-paragraph capability statement (5) list certifications needed (6) single best next action with URL/name.\nBe specific. Name real titles, portals, RFP numbers where known.`;\nconst requestBody = JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4096, system: systemMessage, messages: [{ role: 'user', content: `Research this BD target:\\n\\n${query}\\n\\nProvide: fit score, decision maker, procurement portal, capability statement draft, certifications needed, next action.` }] });\nconst options = { hostname: 'api.anthropic.com', port: 443, path: '/v1/messages', method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': 'REPLACE_WITH_KEY', 'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(requestBody) } };\nconst result = await new Promise((resolve, reject) => {\n  const req = https.request(options, (res) => { let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d })); });\n  req.on('error', reject); req.write(requestBody); req.end();\n});\nlet aiOutput = '';\ntry { aiOutput = JSON.parse(result.body).content?.[0]?.text || 'No response.'; } catch(e) { aiOutput = result.body.substring(0,500); }\nconst timestamp = new Date().toISOString().replace(/[:.]/g,'-');\nconst outputPath = `/data/Aidan_Outputs/Scout/Scout_Report_${timestamp}.txt`;\nfs.mkdirSync('/data/Aidan_Outputs/Scout', { recursive: true });\nfs.writeFileSync(outputPath, aiOutput, 'utf8');\nconst fitMatch = aiOutput.match(/FIT SCORE[:\\s*\\*]*\\s*\\*?\\*?(\\d+)/i);\nconst fitScore = fitMatch ? fitMatch[1] + '%' : 'See report';\nconst queryStr = query.substring(0, 60);\nconst summary = `SCOUT BD REPORT COMPLETE\\nTarget: ${queryStr}\\nFit Score: ${fitScore}\\nSaved: /data/Aidan_Outputs/Scout/`;\nreturn [{ json: { aiOutput, summary, savedTo: outputPath, query: queryStr, fitScore } }];"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [220, 0], "id": "scout-002", "name": "Scout Brain v2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const http = require('http');\nconst { summary = 'Scout complete.', fitScore, query } = $input.first().json;\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: 'Bot reply: ' + summary } });\nconst opts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) } };\nawait new Promise(r => { const req = http.request(opts, res => { res.on('data',()=>{}); res.on('end',r); }); req.on('error',r); req.write(msgBody); req.end(); });\nconst cbBody = JSON.stringify({ agent: 'Scout', summary, fitScore, query, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: 'host.docker.internal', port: 5678, path: '/webhook/aidan-callback', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, res => { res.on('data',()=>{}); res.on('end',()=>{}); }); cbReq.on('error',()=>{}); cbReq.write(cbBody); cbReq.end();\nreturn [{ json: { success: true, agent: 'Scout', summary } }];"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [440, 0], "id": "scout-003", "name": "Aidan Callback"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Scout Brain v2", "type": "main", "index": 0 }]] },
+    "Scout Brain v2": { "main": [[{ "node": "Aidan Callback", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": true },
+  "tags": [{ "name": "KAI-Netics" }, { "name": "Scout" }, { "name": "BD" }]
+}

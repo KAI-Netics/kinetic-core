@@ -1,0 +1,24 @@
+# KAI-Netics Core Engine — .gitignore
+# Protects sensitive data from being pushed to GitHub
+
+# Agent output files (large, regenerated on each run)
+Aidan_Outputs/
+
+# Temporary and session files
+*.tmp
+*.log
+session_orch*.json
+
+# Environment files with secrets
+.env
+*.env
+
+# Node modules if any
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Archive folder is fine to push (workflow history)
+# !archive/

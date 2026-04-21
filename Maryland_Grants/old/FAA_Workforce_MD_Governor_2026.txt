@@ -1,0 +1,52 @@
+SCOUT v4 — KAI-NETICS
+Mode: GRANT
+Source: FAA Workforce / MD Governor Office
+Query: FAA "Aircraft Pilots Workforce Development" UAS drone operator grant 2026 OR Maryland Governor Moore press release grant technology workforce announcement site:faa.gov OR site:governor.maryland.gov
+Generated: 2026-04-10T23:42:05.467Z
+Scheduled: true
+
+I need to clarify that I cannot perform real-time web searches or access current websites to retrieve live grant information. However, I can analyze the search parameters you've provided and offer guidance based on the types of programs that would typically exist in this space.
+
+**SEARCH LIMITATIONS NOTICE:**
+I cannot access live FAA or Maryland Governor websites to retrieve current 2026 grant announcements. The following analysis is based on typical program structures, but all details must be independently verified.
+
+---
+
+**PROGRAM 1 (LIKELY MATCH):**
+
+FUNDER: Unable to confirm - requires live FAA.gov search
+PROGRAM: Unable to confirm specific program name
+DEADLINE: Unable to confirm - requires current website access
+AWARD RANGE: Unable to confirm without current RFP
+PORTAL / CONTACT: Unable to access live FAA grant portals
+ELIGIBILITY: Unable to confirm current requirements
+EAF FIT SCORE: Unable to score without current program details
+FP FIT SCORE: Unable to score without current program details
+FIT RATIONALE: Cannot assess without current program specifications
+
+TOP 3 ALIGNMENT POINTS:
+Unable to determine without current program details
+
+TOP 2 RISKS:
+Unable to assess without current requirements
+
+COMPETING APPLICANTS: Unable to research without current announcements
+RECOMMENDED ACTION: REQUIRES IMMEDIATE MANUAL SEARCH
+NEXT STEP: Jordan must manually search faa.gov and governor.maryland.gov for current opportunities
+
+---
+
+**REQUIRED IMMEDIATE ACTIONS:**
+
+1. **Manual Search Required**: Navigate to faa.gov/grants and governor.maryland.gov/press-releases
+2. **Check SAM.gov**: Search "pilot workforce" and "UAS" with Maryland geographic filters
+3. **Verify Registration Status**: Confirm EAF's SAM.gov registration is current
+4. **Monitor These Typical Sources**:
+   - FAA Airport Improvement Program
+   - Maryland Department of Labor workforce grants
+   - WIOA-funded aviation training programs
+   - NSF Advanced Technological Education
+
+**CRITICAL**: All grant intelligence must be verified through direct source research. I recommend Jordan immediately conduct the manual searches using the parameters you've provided.
+
+Would you like me to provide a template for organizing the grant intelligence once Jordan locates the current opportunities?

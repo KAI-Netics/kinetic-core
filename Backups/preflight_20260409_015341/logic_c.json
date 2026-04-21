@@ -1,0 +1,143 @@
+﻿{
+  "name": "Logic C — WhatsApp Bridge (Aidan Command Router)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-inbound",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000001",
+      "name": "WhatsApp Inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 400],
+      "webhookId": "kai-whatsapp-bridge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst data = body.data || body;\nconst from = data.key?.remoteJid || data.remoteJid || 'unknown';\nconst msgType = data.messageType || 'conversation';\nconst message = data.message || {};\nlet text = '';\nif (msgType === 'conversation') { text = message.conversation || ''; }\nelse if (msgType === 'extendedTextMessage') { text = message.extendedTextMessage?.text || ''; }\nelse { text = JSON.stringify(message).substring(0, 200); }\nconst t = text.toLowerCase().trim();\nlet intent = 'UNKNOWN';\nif (t.includes('grant') || t.includes('nofa') || t.includes('eaf') || t.includes('earn')) { intent = 'GRANT'; }\nelse if (t.includes('3pl') || t.includes('logistics') || t.includes('shipment') || t.includes('inventory')) { intent = 'TPL'; }\nelse if (t.includes('status') || t.includes('briefing') || t.includes('morning') || t.includes('brief')) { intent = 'BRIEF'; }\nelse if (t.includes('monk') || t.includes('drone') || t.includes('akms') || t.includes('cako') || t.includes('architect')) { intent = 'TECH'; }\nelse if (t === 'help' || t === '?') { intent = 'HELP'; }\nelse if (t.startsWith('ack ')) { intent = 'ACK'; }\nreturn [{ json: { intent, text, from, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000002",
+      "name": "Parse Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });\nreturn [{ json: { reply: `*AIDAN MORNING BRIEF*\\n${now} EST\\n\\n*EAF (Non-Profit)*\\n- Form 1023: In preparation\\n- MEIA Capstone: April 14, 2026\\n- CAKO Cohort 1: Month 4 target\\n\\n*FP (For-Profit)*\\n- 3PL logs active\\n- Infrastructure inspection pipeline\\n\\n*MONK / AKMS*\\n- Prototype v1.0 in development\\n- Provisional patent pending\\n\\nReply *help* for full menu.` } }];"
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000006",
+      "name": "Morning Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $('Parse Intent').first().json.text;\nreturn [{ json: { reply: `*MONK / AKMS Tech Brief*\\nQuery: \"${text}\"\\n\\n- MONK v1.0 prototype in development\\n- MEIA Capstone: April 14, 2026\\n- Patent: Via James Scott Esq.\\n- Advisor: Dr. Alexander Kott (Former Chief Scientist, ARL)\\n- AKMS: Autonomous swarm OS\\n- CAKO: 12-16 week drone certification\\n\\nCheck /data/Aidan_Outputs/ for full report.` } }];"
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000007",
+      "name": "Tech Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 460]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { reply: `*AIDAN Command Menu*\\n\\n*EAF / Grants*\\n- grant status\\n- EARN grant\\n\\n*FP / Logistics*\\n- 3pl status\\n- inventory check\\n\\n*Briefings*\\n- morning briefing\\n- status\\n\\n*MONK / Tech*\\n- monk status\\n- CAKO status\\n- architect\\n\\n*Actions*\\n- ACK [ShipmentID]\\n- help` } }];"
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000008",
+      "name": "Help Menu",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 620]
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $('Parse Intent').first().json.text;\nconst shipId = text.replace(/^ack\\s+/i, '').trim();\nreturn [{ json: { reply: `Shipment *${shipId}* acknowledged.\\nLogged: ${new Date().toISOString()}\\nAlerts suppressed 4 hours.` } }];"
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000009",
+      "name": "Acknowledge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 780]
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $('Parse Intent').first().json.text;\nreturn [{ json: { reply: `Aidan did not recognize: \"${text}\"\\nReply *help* for the command menu.` } }];"
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000010",
+      "name": "Unknown Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 940]
+    },
+    {
+      "parameters": {
+        "jsCode": "let reply = '';\nconst branches = ['Morning Brief','Tech Brief','Help Menu','Acknowledge','Unknown Intent'];\nfor (const name of branches) {\n  try { const v = $(name).first()?.json?.reply; if (v) { reply = v; break; } } catch(e) {}\n}\nif (!reply) { reply = 'Request processed. Check /data/Aidan_Outputs/ for the full report.'; }\nif (reply.length > 3800) { reply = reply.substring(0, 3800) + '\\n_(Full report in /data/Aidan_Outputs/)'; }\nconst from = $('Parse Intent').first().json.from;\nreturn [{ json: { reply, from } }];"
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000011",
+      "name": "Collect Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 620]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8081/message/sendText/Aidan",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "apikey", "value": "Kevin2026" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "number": "={{ $json.from }}",
+          "options": { "delay": 1200, "presence": "composing" },
+          "textMessage": { "text": "={{ $json.reply }}" }
+        },
+        "options": {}
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000012",
+      "name": "Send WhatsApp Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 620]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"status\":\"ok\"}"
+      },
+      "id": "c1b2c3d4-0003-0003-0003-000000000013",
+      "name": "ACK Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1680, 620]
+    }
+  ],
+  "connections": {
+    "WhatsApp Inbound": { "main": [[{ "node": "Parse Intent", "type": "main", "index": 0 }]] },
+    "Parse Intent": { "main": [[{ "node": "Morning Brief", "type": "main", "index": 0 }]] },
+    "Morning Brief": { "main": [[{ "node": "Collect Reply", "type": "main", "index": 0 }]] },
+    "Tech Brief": { "main": [[{ "node": "Collect Reply", "type": "main", "index": 0 }]] },
+    "Help Menu": { "main": [[{ "node": "Collect Reply", "type": "main", "index": 0 }]] },
+    "Acknowledge": { "main": [[{ "node": "Collect Reply", "type": "main", "index": 0 }]] },
+    "Unknown Intent": { "main": [[{ "node": "Collect Reply", "type": "main", "index": 0 }]] },
+    "Collect Reply": { "main": [[{ "node": "Send WhatsApp Reply", "type": "main", "index": 0 }]] },
+    "Send WhatsApp Reply": { "main": [[{ "node": "ACK Webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [{ "name": "WhatsApp" }, { "name": "Aidan" }, { "name": "KAI-Netics" }]
+}

@@ -1,0 +1,67 @@
+{
+  "name": "Scout - BD Research v3",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 6 * * 1-5" }] }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, -120],
+      "id": "scout-001",
+      "name": "Daily 6AM Trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "scout-research",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 80],
+      "id": "scout-002",
+      "name": "Webhook Trigger",
+      "webhookId": "bad5071c-c38c-4e8b-99ec-21573ac025ed"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst isScheduled = !body.query && !body.command;\nconst query = String(body.query || body.command || '');\n\nconst today = new Date();\nconst day = today.getDay();\nconst dailyTargets = {\n  1: { mode: 'grant', query: 'Maryland EARN workforce development grant 2026 drone technology training nonprofit', grantName: 'EARN_Maryland_2026.txt' },\n  2: { mode: 'grant', query: 'Maryland CDBG Community Development Block Grant Baltimore City 2026 minority nonprofit facility', grantName: 'CDBG_Baltimore_2026.txt' },\n  3: { mode: 'bd', query: 'BGE Baltimore Gas Electric vendor portal drone inspection NERC FAC-001 transmission line 2026' },\n  4: { mode: 'grant', query: 'FEMA C-UAS SLTT Homeland Security Grant Program 2026 drone counter UAS municipal Maryland', grantName: 'FEMA_CUAS_SLTT_2026.txt' },\n  5: { mode: 'bd', query: 'Maryland State Highway Administration MDSHA bridge inspection vendor registration drone Part 107 2026' }\n};\n\nlet mode, resolvedQuery, grantName;\nif (isScheduled) {\n  const target = dailyTargets[day] || dailyTargets[1];\n  mode = target.mode;\n  resolvedQuery = target.query;\n  grantName = target.grantName || null;\n} else {\n  mode = body.mode || 'bd';\n  resolvedQuery = query || 'Maryland drone infrastructure inspection contracts 2026';\n  grantName = body.grantName || null;\n}\n\nreturn [{ json: { mode, query: resolvedQuery, grantName, isScheduled, timestamp: new Date().toISOString() } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "id": "scout-003",
+      "name": "Route + Build Task"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs'), https = require('https');\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8')); } catch(e) { ctx = {}; }\n\nconst { mode, query, grantName, isScheduled, timestamp } = $input.first().json;\nconst founder = ctx.founder || {};\nconst verticals = ctx.verticals || {};\nconst entities = ctx.entities || {};\nconst naics = ctx.naics || {};\nconst dates = ctx.key_dates || {};\nconst revenue = ctx.revenue_targets || {};\n\nconst verticalList = Object.entries(verticals).map(([k,v]) => `${k}: ${v.name} | Pricing: ${v.pricing || v.revenue_projection || 'TBD'} | Margin: ${v.margin || 'TBD'}`).join('\\n');\nconst eafProfile = `EAF: ${entities.EAF?.name} | EIN: ${entities.EAF?.ein} | Type: ${entities.EAF?.type} | Status: ${entities.EAF?.status}`;\nconst fpProfile = `FP: ${entities.FP?.name} | EIN: ${entities.FP?.ein}`;\n\nlet systemMessage, userMessage, outputFolder, outputPrefix;\n\nif (mode === 'grant') {\n  systemMessage = `You are Scout, Grant Intelligence Agent for KAI-Netics EAF.\\n${eafProfile}\\n${fpProfile}\\nFounder: ${founder.name} — ${(founder.credentials||[]).join(', ')}\\nPrograms: CAKO (12-16 week drone operator certification, zero tuition), MONK (autonomous UAS trust infrastructure)\\nService area: Maryland, DC Metro, Northern Virginia\\nRevenue: Y1 ${revenue.year1_total} Y2 ${revenue.year2_total}\\nKey dates: MEIA ${dates.meia_capstone} | CAKO Cohort 1 ${dates.cako_cohort1_launch}\\nNAICS: ${(naics.registered||[]).map(n=>n.code+' '+n.description).join(', ')}\\n\\nYour job: Research this grant opportunity and produce a structured grant intelligence file that Jordan can use to draft a Letter of Intent and full application. Be specific — real funder names, real portal URLs, real deadlines, real award amounts. If you cannot confirm a specific detail, say so explicitly rather than guessing.\\n\\nFormat your output EXACTLY as follows:\\nFUNDER: [exact organization name]\\nPROGRAM: [exact grant program name]\\nDEADLINE: [date or rolling]\\nAWARD RANGE: [dollar range]\\nPORTAL: [exact URL]\\nELIGIBILITY: [requirements]\\nEAF FIT SCORE: [0-100%]\\nFIT RATIONALE: [2-3 sentences]\\nTOP 3 ALIGNMENT POINTS:\\n1. [point]\\n2. [point]\\n3. [point]\\nTOP 2 RISKS:\\n1. [risk]\\n2. [risk]\\nRECOMMENDED ACTION: [APPLY / WATCH / PASS]\\nNEXT STEP: [single most important action with URL or contact]\\nLOI DRAFT:\\n[250-350 word Letter of Intent draft ready for Jordan to refine]`;\n\n  userMessage = `Research this grant opportunity for KAI-Netics EAF:\\n\\n${query}\\n\\nProduce the structured grant intelligence file. Today is ${new Date().toLocaleDateString('en-US', {timeZone: 'America/New_York'})}. Focus on grants with deadlines in the next 90 days or rolling applications.`;\n  outputFolder = 'Maryland_Grants';\n  outputPrefix = grantName ? grantName.replace('.txt','') : 'Grant_Intel_' + new Date().toISOString().slice(0,10);\n\n} else {\n  systemMessage = `You are Scout, BD Research Agent for KAI-Netics (${entities.FP?.name}).\\nFounder: ${founder.name} — ${(founder.credentials||[]).join(', ')}\\nBackground: ${founder.background}\\nSeven verticals:\\n${verticalList}\\nTarget geography: Baltimore City, Anne Arundel, Howard, Baltimore County, PG County, Montgomery County, DC Metro, Northern Virginia.\\nTarget customers: 24 MD county DPW offices, BGE/PEPCO/Delmarva, Crown Castle/American Tower, MDSHA (2500+ bridges), DC DDOT (245 bridges), Amazon/Home Depot/Target warehouses, municipal fire/police DFR.\\nNAICS registered: ${(naics.registered||[]).map(n=>n.code+' '+n.description).join(', ')}\\nCompliance hooks: FHWA 23 CFR 650, PHMSA 49 CFR 192, OMB M-26-02 deadline May 20 2026, NDAA fleet cert, NERC FAC-001/003.\\n\\nFor each BD target provide:\\n1. TARGET ORG and exact decision maker title\\n2. PROCUREMENT PORTAL — exact URL\\n3. CONTRACT VEHICLE — how they buy this service\\n4. FIT SCORE 0-100% with rationale\\n5. CAPABILITY STATEMENT — 2 tight paragraphs Kevin can send today\\n6. CERTIFICATIONS NEEDED — list gaps\\n7. NEXT ACTION — single specific action with URL or name\\n8. FOLLOW-UP SEQUENCE — 3-touch outreach plan with timing\\n\\nBe specific. Name real titles, portals, RFP numbers where known. Today is ${new Date().toLocaleDateString('en-US', {timeZone: 'America/New_York'})}.`;\n\n  userMessage = `Research this BD target for immediate outreach:\\n\\n${query}\\n\\nProvide all 8 sections. Prioritize speed to first contact — Kevin can act on this today.`;\n  outputFolder = 'Aidan_Outputs/Scout';\n  outputPrefix = 'Scout_BD_' + new Date().toISOString().slice(0,10).replace(/-/g,'');\n}\n\nconst requestBody = JSON.stringify({\n  model: 'claude-sonnet-4-20250514',\n  max_tokens: 4096,\n  system: systemMessage,\n  messages: [{ role: 'user', content: userMessage }]\n});\n\nconst options = {\n  hostname: 'api.anthropic.com',\n  port: 443,\n  path: '/v1/messages',\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n    'x-api-key': 'REPLACE_WITH_KEY',\n    'anthropic-version': '2023-06-01',\n    'Content-Length': Buffer.byteLength(requestBody)\n  }\n};\n\nconst result = await new Promise((resolve, reject) => {\n  const req = https.request(options, (res) => {\n    let d = '';\n    res.on('data', c => d += c);\n    res.on('end', () => resolve({ status: res.statusCode, body: d }));\n  });\n  req.on('error', reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet aiOutput = '';\ntry {\n  aiOutput = JSON.parse(result.body).content?.[0]?.text || 'No response.';\n} catch(e) {\n  aiOutput = result.body.substring(0, 500);\n}\n\nconst dateStr = new Date().toISOString().replace(/[:.]/g,'-');\nconst filename = mode === 'grant' ? `${outputPrefix}.txt` : `${outputPrefix}_${dateStr}.txt`;\nconst folderPath = `/data/${outputFolder}`;\nfs.mkdirSync(folderPath, { recursive: true });\nfs.writeFileSync(`${folderPath}/${filename}`, `SCOUT v3 — KAI-NETICS\\nMode: ${mode.toUpperCase()}\\nQuery: ${query}\\nGenerated: ${timestamp}\\nScheduled: ${isScheduled}\\n\\n${aiOutput}\\n`, 'utf8');\n\nconst fitMatch = aiOutput.match(/(?:FIT SCORE|EAF FIT SCORE)[:\\s*\\*]*\\s*\\*?\\*?(\\d+)/i);\nconst fitScore = fitMatch ? fitMatch[1] + '%' : 'See report';\nconst actionMatch = aiOutput.match(/RECOMMENDED ACTION[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst action = actionMatch ? actionMatch[1].trim().replace(/\\*/g,'') : 'Review report';\nconst nextMatch = aiOutput.match(/NEXT (?:STEP|ACTION)[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst nextStep = nextMatch ? nextMatch[1].trim().replace(/\\*/g,'').substring(0,80) : 'See report';\n\nconst modeLabel = mode === 'grant' ? 'GRANT INTEL' : 'BD REPORT';\nconst summary = `SCOUT ${modeLabel} COMPLETE\\nMode: ${mode.toUpperCase()}\\nQuery: ${query.substring(0,60)}\\nFit: ${fitScore} | Action: ${action}\\nNext: ${nextStep}\\nSaved: /data/${outputFolder}/${filename}`;\n\nreturn [{ json: { aiOutput, summary, savedTo: `${folderPath}/${filename}`, query, fitScore, action, mode, filename, outputFolder, isScheduled, timestamp } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "id": "scout-004",
+      "name": "Scout Brain v3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const http = require('http');\nconst { summary = 'Scout complete.', fitScore, query, mode, isScheduled } = $input.first().json;\n\nconst msgText = isScheduled\n  ? `Bot reply: 🔍 SCOUT MORNING SCAN\\n\\n${summary}`\n  : `Bot reply: SCOUT ${mode?.toUpperCase() === 'GRANT' ? 'GRANT INTEL' : 'BD REPORT'} COMPLETE\\n\\n${summary}`;\n\nconst msgBody = JSON.stringify({\n  number: '14432576836@s.whatsapp.net',\n  textMessage: { text: msgText }\n});\n\nconst opts = {\n  hostname: 'host.docker.internal',\n  port: 8081,\n  path: '/message/sendText/Aidan',\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n    'apikey': 'Kevin2026',\n    'Content-Length': Buffer.byteLength(msgBody)\n  }\n};\n\nawait new Promise(r => {\n  const req = http.request(opts, res => { res.on('data',()=>{}); res.on('end',r); });\n  req.on('error',r);\n  req.write(msgBody);\n  req.end();\n});\n\nconst cbBody = JSON.stringify({\n  agent: 'Scout',\n  summary,\n  fitScore,\n  query,\n  mode,\n  isScheduled,\n  timestamp: new Date().toISOString()\n});\n\nconst cbOpts = {\n  hostname: 'host.docker.internal',\n  port: 5678,\n  path: '/webhook/aidan-callback',\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n    'Content-Length': Buffer.byteLength(cbBody)\n  }\n};\n\nconst cbReq = http.request(cbOpts, res => { res.on('data',()=>{}); res.on('end',()=>{}); });\ncbReq.on('error',()=>{});\ncbReq.write(cbBody);\ncbReq.end();\n\nreturn [{ json: { success: true, agent: 'Scout', summary, mode } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "id": "scout-005",
+      "name": "Aidan Callback"
+    }
+  ],
+  "connections": {
+    "Daily 6AM Trigger": { "main": [[{ "node": "Route + Build Task", "type": "main", "index": 0 }]] },
+    "Webhook Trigger": { "main": [[{ "node": "Route + Build Task", "type": "main", "index": 0 }]] },
+    "Route + Build Task": { "main": [[{ "node": "Scout Brain v3", "type": "main", "index": 0 }]] },
+    "Scout Brain v3": { "main": [[{ "node": "Aidan Callback", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": true },
+  "tags": [{ "name": "KAI-Netics" }, { "name": "Scout" }, { "name": "BD" }, { "name": "v3" }]
+}

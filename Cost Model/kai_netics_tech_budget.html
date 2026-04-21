@@ -1,0 +1,228 @@
+
+<style>
+  .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-secondary); margin: 1.5rem 0 0.5rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 6px 10px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); }
+  td { padding: 7px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+  .tag-free { background: #EAF3DE; color: #3B6D11; }
+  .tag-paid { background: #E6F1FB; color: #185FA5; }
+  .tag-var { background: #FAEEDA; color: #854F0B; }
+  .tag-np { background: #EEEDFE; color: #3C3489; }
+  .amt { font-weight: 500; text-align: right; white-space: nowrap; }
+  .subtotal-row td { background: var(--color-background-secondary); font-weight: 500; }
+  .total-row td { font-weight: 500; font-size: 14px; background: var(--color-background-secondary); border-top: 1px solid var(--color-border-secondary); }
+  .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 1.5rem 0; }
+  .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+  .metric-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .metric-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .note { font-size: 12px; color: var(--color-text-secondary); margin-top: 0.75rem; padding: 10px 14px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); border-left: 3px solid #9FE1CB; }
+</style>
+
+<h2 class="sr-only">KAI-Netics technology infrastructure budget — startup and recurring costs</h2>
+
+<div class="metric-grid">
+  <div class="metric">
+    <div class="metric-label">Startup / one-time</div>
+    <div class="metric-value">$50</div>
+    <div class="metric-sub">API pre-deposits only</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Monthly (low)</div>
+    <div class="metric-value">$25</div>
+    <div class="metric-sub">Light API usage</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Monthly (high)</div>
+    <div class="metric-value">$49</div>
+    <div class="metric-sub">Heavy agent activity</div>
+  </div>
+</div>
+
+<div class="section-label">Infrastructure (self-hosted)</div>
+<table>
+  <thead>
+    <tr><th style="width:30%">Tool</th><th style="width:30%">Role</th><th>Tier</th><th style="width:90px">Monthly</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Docker Desktop</td>
+      <td>Runs n8n + Evolution API locally on Surface Book II</td>
+      <td><span class="tag tag-free">Free</span></td>
+      <td class="amt">$0</td>
+    </tr>
+    <tr>
+      <td>n8n Community</td>
+      <td>Agent orchestration ("Chief of Staff brain")</td>
+      <td><span class="tag tag-free">Self-hosted</span></td>
+      <td class="amt">$0</td>
+    </tr>
+    <tr>
+      <td>Supabase</td>
+      <td>Long-term agent memory / database</td>
+      <td><span class="tag tag-free">Free tier</span></td>
+      <td class="amt">$0</td>
+    </tr>
+    <tr>
+      <td>Claude Desktop + MCP</td>
+      <td>Interface to local n8n flows</td>
+      <td><span class="tag tag-free">Free</span></td>
+      <td class="amt">$0</td>
+    </tr>
+    <tr class="subtotal-row">
+      <td colspan="3">Infrastructure subtotal</td>
+      <td class="amt">$0</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="section-label">Software (nonprofit-discounted)</div>
+<table>
+  <thead>
+    <tr><th style="width:30%">Service</th><th style="width:30%">Role</th><th>Pricing basis</th><th style="width:90px">Monthly</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Microsoft 365 Business</td>
+      <td>Office suite, OneNote MCP hooks, Outlook</td>
+      <td><span class="tag tag-np">Nonprofit grant (EAF EIN) — up to 10 users</span></td>
+      <td class="amt">$0</td>
+    </tr>
+    <tr>
+      <td>Google Workspace</td>
+      <td>Email / storage</td>
+      <td><span class="tag tag-np">Google for Nonprofits</span></td>
+      <td class="amt">$0</td>
+    </tr>
+    <tr>
+      <td>Claude Pro (Anthropic)</td>
+      <td>Grant drafting, strategy, Artifacts UI</td>
+      <td><span class="tag tag-paid">Paid subscription</span></td>
+      <td class="amt">$20</td>
+    </tr>
+    <tr class="subtotal-row">
+      <td colspan="3">Software subtotal</td>
+      <td class="amt">$20</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="section-label">AI API usage — token routing (pay-as-you-go)</div>
+<table>
+  <thead>
+    <tr><th style="width:30%">Model</th><th style="width:30%">Best used for</th><th>Rate</th><th style="width:90px">Est./month</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Claude 3.7 Sonnet</td>
+      <td>Grant writing, SBIR sections, strategy (Jordan, Atlas, Sage)</td>
+      <td><span class="tag tag-var">$3 in / $15 out per 1M tokens</span></td>
+      <td class="amt">~$5–$12</td>
+    </tr>
+    <tr>
+      <td>GPT-4o</td>
+      <td>Office 365 tasks, Nova contract drafts</td>
+      <td><span class="tag tag-var">$2.50 in / $10 out per 1M tokens</span></td>
+      <td class="amt">~$3–$8</td>
+    </tr>
+    <tr>
+      <td>Gemini 2.0 Flash</td>
+      <td>3PL log summarization, web research (Scout, Pulse)</td>
+      <td><span class="tag tag-free">$0.10 in / $0.40 out per 1M tokens</span></td>
+      <td class="amt">~$1–$3</td>
+    </tr>
+    <tr class="subtotal-row">
+      <td colspan="3">API subtotal (blended, 7 agents active)</td>
+      <td class="amt">$9–$23</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="section-label">Other recurring</div>
+<table>
+  <thead>
+    <tr><th style="width:30%">Item</th><th style="width:30%">Notes</th><th></th><th style="width:90px">Monthly</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GoDaddy domains (3)</td>
+      <td>~$48/yr for kevin-llc.com + 2 others</td>
+      <td></td>
+      <td class="amt">~$4</td>
+    </tr>
+    <tr>
+      <td>Vercel (static sites)</td>
+      <td>Simple business sites</td>
+      <td><span class="tag tag-free">Free tier</span></td>
+      <td class="amt">$0</td>
+    </tr>
+    <tr class="subtotal-row">
+      <td colspan="3">Other subtotal</td>
+      <td class="amt">~$4</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="section-label">Startup / one-time costs</div>
+<table>
+  <thead>
+    <tr><th style="width:30%">Item</th><th>Notes</th><th style="width:90px">Cost</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Anthropic API deposit</td>
+      <td>console.anthropic.com — pre-load $20</td>
+      <td class="amt">$20</td>
+    </tr>
+    <tr>
+      <td>OpenAI API deposit</td>
+      <td>platform.openai.com — pre-load $5</td>
+      <td class="amt">$5</td>
+    </tr>
+    <tr>
+      <td>Google AI Studio (Gemini)</td>
+      <td>Often free for low-volume testing</td>
+      <td class="amt">$0–$25</td>
+    </tr>
+    <tr>
+      <td>Docker Desktop, n8n, MCP</td>
+      <td>Free / open source</td>
+      <td class="amt">$0</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2">Total startup investment</td>
+      <td class="amt">~$50</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="section-label">Bottom line</div>
+<table>
+  <thead>
+    <tr><th>Scenario</th><th>Fixed</th><th>Variable (API)</th><th style="width:90px">Total/mo</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Low (light agent activity)</td>
+      <td>$24</td>
+      <td>~$9</td>
+      <td class="amt">~$25–$33</td>
+    </tr>
+    <tr>
+      <td>High (7 agents, active scanning)</td>
+      <td>$24</td>
+      <td>~$23</td>
+      <td class="amt">~$38–$49</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="3">Covers all 3 entities (FP + EAF + MONK)</td>
+      <td class="amt">$25–$49/mo</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Nonprofit leverage:</strong> Microsoft 365 ($150/mo standard) + Google Workspace ($144/mo) = $294/mo in grants eliminated by using EAF's EIN. Apply to Microsoft for Nonprofits first — it also unlocks the professional API hooks Nova needs for OneNote and Outlook.
+</div>

@@ -1,0 +1,417 @@
+{
+  "meta": {
+    "version": "1.6",
+    "updated": "2026-04-21",
+    "owner": "Kevin Alexander Smith",
+    "changelog": "v1.6 — CAKO full name corrected to Certified Autonomous Kinetic Operator. Supabase marked COMPLETE. SAM.gov status updated. Version bump."
+  },
+  "entities": {
+    "FP": {
+      "name": "Kevin Alexander International LLC dba KAI-Netics",
+      "ein": "46-2432851",
+      "type": "Maryland LLC — For-Profit",
+      "role": "Commercial operations, revenue engine, MONK LLC parent",
+      "status": "Operational"
+    },
+    "EAF": {
+      "name": "KAI-Netics Equity & Autonomy Foundry, Inc.",
+      "ein": "41-4820296",
+      "type": "Maryland Nonstock Corporation — Nonprofit",
+      "role": "Fleet ownership, workforce development, grants, DFR SOP consulting",
+      "status": "Incorporated 2/15/2026, certified 3/4/2026, board seated, IRS Form 1023 in preparation"
+    },
+    "MONK": {
+      "name": "MONK LLC",
+      "ein": "TBD — formation in progress",
+      "type": "Maryland LLC — For-Profit, wholly-owned by FP",
+      "role": "IP holding, SBIR applicant, legacy asset container, technology licensing",
+      "status": "Formation in progress"
+    }
+  },
+  "founder": {
+    "name": "Kevin Alexander Smith",
+    "credentials": ["PMP", "CISSP", "FAA Part 107 #5250157", "CCNA", "MCSE", "Security+"],
+    "part107": { "cert": "5250157", "ftn": "C2274489", "expiry": "2027-12-31" },
+    "roles": ["Sales and BD — closing all contracts", "MONK technology development"],
+    "background": "33 years IT — Microsoft, TSA, EIA, CMS, MedImmune, MedStar, Johns Hopkins, Capital One, pharmaceutical manufacturing, distribution center operations"
+  },
+  "compliance_rules": [
+    "NO funds flow from FP to EAF — IRS private benefit prohibition",
+    "MONK IP belongs to MONK LLC only — never EAF or FP property",
+    "NDAA fleet segregation — Green UAS never mixed with non-NDAA hardware on government contracts",
+    "Red team exercises require written authorization + James Scott Esq. review before execution",
+    "EAF compliance always beats FP efficiency when they conflict",
+    "DJI M350 RTK for private sector only — never on government contract",
+    "Fleet 3 show hardware — private entertainment only, never government contracts",
+    "Fleet 4 FPV — private EAF property and contracted private-sector red team only"
+  ],
+  "deadlines": [
+    {
+      "item": "MEIA Capstone Submission",
+      "date": "2026-04-14",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "status": "FILED",
+      "notes": "Submitted to Emily Sheppard on 2026-04-14"
+    },
+    {
+      "item": "EAF Annual Report — Maryland SDAT",
+      "date": "2027-04-15",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "status": "FILED",
+      "notes": "EXEMPT in 2026 — incorporated Feb 2026, first calendar year exemption under Maryland law. Next filing due 2027-04-15."
+    },
+    {
+      "item": "Supabase Setup — Core Engine",
+      "date": "2026-04-21",
+      "entity": "FP",
+      "owner": "Kevin",
+      "status": "COMPLETE",
+      "notes": "COMPLETED April 21 2026. Project: KAI-Netics at raxpmeltyxmtiihxoxpa.supabase.co. 8 tables live. Scout, Jordan, Iris all logging confirmed."
+    },
+    {
+      "item": "Form 1023-EZ Eligibility Check — James Scott",
+      "date": "2026-04-25",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "notes": "URGENT — TechSoup and Google for Nonprofits blocked until 501c3 determination received. 1023-EZ takes 2-4 weeks but requires EAF to project under $50,000 gross receipts first 3 years. James Scott must run eligibility worksheet. Fee: $275 at pay.gov if eligible. Full 1023 fee: $600."
+    },
+    {
+      "item": "Maryland Lighthouse Upskilling Application",
+      "date": "2026-04-24",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "notes": "Up to $200,000. Contact: Brittney Hansen brittney.hansen@maryland.gov. Must partner with 3+ employers. CAKO is the program. FP is employer #1."
+    },
+    {
+      "item": "MONK Provisional Patent Filing",
+      "date": "2026-04-30",
+      "entity": "MONK",
+      "owner": "Kevin",
+      "notes": "Non-negotiable before any further public MONK disclosure. File via James L. Scott Esq."
+    },
+    {
+      "item": "Microsoft for Nonprofits — EAF Application",
+      "date": "2026-04-30",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "notes": "nonprofit.microsoft.com. EAF EIN 41-4820296. May accept pending 501c3 status — apply now and reference Form 1023 in preparation."
+    },
+    {
+      "item": "Google for Nonprofits — EAF Application",
+      "date": "2026-04-30",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "notes": "google.org/nonprofits. Requires 501c3 determination letter. BLOCKED until Form 1023 approved."
+    },
+    {
+      "item": "SAM.gov Registration — UEI + CAGE Code",
+      "date": "2026-04-30",
+      "entity": "FP",
+      "owner": "Kevin",
+      "notes": "Submitted April 17 2026. Status: Pending UEI Assignment. Monitor EVS email. If no response by April 22 call 1-866-606-8220."
+    },
+    {
+      "item": "MONK LLC Formation",
+      "date": "2026-05-01",
+      "entity": "MONK",
+      "owner": "Kevin",
+      "notes": "File via James L. Scott Esq., Mobley & Brown LLP. IP protection prerequisite — do not delay."
+    },
+    {
+      "item": "IRS Form 1023 — EAF 501c3 Filing",
+      "date": "2026-05-01",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "notes": "BLOCKING ITEM — TechSoup, Google for Nonprofits, EARN Maryland, and most foundation grants require determination letter. Full Form 1023 takes 6 months. File by May 1 for ~November 2026 determination. 1023-EZ (2-4 week turnaround) may apply — James Scott must confirm. File at pay.gov. EIN: 41-4820296. 27-month retroactive window expires May 2028."
+    },
+    {
+      "item": "MBE/DBE Certification — MDOT",
+      "date": "2026-05-15",
+      "entity": "FP",
+      "owner": "Kevin",
+      "notes": "Maryland Department of Transportation. 90-120 day clock. Unlocks state procurement pipeline."
+    },
+    {
+      "item": "OMB M-26-02 Federal Drone Compliance",
+      "date": "2026-05-20",
+      "entity": "FP",
+      "owner": "Kevin",
+      "notes": "All federal drone operators must comply. Affects V3 DFR and government contracts. First dollar opportunity — no fleet needed for consulting."
+    },
+    {
+      "item": "EARN Maryland Grant Application",
+      "date": "2026-06-30",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "notes": "$50,000-$500,000. 25% match required. CAKO program is anchor. Jordan has LOI draft. Portal: dllr.state.md.us/earn"
+    },
+    {
+      "item": "CAKO Cohort 1 Launch",
+      "date": "2026-07-01",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "notes": "12-16 week zero-tuition program. FAA Part 107, Security+, CAPM, PCEP. Target: underserved Baltimore communities."
+    },
+    {
+      "item": "Fleet 1 Arrival",
+      "date": "2026-07-01",
+      "entity": "FP",
+      "owner": "Kevin",
+      "notes": "Skydio X10 + Freefly Astro Max + DJI M350 RTK. $55,000. Skydio + Freefly NDAA compliant. DJI M350 private sector only."
+    },
+    {
+      "item": "IRS Form 990-N — EAF e-Postcard",
+      "date": "2027-05-15",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "notes": "Electronic only at apps.irs.gov/app/ePostcard. Due 15th day of 5th month after 12/31/2026 tax year close. Extension outer limit: 2027-08-15."
+    },
+    {
+      "item": "EAF Annual Report — Maryland SDAT (Year 2)",
+      "date": "2027-04-15",
+      "entity": "EAF",
+      "owner": "Kevin",
+      "notes": "First active filing year. Set status ACTIVE when approaching 2027."
+    },
+    {
+      "item": "FAA Part 107 Renewal",
+      "date": "2027-12-31",
+      "entity": "FP",
+      "owner": "Kevin",
+      "notes": "Cert #5250157, FTN C2274489. Recurrent knowledge test required. Exam ID: 90120420255897530."
+    }
+  ],
+  "backlog": [
+    {
+      "id": "BL-001",
+      "title": "Sage Newsletter Automation — Dual Audience",
+      "status": "COMPLETE",
+      "priority": "HIGH",
+      "entity": "EAF + FP",
+      "owner": "Kevin",
+      "agent": "Sage",
+      "notes": "COMPLETED April 21 2026. Workflow: 10_sage_newsletter.json. Board newsletter (Opus, monthly, 25th trigger). Market newsletter (Opus, quarterly/milestone). Both confirmed working. SAGE SEND BOARD/MARKET commands need wiring in Aidan Router."
+    },
+    {
+      "id": "BL-002",
+      "title": "MCP Email Integration",
+      "status": "PARTIAL",
+      "priority": "HIGH",
+      "entity": "FP + EAF",
+      "owner": "Kevin",
+      "notes": "SMTP outbound live (kas@kevin-llc.com). Gmail OAuth inbound live (kas42869@gmail.com). GoDaddy external forwarding BLOCKED by tenant policy. Microsoft Outlook OAuth blocked by GoDaddy federated tenant — requires defederation. Add to James Scott call."
+    },
+    {
+      "id": "BL-003",
+      "title": "Supabase Agent Memory Layer",
+      "status": "COMPLETE",
+      "priority": "HIGH",
+      "entity": "FP",
+      "owner": "Kevin",
+      "notes": "COMPLETED April 21 2026. 8 tables live. Scout, Jordan, Iris, Nova all logging confirmed."
+    },
+    {
+      "id": "BL-004",
+      "title": "GitHub Backup — C:\\Kinetic_Core",
+      "status": "PENDING",
+      "priority": "HIGH",
+      "entity": "FP",
+      "owner": "Kevin",
+      "notes": "Private repo needed. All workflows, skills, config files. Do today."
+    },
+    {
+      "id": "BL-005",
+      "title": "Pulse Metrics Workflow",
+      "status": "PENDING",
+      "priority": "MEDIUM",
+      "entity": "FP",
+      "owner": "Kevin",
+      "notes": "Platform health + pipeline dashboard. Reads Supabase views. Build next session."
+    },
+    {
+      "id": "BL-006",
+      "title": "SAGE SEND Commands — Aidan Router",
+      "status": "PENDING",
+      "priority": "MEDIUM",
+      "entity": "FP + EAF",
+      "owner": "Kevin",
+      "notes": "Wire SAGE SEND BOARD and SAGE SEND MARKET into 6_aidan_router_v2.json. Triggers email delivery via SMTP to distribution lists."
+    },
+    {
+      "id": "BL-007",
+      "title": "GoDaddy Defederation — Microsoft Outlook OAuth",
+      "status": "PENDING",
+      "priority": "MEDIUM",
+      "entity": "FP",
+      "owner": "Kevin",
+      "notes": "Add to James Scott call. Defederation unlocks full Azure App Registration and Microsoft Outlook OAuth in n8n. Enables bi-directional kas@kevin-llc.com email."
+    }
+  ],
+  "verticals": {
+    "V1": {
+      "name": "Infrastructure Inspection & Data Services",
+      "status": "Day 1 — Kevin delivers personally",
+      "key_regulations": ["FHWA 23 CFR 650", "NERC FAC-001/003", "PHMSA 49 CFR 192", "FRA 49 CFR 213", "FAA AC 150/5370", "MD Dam Safety Act", "FERC Part 12", "Clean Water Act TMDL", "MS4 NPDES"],
+      "pricing": "$1,500-6,000 per inspection, $2,500-12,000/month retainer",
+      "margin": "70-88%"
+    },
+    "V2": {
+      "name": "Warehouse & Distribution Center Autonomous Operations",
+      "status": "Consulting Day 1, managed service Month 6+",
+      "key_regulations": ["OSHA 29 CFR 1910", "FDA GMP", "WMS data security", "OSHA PSM 29 CFR 1910.119"],
+      "pricing": "$3,500-7,500 assessment, $8,000-15,000/month managed service",
+      "margin": "65-80%"
+    },
+    "V3": {
+      "name": "Public Safety, DFR & Aerial Cybersecurity",
+      "status": "Day 1 — Kevin delivers personally",
+      "key_regulations": ["Safer Skies Act", "OMB M-26-02 deadline May 20 2026", "NDAA compliance per fleet", "DHS SLTT drone guidance", "Drones for First Responders Act", "CISSP framework", "DCSA facility security", "FedRAMP PE-6"],
+      "pricing": "$5,000-30,000 SOP packages, $10,000-150,000 pen test/red team",
+      "margin": "80-90%"
+    },
+    "V4": {
+      "name": "Entertainment, Events & Aerial Shows",
+      "status": "Month 6+ — requires Fleet 3",
+      "key_regulations": ["FAA Part 107 waiver", "ITAR-cleared Skybrush software", "FEMA C-UAS grant compliance", "FIFA venue security mandates", "FAA NOTAM"],
+      "pricing": "$35,000-200,000 per show, $5,000-15,000 per DTI event",
+      "margin": "55-68%"
+    },
+    "V5": {
+      "name": "Drone-Enabled Logistics & Delivery",
+      "status": "VLOS Month 8+, BVLOS Year 2-3, 3PL Year 5+",
+      "key_regulations": ["FAA BVLOS rulemaking FAA-2022-1258", "Part 108 final rule incoming", "Part 135 certificate requirements", "CURN airspace designation"],
+      "pricing": "$5,000-8,000/month VLOS retainer",
+      "revenue_projection": "$0 Y1, $360,000 Y2, $924,000 Y3"
+    },
+    "V6": {
+      "name": "Fleet Services, DaaS & Inside the Fence",
+      "status": "Year 2+",
+      "key_regulations": ["NDAA fleet certification per client", "DaaS contract structures", "Confined space OSHA 29 CFR 1910.146", "Digital twin data ownership", "ITAR export compliance"],
+      "services": ["Drone-as-a-Service leasing", "Fleet maintenance and repair", "Pilot-on-demand staffing", "Confined space inspection", "Persistent autonomous monitoring", "Digital twin generation"]
+    },
+    "V7": {
+      "name": "Technology Commercialization — MONK, AKMS, Data Products",
+      "status": "MONK prototype Month 4-8, licensing Year 3+",
+      "key_regulations": ["SBIR reauthorization status", "MONK patent prosecution", "ITAR compliance for AKMS export", "FAA authorized technology designation", "DHS approved technology list"],
+      "services": ["MONK module licensing $150-250/unit", "AKMS swarm OS licensing", "Proprietary flight data products", "Part 135 readiness consulting", "OEM integration agreements"]
+    }
+  },
+  "technology": {
+    "MONK": {
+      "full_name": "Modular Operational Network Kernel",
+      "description": "Hardware-anchored trust layer for autonomous drone operations. Cryptographically signed mission authorization, authenticated identity broadcast, tamper-resistant mission evidence.",
+      "status": "Prototype v1.0 in development. Provisional patent pending. MONK LLC formation in progress.",
+      "sbir_target": "DHS S&T or DoD — ~$175,000 Phase I. Pending Congressional reauthorization.",
+      "licensing_model": "$150-250 per module. OEM integration Year 3+.",
+      "bvlos_relevance": "MONK safety architecture is the core of Part 108 compliance case. TSA security requirements in BVLOS NPRM directly favor MONK-equipped fleets."
+    },
+    "AKMS": {
+      "full_name": "Autonomous Kinetic Management System",
+      "description": "Software OS for High-Definition Autonomous Swarms and BVLOS logistics. Data moat compounds with every flight.",
+      "data_value": "250 drones x show hours x red team exercises = proprietary flight dataset no competitor can replicate"
+    },
+    "CAKO": {
+      "full_name": "Certified Autonomous Kinetic Operator",
+      "description": "12-16 week EAF-run zero-tuition certification: FAA Part 107, Security+, CAPM, PCEP. Trains underserved Baltimore community members as professional drone operators.",
+      "cohort_1_target": "Month 4 launch",
+      "pipeline": "Each cohort adds certified operators to FP Talent Pipeline Agreement"
+    }
+  },
+  "fleets": {
+    "Fleet1": { "name": "Blue UAS Inspection", "units": "3 specialist", "hardware": "Skydio X10 + Freefly Astro Max + DJI M350 RTK", "ndaa": "Skydio + Freefly NDAA compliant. DJI M350 private sector only — NEVER government contract.", "cost": "$55,000", "timeline": "Month 3" },
+    "Fleet2": { "name": "Green UAS MONK/DTI", "units": "10-20", "hardware": "Inspired Flight IF800 Tomcat or equivalent", "ndaa": "Green UAS certified — NDAA compliant", "cost": "$80,000-150,000", "timeline": "Month 6" },
+    "Fleet3": { "name": "Show/Swarm Entertainment", "units": "250 + 25 spare", "hardware": "LED choreography drones + Skybrush ITAR-cleared software", "ndaa": "Private entertainment only — never government contracts", "cost": "$261,000-320,000", "timeline": "Month 6" },
+    "Fleet4": { "name": "FPV Racing/Red Team", "units": "20-30", "hardware": "FPV racing drones", "ndaa": "Non-NDAA — private property and contracted private-sector red team only", "cost": "$28,000-35,000", "timeline": "Month 4" }
+  },
+  "naics": {
+    "registered": [
+      { "code": "541519", "description": "Other Computer Related Services" },
+      { "code": "488190", "description": "Other Support Activities for Air Transportation" },
+      { "code": "541690", "description": "Other Scientific and Technical Consulting Services" }
+    ],
+    "recommended": [
+      { "code": "541330", "description": "Engineering Services — bridge and infrastructure inspection" },
+      { "code": "561621", "description": "Security Systems Services — DTI and aerial cybersecurity" },
+      { "code": "611699", "description": "All Other Miscellaneous Schools and Instruction — CAKO training" },
+      { "code": "336413", "description": "Other Aircraft Parts and Equipment — MONK hardware" },
+      { "code": "517410", "description": "Satellite Telecommunications — BVLOS operations" },
+      { "code": "541715", "description": "Research and Development in Physical Sciences — AKMS/MONK R&D" }
+    ]
+  },
+  "grant_contacts": {
+    "lighthouse_upskilling": {
+      "program": "Maryland Lighthouse Industries Upskilling and Reskilling Program",
+      "contact": "Brittney Hansen",
+      "email": "brittney.hansen@maryland.gov",
+      "portal": "https://www.dllr.state.md.us",
+      "amount": "up to $200,000",
+      "deadline": "2026-04-24",
+      "applicant": "EAF",
+      "notes": "Must partner with at least 3 employers. CAKO is the program. FP is employer #1."
+    },
+    "lighthouse_internship": {
+      "program": "Maryland Lighthouse Industries and AI Internship Program",
+      "portal": "https://www.dllr.state.md.us",
+      "amount": "up to $150,000 — $10,000 per intern",
+      "deadline": "rolling until exhausted",
+      "applicant": "FP or EAF",
+      "notes": "Apply immediately — rolling first-come first-served."
+    },
+    "tedco": {
+      "program": "TEDCO — Multiple Programs",
+      "portal": "https://tedco.md",
+      "notes": "Builder Fund, Social Innovation Fund, SBIR Proposal Lab, Maryland Innovation Initiative. Check portal for current open rounds."
+    },
+    "earn_maryland": {
+      "program": "Maryland EARN Workforce Development Grant",
+      "portal": "https://www.dllr.state.md.us/earn",
+      "amount": "$50,000 - $500,000",
+      "deadline": "2026-06-30",
+      "applicant": "EAF",
+      "notes": "25% match required. CAKO program is anchor. Jordan has LOI draft."
+    },
+    "build_our_future": {
+      "program": "Build Our Future Grant — Maryland Department of Commerce",
+      "portal": "https://commerce.maryland.gov",
+      "amount": "up to $2,000,000 matching",
+      "applicant": "FP or EAF",
+      "notes": "Eligible sectors: autonomous tech, cybersecurity, aerospace, defense, manufacturing. Monitor for next round."
+    }
+  },
+  "revenue_targets": {
+    "year1_total": "$636,000",
+    "year2_total": "$2,916,500",
+    "year3_total": "$5,445,000",
+    "path_to_1m_arr": "20 retainer clients at blended $5,000/month average",
+    "first_dollar": "Week 3-4 April 2026 — bridge inspection or OMB compliance consulting"
+  },
+  "core_engine": {
+    "version": "Phase 2 — April 21 2026",
+    "supabase_url": "https://raxpmeltyxmtiihxoxpa.supabase.co",
+    "workflows_active": [
+      "1_atlas_v2.json",
+      "2_scout_v5.json",
+      "3_jordan_v3.json",
+      "4_iris_v3_supabase.json",
+      "5a_orchestra_fanout.json",
+      "5b_callback_consolidator.json",
+      "6_aidan_router_v2.json",
+      "7_network_watchdog.json",
+      "8_email_router.json",
+      "9_nova_rfp.json",
+      "10_sage_newsletter.json"
+    ],
+    "connectors_live": [
+      "GoDaddy SMTP — outbound email (kas@kevin-llc.com)",
+      "Gmail OAuth — inbound email (kas42869@gmail.com)",
+      "Supabase — structured agent memory (8 tables)"
+    ],
+    "connectors_pending": [
+      "Microsoft Outlook OAuth — blocked, needs GoDaddy defederation",
+      "Pulse Metrics workflow — build next session",
+      "MCP servers — supabase-mcp, n8n-mcp, google-drive-mcp"
+    ]
+  }
+}

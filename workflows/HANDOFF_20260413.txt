@@ -1,0 +1,243 @@
+================================================================================
+KAI-NETICS SESSION HANDOFF
+Date: April 13, 2026 (Late Night)
+Prepared by: Aidan (Claude Sonnet 4.6)
+Next session: Open fresh to avoid billing overages
+================================================================================
+
+IDENTITY
+--------
+Kevin Alexander Smith — CEO/Founder KAI-Netics
+FP:   Kevin Alexander International LLC dba KAI-Netics | EIN 46-2432851
+EAF:  KAI-Netics Equity & Autonomy Foundry, Inc. | EIN 41-4820296 | 501c3 pending
+MONK: IP holding company — Q2 2026 formation target
+Core Engine: n8n in Docker at C:\Kinetic_Core | Container: kinetic-core-n8n
+
+================================================================================
+BILLING ALERT — CRITICAL
+================================================================================
+Today's total charges: $56.17
+  $10.84 — agent test runs (Scout/Jordan debugging)
+  $10.64 — Jordan processing all 8 grant files
+  $11.24 — claude.ai conversation overage
+  $12.19 — claude.ai conversation overage
+  $11.30 — claude.ai conversation overage (late session)
+
+These are claude.ai WEEKLY LIMIT OVERAGES — not agent API charges.
+Weekly limit resets: TUESDAY 11AM
+Agent API cap: $25/month set at console.anthropic.com (protecting agent spend)
+
+ACTION REQUIRED: Go to claude.ai → Settings → Billing
+Turn off auto-recharge OR set hard cap on conversation overages.
+
+================================================================================
+MEIA SUBMISSION — DUE APRIL 14, 2026
+================================================================================
+Contact: Emily Sheppard | d: 301-314-6095
+Submit: Reply directly to her email (NOT info@mdeia.org)
+Status: Deck v2.9 is FINAL and ready to submit
+
+DECK FILE: MEIA_Deck_v2_9.pptx
+Location: C:\Kinetic_Core\ (or download from claude.ai outputs)
+
+DECK STRUCTURE (10 core slides):
+  1. Cover
+  2. The Problem: Baltimore's Supply Chain Runs on Diesel
+  3. Why Drone Delivery Now
+  4. The Jevons Argument: We Don't Replace Trips. We Create Them.
+     - Jevons Paradox definition
+     - TODAY (rationed market) vs AT SCALE (4 new categories)
+     - Tesla Robocab model as subtle background reference
+     - Three-engine compounding loop strip at bottom
+  5. Anchor Customer: UMMS Sparrows Point LOC
+  6. Traction: What We Have Built Before Revenue
+  7. Why No One Else Can Do This (competitive table)
+  8. Go-to-Market: Three-Phase Revenue Motion
+  9. KAI-Netics Leadership & Advisory Team
+ 10. The Ask
+ -- APPENDIX DIVIDER --
+ 11-22. Appendix slides (10 backup slides for Q&A)
+
+KEY DECK DECISIONS THIS SESSION:
+- Slide 4 replaces DaI Three-Layer Platform AND Double Helix (both scrapped)
+- Tesla story is background reference only — NOT headline
+- MissionGO competitive note corrected:
+  "Proprietary aircraft needs Type Cert for BVLOS at scale"
+  (They CAN fly under Part 107 today — we overstated the block previously)
+- Dr. Lauren Segura, PhD added to Team slide (Academic Advisor | UMGC Dean)
+- Dr. Alexander Kott corrected to "Dr. Alexander Kott, PhD"
+- Dr. Timothy Amukele outreach card updated on Traction slide
+
+NARRATIVE DOC: MEIA_Commercialization_Plan_v1_7.docx (also in outputs)
+
+================================================================================
+TEAM SLIDE — CURRENT (5 PEOPLE)
+================================================================================
+ROW 1 (Leadership):
+  Kevin Alexander Smith — CEO & Founder | KAI-Netics
+  Dr. Alexander Kott, PhD — Technical Advisor & SCORE Mentor
+    Former Chief Scientist, U.S. Army Research Laboratory
+
+ROW 2 (EAF Board of Directors & Academic Advisory):
+  Maurice Ellis — EAF Board Member | Professional Pilot
+  James L. Scott, Esq. — EAF Board Member | Attorney | Mobley & Brown LLP
+  Dr. Lauren Segura, PhD — Academic Advisor | UMGC Dean
+    School of Integrative & Professional Studies
+    Background: FBI global workforce development, Strayer University
+    Relevance: CAKO academic credentialing, UROC support
+    STATUS: Outreach NOT yet initiated — confirm before deck circulates with her name
+
+================================================================================
+DR. TIMOTHY AMUKELE — OUTREACH STATUS
+================================================================================
+Johns Hopkins School of Medicine pathologist
+Drone medical delivery pioneer — first rigorous blood sample drone transport study
+Led 161-mile drone delivery distance record (Arizona desert, 2017)
+Contact: tamukele@jhmi.edu (verify before sending)
+Status: "Outreach initiated" per deck — confirm actual contact was made
+Role: Research collaborator, POC validator, UMMS/Hopkins network introducer
+Strategic importance: Independent pathway into UMMS when MissionGO has the UROC relationship
+
+================================================================================
+KAI-NETICS CORE ENGINE — AGENT STATUS
+================================================================================
+PLATFORM: n8n:5678 | EvolutionAPI:8081 | Docker at C:\Kinetic_Core
+WHATSAPP: 14432576836 | apikey: Kevin2026
+
+LIVE AGENTS:
+  Scout v4  — cron: 0 0 11 * * 1-5 (7AM Eastern) | webhook: /webhook/scout-research
+  Jordan v2 — cron: 0 0 12 * * 1-5 (8AM Eastern) | webhook: /webhook/grant-writer
+  Atlas v2  — webhook only: /webhook/atlas-architect
+  Iris v2   — webhook + daily 8AM trigger: /webhook/iris-monitor
+  Aidan Orchestrator — /webhook/aidan-orchestra + /webhook/aidan-callback
+  Aidan WhatsApp Bridge — /webhook/whatsapp-inbound
+
+IN DEVELOPMENT (not yet live):
+  Scout, Iris, Atlas, Nova, Sage, Pulse (various stages)
+
+API KEY STATUS — CRITICAL:
+  Key is currently INVALID — "No response from Claude." in all recent outputs
+  Evidence: 6 Scout files from today show 346 bytes each = failed API calls
+  Jordan's last run (4:53PM) returned "No response" on CDBG report
+
+API KEY ROTATION — MUST DO TONIGHT:
+  1. Go to console.anthropic.com → API Keys
+  2. Revoke exposed key: sk-ant-api03-NQ2s...
+  3. Create new key
+  4. Update in n8n — ALL FOUR of these nodes:
+     a. Scout - BD Research v4      → node: "Scout Brain v4"
+     b. Jordan - Grant Writer v2    → node: "Call Claude"
+     c. Atlas - Technical Architect v2 → node: "Call Claude + Save Output"
+     d. Aidan - Orchestra Orchestrator → node: "Collect + Consolidate"
+  NOTE: Iris and WhatsApp Bridge have NO API key — skip those.
+  5. Save all four workflows
+  6. Confirm Scout and Jordan still show green Active toggle
+
+GRANT FILES (C:\Kinetic_Core\Maryland_Grants):
+  CDBG_Baltimore_2026.txt        5.51 KB ✅
+  EARN_Maryland_2026.txt           241 B  ⚠️ empty/failed — needs re-run
+  EARN_Test_Grant.txt              409 B
+  EARN_Test.txt                  3.73 KB ✅
+  FAA_Workforce_MD_Governor_2026.txt 2.55 KB ✅
+  FEMA_CUAS_SLTT_2026.txt        6.81 KB ✅
+  MD_Lighthouse_Upskilling_2026.txt  264 B  ⚠️ empty/failed — needs re-run
+  TEDCO_Deep_2026.txt            3.05 KB ✅
+
+TOMORROW MORNING CHECKLIST:
+  □ Rotate API key tonight (console.anthropic.com)
+  □ Update key in 4 n8n nodes
+  □ Confirm Scout Active (green toggle in n8n)
+  □ Confirm Jordan Active (green toggle in n8n)
+  □ Docker Desktop set to start on login
+  □ Reports should arrive WhatsApp 7AM (Scout) and 8AM (Jordan)
+
+POWERSHELL TEST COMMANDS (fire manually if needed):
+  # Fire Scout
+  Invoke-WebRequest -Uri "http://localhost:5678/webhook/scout-research" `
+    -Method POST -ContentType "application/json" `
+    -Body '{"sweep":"tedco_deep"}' -UseBasicParsing
+
+  # Fire Jordan (single file)
+  Invoke-WebRequest -Uri "http://localhost:5678/webhook/grant-writer" `
+    -Method POST -ContentType "application/json" `
+    -Body '{"file":"TEDCO_Deep_2026.txt"}' -UseBasicParsing
+
+  # Check outputs
+  Get-ChildItem "C:\Kinetic_Core\Aidan_Outputs\Scout" | Sort LastWriteTime | Select -Last 3
+  Get-ChildItem "C:\Kinetic_Core\Aidan_Outputs\Jordan" | Sort LastWriteTime | Select -Last 3
+
+================================================================================
+PENDING ACTIONS — PRIORITIZED
+================================================================================
+TONIGHT (before bed):
+  1. Rotate Anthropic API key — console.anthropic.com
+  2. Update key in 4 n8n nodes (see above)
+  3. Confirm Scout + Jordan Active in n8n
+
+TUESDAY (weekly limit resets 11AM — safe to use claude.ai again):
+  4. Submit MEIA deck to Emily Sheppard — reply to her email to confirm method
+  5. Confirm Dr. Segura outreach before deck circulates with her name
+  6. Confirm actual Dr. Amukele outreach was made (deck says "initiated")
+  7. Rotate Gmail app password (kas42869@gmail.com) — also exposed
+  8. Email sbirlab@tedco.md — register for TEDCO SBIR Proposal Lab (May 15)
+
+CRITICAL PATH ADMIN (SP1):
+  □ SAM.gov registration — FP EIN 46-2432851
+  □ MBE application — mbe.mdot.maryland.gov
+  □ eMMA registration — emma.maryland.gov
+  □ Microsoft for Nonprofits — nonprofit.microsoft.com | EAF EIN 41-4820296
+  □ Google for Nonprofits — google.org/nonprofits
+  □ Brave Search API key — api.search.brave.com
+  □ Supabase — supabase.com
+  □ Cloud backup — GitHub private repo or OneDrive for C:\Kinetic_Core
+  □ Install VS Code on local machine
+  □ UROC internship application follow-up
+
+BACKLOG (must not lose sight of):
+  □ Supabase structured output layer for agents
+  □ Core Engine as MONK LLC licensable product + SBIR narrative
+  □ MCP servers — must-have SP3
+  □ Collectors: Grant, RFP, Compliance, News, Market
+    (searches must cover Baltimore City + Anne Arundel, Howard,
+     Baltimore County, PG County, Montgomery counties)
+  □ Jordan cron: confirm UTC fix is 0 0 12 * * 1-5 in live n8n
+
+================================================================================
+STRATEGIC CONTEXT — KAI-NETICS POSITIONING
+================================================================================
+WHAT THE INDUSTRY CALLS THE CORE ENGINE:
+  "Agentic AI Platform" / "Multi-agent orchestration system"
+  One-liner: "An always-on multi-agent AI platform that turns public data into
+  daily grant intelligence, LOI drafts, and BD research — delivered to your
+  phone before you wake up."
+
+MISSIONGO COMPETITIVE NOTE (corrected this session):
+  MissionGO CAN fly under Part 107 today like anyone else.
+  Their constraint: proprietary MG Velos 100 aircraft needs FAA Type
+  Certification for BVLOS over-people commercial scale operations.
+  Airworthiness criteria approved April 2021 — Type Cert still pending.
+  KAI-Netics advantage: operating NOW across 7 verticals while MissionGO
+  is focused on one use case and one aircraft awaiting certification.
+
+KEY UPCOMING EVENT:
+  Techstars AI Health Baltimore Demo Day — June 3, 2026
+  M&T Bank Stadium | UMMS, Hopkins, MedStar, CareFirst, UMB
+
+ANNUAL REPORT FILING STATUS:
+  ✅ Kapi African Lifestyles LLC — 2-month extension filed
+  ✅ Kevin Alexander International LLC (FP) — 2-month extension filed
+  ✅ EAF — EXEMPT (incorporated Feb 2026, no annual report first year)
+
+================================================================================
+NEXT SESSION OPENING LINE
+================================================================================
+"Pick up from HANDOFF.txt at C:\Kinetic_Core\workflows\HANDOFF.txt.
+MEIA deck v2.9 is final — submit to Emily Sheppard April 14.
+API key needs rotation at console.anthropic.com — update 4 n8n nodes.
+Scout cron: 0 0 11 * * 1-5. Jordan cron: 0 0 12 * * 1-5.
+Both agents confirmed Active in n8n.
+KAI-Netics is not a misspelling — it is the brand name."
+
+================================================================================
+END OF HANDOFF
+================================================================================

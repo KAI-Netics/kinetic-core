@@ -1,0 +1,8 @@
+SCOUT v4 — KAI-NETICS
+Mode: GRANT
+Source: Maryland EARN
+Query: Maryland EARN workforce development grant 2026 drone technology training nonprofit June deadline
+Generated: 2026-04-13T16:32:06.646Z
+Scheduled: false
+
+No response from Claude.

@@ -1,0 +1,53 @@
+{
+  "name": "Jordan - Grant Writer v2",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "cronExpression", "expression": "0 0 7 * * 1-5" }] } },
+      "id": "jordan-001", "name": "Daily Trigger 7AM", "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.2, "position": [0, -120]
+    },
+    {
+      "parameters": { "httpMethod": "POST", "path": "grant-writer", "responseMode": "lastNode", "options": {} },
+      "id": "jordan-002", "name": "Webhook Trigger", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [0, 80], "webhookId": "kai-grant-writer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8')); } catch(e) { ctx = {}; }\nconst entities = ctx.entities || {}, founder = ctx.founder || {}, tech = ctx.technology || {}, dates = ctx.key_dates || {}, revenue = ctx.revenue_targets || {};\nconst eafProfile = `ORGANIZATION: ${entities.EAF?.name || 'KAI-Netics Equity & Autonomy Foundry'}\nEIN: ${entities.EAF?.ein || '41-4820296'}\nTYPE: ${entities.EAF?.type || 'Maryland Nonstock Corp 501c3 pending'}\nSTATUS: ${entities.EAF?.status}\nROLE: ${entities.EAF?.role}\nFOUNDER: ${founder.name} — ${(founder.credentials||[]).join(', ')}\nPROGRAMS: CAKO (${tech.CAKO?.description}) | MONK (${tech.MONK?.description}) | Talent Pipeline Agreement\nSERVICE AREA: Maryland, DC Metro, Northern Virginia\nREVENUE IMPACT: Y1 ${revenue.year1_total} Y2 ${revenue.year2_total} Y3 ${revenue.year3_total}\nKEY DATES: MEIA ${dates.meia_capstone} | CAKO Cohort 1 ${dates.cako_cohort1_launch}\nCOMPLIANCE: NO funds flow FP to EAF. Talent Pipeline Agreement is only structural link.`;\nconst dirPath = '/data/Maryland_Grants/';\nlet grantFiles = [];\ntry { grantFiles = fs.readdirSync(dirPath).filter(f => f.endsWith('.txt') || f.endsWith('.pdf') || f.endsWith('.md')); } catch(e) { grantFiles = []; }\nif (grantFiles.length === 0) return [{ json: { fileName: 'No grant files', content: 'No files in /data/Maryland_Grants/', eafProfile, noFiles: true } }];\nreturn grantFiles.map(file => {\n  let content = '';\n  try { content = fs.readFileSync(dirPath + file, 'utf8'); } catch(e) { content = 'Could not read: ' + e.message; }\n  return { json: { fileName: file, content, eafProfile, noFiles: false } };\n});"
+      },
+      "id": "jordan-003", "name": "Load Context + Grant Files", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { fileName, content, eafProfile } = $input.first().json;\nconst systemMessage = `You are Jordan, Grant Writer for KAI-Netics EAF. Expert in Maryland workforce development grants, federal SBIR, nonprofit funding. Analyze grants and draft winning applications. Concise, professional, outcome-focused.`;\nconst userMessage = `GRANT: ${fileName}\\nCONTENT:\\n${content}\\nEAF PROFILE:\\n${eafProfile}\\n\\nAnalyze:\\n1. FUNDER\\n2. DEADLINE\\n3. AWARD RANGE\\n4. ELIGIBILITY (flag risks)\\n5. FIT SCORE 0-100% with rationale\\n6. TOP 3 ALIGNMENT POINTS\\n7. TOP 2 RISKS\\n8. RECOMMENDED ACTION: Apply/Pass/Watch\\n\\nIf fit 60%+, also draft:\\n9. LETTER OF INTENT (250-350 words)`;\nreturn [{ json: { systemMessage, userMessage, fileName } }];"
+      },
+      "id": "jordan-004", "name": "Build Grant Prompt", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const https = require('https');\nconst { systemMessage, userMessage, fileName } = $input.first().json;\nconst requestBody = JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4096, system: systemMessage, messages: [{ role: 'user', content: userMessage }] });\nconst options = { hostname: 'api.anthropic.com', port: 443, path: '/v1/messages', method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': 'REPLACE_WITH_KEY', 'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(requestBody) } };\nconst result = await new Promise((resolve, reject) => {\n  const req = https.request(options, (res) => { let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d })); });\n  req.on('error', reject); req.write(requestBody); req.end();\n});\nlet aiOutput = '';\ntry { aiOutput = JSON.parse(result.body).content?.[0]?.text || 'No response.'; } catch(e) { aiOutput = result.body.substring(0,500); }\nreturn [{ json: { aiOutput, fileName, status: result.status } }];"
+      },
+      "id": "jordan-005", "name": "Call Claude", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nconst { aiOutput, fileName } = $input.first().json;\nconst timestamp = new Date().toISOString();\nconst outputPath = `/data/Aidan_Outputs/Jordan/Grant_Report_${timestamp.replace(/[:.]/g,'-')}_${fileName.replace(/[^a-z0-9]/gi,'_')}.txt`;\nfs.mkdirSync('/data/Aidan_Outputs/Jordan', { recursive: true });\nfs.writeFileSync(outputPath, `JORDAN GRANT REPORT — EAF\\nFile: ${fileName}\\nGenerated: ${timestamp}\\n\\n${aiOutput}`, 'utf8');\nconst fitMatch = aiOutput.match(/FIT SCORE[*:\\s]+(\\d+)[/%]/i);\nconst fitScore = fitMatch ? fitMatch[1] + '%' : 'See report';\nconst funderMatch = aiOutput.match(/FUNDER[*:\\s|]+([^\\n|]+)/i);\nconst funder = funderMatch ? funderMatch[1].trim().replace(/\\*/g,'').substring(0,40) : 'See report';\nconst actionMatch = aiOutput.match(/RECOMMENDED ACTION[*:\\s|]+([^\\n|]+)/i);\nconst action = actionMatch ? actionMatch[1].trim().replace(/\\*/g,'') : 'Review report';\nconst summary = `JORDAN GRANT ANALYSIS COMPLETE\\nFile: ${fileName}\\nFunder: ${funder}\\nFit: ${fitScore}\\nAction: ${action}\\nSaved: /data/Aidan_Outputs/Jordan/`;\nreturn [{ json: { summary, outputPath, fileName, fitScore, timestamp } }];"
+      },
+      "id": "jordan-006", "name": "Format + Save Report", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const http = require('http');\nconst { summary = 'Jordan complete.', fitScore, fileName } = $input.first().json;\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: 'Bot reply: ' + summary } });\nconst opts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) } };\nawait new Promise(r => { const req = http.request(opts, res => { res.on('data',()=>{}); res.on('end',r); }); req.on('error',r); req.write(msgBody); req.end(); });\nconst cbBody = JSON.stringify({ agent: 'Jordan', summary, fitScore, fileName, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: 'host.docker.internal', port: 5678, path: '/webhook/aidan-orchestra', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, res => { res.on('data',()=>{}); res.on('end',()=>{}); }); cbReq.on('error',()=>{}); cbReq.write(cbBody); cbReq.end();\nreturn [{ json: { success: true, agent: 'Jordan', summary } }];"
+      },
+      "id": "jordan-007", "name": "Aidan Callback", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1100, 0]
+    }
+  ],
+  "connections": {
+    "Daily Trigger 7AM": { "main": [[{ "node": "Load Context + Grant Files", "type": "main", "index": 0 }]] },
+    "Webhook Trigger": { "main": [[{ "node": "Load Context + Grant Files", "type": "main", "index": 0 }]] },
+    "Load Context + Grant Files": { "main": [[{ "node": "Build Grant Prompt", "type": "main", "index": 0 }]] },
+    "Build Grant Prompt": { "main": [[{ "node": "Call Claude", "type": "main", "index": 0 }]] },
+    "Call Claude": { "main": [[{ "node": "Format + Save Report", "type": "main", "index": 0 }]] },
+    "Format + Save Report": { "main": [[{ "node": "Aidan Callback", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": true },
+  "tags": [{ "name": "KAI-Netics" }, { "name": "Jordan" }, { "name": "EAF" }]
+}

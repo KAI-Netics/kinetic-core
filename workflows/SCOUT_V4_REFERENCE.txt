@@ -1,0 +1,192 @@
+SCOUT v4 — MASTER QUERY REFERENCE
+KAI-Netics | Updated: April 9, 2026
+============================================================
+
+ARCHITECTURE: 2-WEEK ROTATION
+Scout runs at 6AM Mon–Fri. Odd ISO weeks = Week A (grants). Even ISO weeks = Week B (BD + federal grants).
+On-demand sweeps available 24/7 via webhook POST { "sweep": "<key>" }
+
+============================================================
+WEEK A — MARYLAND STATE + FEDERAL GRANTS
+============================================================
+
+Monday     | Maryland Lighthouse Industries Upskilling & Reskilling Program
+           | $1M pool, up to $200K per nonprofit/HEI/industry group
+           | DEADLINE: April 24, 2026 | Contact: brittney.hansen@maryland.gov
+           | Output: Maryland_Grants/MD_Lighthouse_Upskilling_2026.txt
+           | 🔴 APPLY NOW — 15 days out
+
+Tuesday    | TEDCO — All Maryland Programs
+           | Builder Fund, Social Innovation Fund, SBIR Proposal Lab, Maryland Innovation Initiative
+           | Rolling deadlines | site: tedco.md
+           | Output: Maryland_Grants/TEDCO_2026.txt
+
+Wednesday  | Build Our Future + DECADE Act
+           | Up to $2M matching grants for innovation infrastructure
+           | Eligible: private companies, nonprofits, local gov, colleges
+           | Sectors: autonomous tech, cybersecurity, aerospace, defense, manufacturing
+           | Output: Maryland_Grants/MD_BuildOurFuture_DECADE_2026.txt
+
+Thursday   | FEMA C-UAS SLTT + FIFA World Cup Security Grants
+           | $250M obligated FY2026 for counter-drone tech
+           | FIFA: $625M to 11 host cities including Baltimore area
+           | Output: Maryland_Grants/FEMA_CUAS_SLTT_2026.txt
+
+Friday     | FAA Workforce Dev Grants + MD Governor Press Release Sweep
+           | FAA Aircraft Pilots/UAS Workforce Development Program
+           | + Any new grant announcements from governor.maryland.gov
+           | Output: Maryland_Grants/FAA_Workforce_MD_Governor_2026.txt
+
+============================================================
+WEEK B — FEDERAL GRANTS + BD BY VERTICAL
+============================================================
+
+Monday     | V1 Infrastructure — MDSHA + County DPW BD
+           | Targets: MDSHA, Anne Arundel DPW, Howard County DPW
+           | Hook: FHWA 23 CFR 650 biennial bridge inspection cycle
+           | Output: Aidan_Outputs/Scout/
+
+Tuesday    | V1 Utility + V3 OMB M-26-02 Compliance BD
+           | Targets: BGE NERC FAC-001/003 (May 2026 deadline), OMB M-26-02 federal agencies
+           | Hook: NERC deadline + OMB May 20 compliance window
+           | Output: Aidan_Outputs/Scout/
+
+Wednesday  | V2 Warehouse Autonomous Operations BD
+           | Targets: Amazon BWI2, pharma distributors, 3PL Maryland
+           | Hook: 80% audit time reduction, WMS integration, $8–15K/mo managed service
+           | Output: Aidan_Outputs/Scout/
+
+Thursday   | V3 DFR / Public Safety BD
+           | Targets: Baltimore City PD, Anne Arundel/Howard PD, Port of Baltimore
+           | Hook: Drones for First Responders Act, PSGP grant buyer angle
+           | Output: Aidan_Outputs/Scout/
+
+Friday     | SBIR + Private Foundation Grants
+           | DHS/DoD SBIR Phase I (~$175K for MONK)
+           | DroneDeploy Resilient Futures ($10–20K, EAF eligible)
+           | Northrop Grumman Foundation, Honda USA Foundation, Motorola Solutions
+           | Output: Maryland_Grants/SBIR_Private_Foundation_2026.txt
+
+============================================================
+ON-DEMAND SWEEP LIBRARY (POST { "sweep": "<key>" })
+============================================================
+
+KEY                     | PROGRAM / TARGET
+------------------------|--------------------------------------------------
+grants_gov_uas          | Grants.gov — UAS/autonomous/drone open solicitations
+grants_gov_workforce    | Grants.gov — workforce development technology nonprofit MD
+md_commerce_press       | Maryland Commerce press releases — all grant announcements
+md_governor_press       | Governor Moore press releases — all investment announcements
+workforce_dev_board     | MD Governor's Workforce Development Board announcements
+tedco_deep              | TEDCO all programs deep scan
+earn_maryland           | Maryland EARN grant (June 30 deadline)
+cdbg_baltimore          | CDBG Baltimore City
+lighthouse_internship   | MD Lighthouse AI Internship Program ($150K rolling)
+psgp_port_security      | FEMA PSGP — Port Security ($90M FY2025)
+uasi_urban_security     | FEMA UASI — Baltimore/DC urban areas ($553M FY2025)
+shsp_state_homeland     | DHS State Homeland Security Program
+dol_wioa                | DOL WIOA workforce training technology
+nsf_ate                 | NSF Advanced Technological Education (community college UAS)
+drone_deploy_foundation | DroneDeploy Resilient Futures $10–20K nonprofit
+private_foundations     | Motorola Solutions, Honda USA, T-Mobile Hometown Grant
+mbe_certification       | Maryland MBE/MDOT vendor registration
+v4_entertainment_shows  | FIFA/FEMA entertainment security + drone show permits
+v5_bvlos_logistics      | FAA BVLOS Part 108 rulemaking + VLOS logistics BD
+v6_daas_fleet           | DaaS/fleet leasing + confined space inspection BD
+v7_monk_licensing       | MONK OEM licensing + DoD trusted hardware BD
+cako_partnerships       | Community college + employer pipeline partnerships
+johns_hopkins_meia      | Johns Hopkins drone delivery + MEIA submission intel
+crown_castle_telecom    | Crown Castle / American Tower telecom tower inspection BD
+insurance_surge         | State Farm / Allstate / CBRE / JLL property inspection BD
+
+============================================================
+7-VERTICAL BD INTELLIGENCE MAP (Aidan's Framework)
+============================================================
+
+V1 — INFRASTRUCTURE INSPECTION (Day 1 revenue)
+  Grant hooks: FHWA biennial cycle, NERC FAC-001/003, PHMSA patrol reqs
+  BD targets: MDSHA, all 24 county DPWs, BGE, Pepco, SMECO, Dominion VA,
+              Crown Castle, American Tower, SBA Communications, CSX, Amtrak,
+              WMATA, Army Corps, MD DNR, CBRE, JLL, State Farm, Allstate
+  Urgency levers: May 20 OMB M-26-02, BGE NERC deadline, storm surge insurance
+
+V2 — WAREHOUSE AUTONOMOUS OPERATIONS
+  Grant hooks: EARN (workforce training angle), DOL WIOA
+  BD targets: Amazon BWI2, Home Depot White Marsh, Target Upper Marlboro,
+              MedImmune/AZ supply chain, Cardinal Health, McKesson MD,
+              Sysco Baltimore, Cold chain 3PL operators
+  Urgency levers: FDA GMP audit cycle, OSHA 29 CFR 1910, WMS accuracy SLAs
+
+V3 — PUBLIC SAFETY / DFR / AERIAL CYBERSECURITY
+  Grant hooks: FEMA C-UAS SLTT $250M, UASI $553M, PSGP $90M, FIFA $625M
+  BD targets: Baltimore City PD, BFD, Anne Arundel/Howard/Cecil/PG county PD,
+              Port of Baltimore, TSA, CBP, Maryland Emergency Management Agency,
+              DC HSEMA, Virginia VDEM
+  Urgency levers: OMB M-26-02 May 20, Drones for First Responders Act,
+                  FIFA World Cup 2026 Baltimore security mandates
+
+V4 — ENTERTAINMENT / EVENTS / AERIAL SHOWS
+  Grant hooks: FEMA FIFA $625M (city security buyer), ITAR-cleared Skybrush
+  BD targets: M&T Bank Stadium events, CFG Bank Arena, Baltimore Convention Ctr,
+              county fair/festival authorities, corporate event producers,
+              FIFA host city committee Baltimore, Maryland State Fair
+  Timeline: Month 6+ (requires Fleet 3)
+
+V5 — DRONE LOGISTICS / DELIVERY
+  Grant hooks: FAA BVLOS rulemaking FAA-2022-1258, Part 108 final rule
+  BD targets: Johns Hopkins health system (Dr. Amukele connection),
+              MedStar, UMMC, pharmacy chains, USPS pilot programs,
+              Amazon Last Mile, Baltimore airport logistics corridor
+  Timeline: VLOS Month 8+, BVLOS Year 2–3
+
+V6 — DaaS / FLEET SERVICES / INSIDE THE FENCE
+  Grant hooks: Build Our Future (infrastructure angle), SBIR (MONK hardware)
+  BD targets: Confined space industrial facilities, digital twin buyers,
+              utility corridor monitoring, OEM lease partners,
+              DCSA facility security clients (FedRAMP PE-6)
+  Timeline: Year 2+
+
+V7 — TECHNOLOGY COMMERCIALIZATION (MONK / AKMS / CAKO)
+  Grant hooks: SBIR DHS/DoD ~$175K Phase I, NSF ATE (CAKO curriculum),
+               TEDCO MII, Build Our Future (MONK prototype facility)
+  BD targets: Inspired Flight, Skydio, Freefly OEM partners,
+              Leidos/SAIC/Booz Allen drone primes, Army/Navy SBIR offices,
+              Community colleges for CAKO curriculum licensing,
+              Maryland workforce pipeline employers (3+ for Lighthouse grant)
+  IP rule: MONK LLC holds all IP — never FP or EAF property
+
+============================================================
+UPGRADING IRIS AND KAI_CONTEXT.JSON
+============================================================
+
+ADD THESE KEY DATES TO KAI_Context.json > key_dates:
+  "lighthouse_upskilling_deadline": "2026-04-24",
+  "lighthouse_internship": "rolling",
+  "tedco_builder_fund": "rolling",
+  "build_our_future_next_round": "monitor",
+  "fema_cuas_sltt": "monitor",
+  "psgp_2026": "monitor",
+  "uasi_2026": "monitor",
+  "dol_wioa_2026": "rolling",
+  "nsf_ate_2026": "rolling",
+  "sbir_reauth": "monitor"
+
+Iris will then flag Lighthouse (April 24) as CRITICAL immediately.
+
+============================================================
+IMPORT INSTRUCTIONS FOR n8n
+============================================================
+1. In n8n, go to Workflows > Import
+2. Upload: C:\Kinetic_Core\workflows\2_scout_v4.json
+3. Open workflow > Scout Brain v4 node
+4. Replace REPLACE_WITH_KEY with your Anthropic API key
+5. Activate workflow
+6. Keep Scout v3 ACTIVE until v4 has run one clean cycle
+7. Deactivate Scout v3 after first successful v4 run
+
+To fire an on-demand sweep from WhatsApp / n8n:
+  POST https://[your-n8n]/webhook/scout-research
+  Body: { "sweep": "tedco_deep" }
+  Or:   { "sweep": "lighthouse_internship" }
+
+============================================================

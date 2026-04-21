@@ -1,0 +1,78 @@
+{
+  "name": "Pulse - Platform Metrics",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pulse-metrics",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "pulse-001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 80],
+      "webhookId": "kai-pulse-metrics"
+    },
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 0 14 * * 1-5" }] }
+      },
+      "id": "pulse-002",
+      "name": "Daily 10AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, -80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const https = require('https');\nconst SUPABASE_URL = 'raxpmeltyxmtiihxoxpa.supabase.co';\nconst SUPABASE_KEY = 'sb_secret_Jz8T31FHgqpfOrqijr1qtQ_HcbbZ8Nu';\n\nasync function query(path) {\n  return new Promise(function(resolve) {\n    const req = https.request({\n      hostname: SUPABASE_URL,\n      port: 443,\n      path: path,\n      method: 'GET',\n      headers: {\n        'apikey': SUPABASE_KEY,\n        'Authorization': 'Bearer ' + SUPABASE_KEY,\n        'Content-Type': 'application/json'\n      }\n    }, function(res) {\n      let d = '';\n      res.on('data', function(c) { d += c; });\n      res.on('end', function() {\n        try { resolve(JSON.parse(d)); }\n        catch(e) { resolve([]); }\n      });\n    });\n    req.on('error', function() { resolve([]); });\n    req.end();\n  });\n}\n\n// Query all views and tables in parallel\nconst results = await Promise.all([\n  query('/rest/v1/pipeline_summary?select=*'),\n  query('/rest/v1/grant_pipeline_summary?select=*'),\n  query('/rest/v1/agent_health_7d?select=*'),\n  query('/rest/v1/scout_reports?select=id,run_date,fit_score,status,mode&order=run_date.desc&limit=5'),\n  query('/rest/v1/compliance_items?resolved=eq.false&order=deadline.asc&limit=5&select=item_name,deadline,severity,days_remaining'),\n  query('/rest/v1/rfp_responses?select=id,rfp_name,fit_score,go_no_go,kevin_decision&order=created_at.desc&limit=5')\n]);\n\nconst pipeline = results[0] && results[0][0] ? results[0][0] : {};\nconst grants = results[1] && results[1][0] ? results[1][0] : {};\nconst agentHealth = results[2] || [];\nconst recentScout = results[3] || [];\nconst openCompliance = results[4] || [];\nconst recentRfp = results[5] || [];\n\nreturn [{ json: {\n  pipeline: pipeline,\n  grants: grants,\n  agentHealth: agentHealth,\n  recentScout: recentScout,\n  openCompliance: openCompliance,\n  recentRfp: recentRfp,\n  timestamp: new Date().toISOString()\n}}];"
+      },
+      "id": "pulse-003",
+      "name": "Query Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst pipeline = input.pipeline || {};\nconst grants = input.grants || {};\nconst agentHealth = input.agentHealth || [];\nconst recentScout = input.recentScout || [];\nconst openCompliance = input.openCompliance || [];\nconst recentRfp = input.recentRfp || [];\n\nconst today = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', year: 'numeric' });\n\nlet report = 'PULSE PLATFORM REPORT\\n';\nreport += today + ' | KAI-Netics Core Engine v2\\n';\nreport += '================================\\n\\n';\n\n// BD PIPELINE\nreport += 'BD PIPELINE\\n';\nreport += '  Active MRR:      $' + (pipeline.total_active_mrr || '0') + '/mo\\n';\nreport += '  Pipeline Value:  $' + (pipeline.total_pipeline_value || '0')+ '\\n';\nreport += '  Stage 0 (Outreach):    ' + (pipeline.outreach_count || 0) + '\\n';\nreport += '  Stage 1 (Discovery):   ' + (pipeline.discovery_count || 0) + '\\n';\nreport += '  Stage 2 (POC Prop):    ' + (pipeline.poc_proposal_count || 0) + '\\n';\nreport += '  Stage 3 (POC Exec):    ' + (pipeline.poc_execution_count || 0) + '\\n';\nreport += '  Stage 4 (SLA Conv):    ' + (pipeline.sla_conversion_count || 0) + '\\n';\nreport += '  Stage 5 (MRR Active):  ' + (pipeline.mrr_active_count || 0) + '\\n\\n';\n\n// GRANT PIPELINE\nreport += 'GRANT PIPELINE\\n';\nreport += '  LOI Drafted:     ' + (grants.loi_drafted || 0) + '\\n';\nreport += '  LOI Sent:        ' + (grants.loi_sent || 0) + '\\n';\nreport += '  Submitted:       ' + (grants.submitted || 0) + '\\n';\nreport += '  Under Review:    ' + (grants.under_review || 0) + '\\n';\nreport += '  Awarded:         ' + (grants.awarded || 0) + '\\n';\nreport += '  Total Awarded:   $' + (grants.total_awarded || '0') + '\\n';\nreport += '  Due in 30 days:  ' + (grants.due_in_30_days || 0) + '\\n\\n';\n\n// AGENT HEALTH\nreport += 'AGENT HEALTH (7 days)\\n';\nif (agentHealth.length === 0) {\n  report += '  No execution data yet\\n';\n} else {\n  agentHealth.forEach(function(a) {\n    const rate = a.success_rate_pct !== null ? a.success_rate_pct + '%' : 'N/A';\n    const lastRun = a.last_run ? new Date(a.last_run).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }) : 'Never';\n    report += '  ' + a.agent + ': ' + a.total_runs + ' runs | ' + rate + ' success | Last: ' + lastRun + '\\n';\n  });\n}\nreport += '\\n';\n\n// RECENT SCOUT ACTIVITY\nreport += 'RECENT SCOUT FINDS (last 5)\\n';\nif (recentScout.length === 0) {\n  report += '  No Scout data yet\\n';\n} else {\n  recentScout.forEach(function(s) {\n    report += '  ' + (s.run_date || '?') + ' | ' + (s.mode || '?').toUpperCase() + ' | Score: ' + (s.fit_score || 'N/A') + ' | ' + (s.status || 'new') + '\\n';\n  });\n}\nreport += '\\n';\n\n// COMPLIANCE FLAGS\nreport += 'OPEN COMPLIANCE ITEMS\\n';\nif (openCompliance.length === 0) {\n  report += '  All clear\\n';\n} else {\n  openCompliance.forEach(function(c) {\n    const days = c.days_remaining !== null ? c.days_remaining + 'd' : '?';\n    report += '  [' + (c.severity || '?').toUpperCase() + '] ' + c.item_name + ' -- ' + days + ' (' + (c.deadline || '?') + ')\\n';\n  });\n}\nreport += '\\n';\n\n// RECENT RFP ACTIVITY\nreport += 'RECENT RFP ACTIVITY (last 5)\\n';\nif (recentRfp.length === 0) {\n  report += '  No RFP data yet\\n';\n} else {\n  recentRfp.forEach(function(r) {\n    report += '  ' + (r.rfp_name || 'Unknown').substring(0, 40) + ' | ' + (r.go_no_go || '?') + ' | Score: ' + (r.fit_score || 'N/A') + ' | Decision: ' + (r.kevin_decision || 'PENDING') + '\\n';\n  });\n}\n\nreport += '\\n================================\\n';\nreport += 'Generated: ' + new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }) + ' ET\\n';\n\n// Build WhatsApp summary (shorter)\nlet waSummary = 'PULSE REPORT -- ' + today + '\\n\\n';\nwaSummary += 'BD: MRR $' + (pipeline.total_active_mrr || '0') + '/mo | Pipeline $' + (pipeline.total_pipeline_value || '0') + '\\n';\nwaSummary += 'GRANTS: ' + (grants.loi_drafted || 0) + ' drafted | ' + (grants.submitted || 0) + ' submitted | $' + (grants.total_awarded || '0') + ' awarded\\n';\n\nconst criticalItems = openCompliance.filter(function(c) { return c.severity === 'critical' || c.severity === 'overdue'; });\nif (criticalItems.length > 0) {\n  waSummary += 'COMPLIANCE FLAGS: ' + criticalItems.length + ' critical/overdue\\n';\n  criticalItems.forEach(function(c) {\n    waSummary += '  * ' + c.item_name + ' -- ' + (c.days_remaining !== null ? c.days_remaining + 'd' : '?') + '\\n';\n  });\n} else {\n  waSummary += 'COMPLIANCE: All clear\\n';\n}\n\nwaSummary += 'RFP: ' + recentRfp.length + ' recent | AGENTS: ' + agentHealth.length + ' tracked';\n\nreturn [{ json: {\n  report: report,\n  waSummary: waSummary,\n  timestamp: input.timestamp\n}}];"
+      },
+      "id": "pulse-004",
+      "name": "Build Pulse Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nconst input = $input.first().json;\nconst safeTime = input.timestamp.split(':').join('-').split('.').join('-');\nconst outputPath = '/data/Aidan_Outputs/Pulse/Pulse_Report_' + safeTime + '.txt';\nfs.mkdirSync('/data/Aidan_Outputs/Pulse', { recursive: true });\nfs.writeFileSync(outputPath, input.report, 'utf8');\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i < keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.savedTo = outputPath;\nreturn [{ json: out }];"
+      },
+      "id": "pulse-005",
+      "name": "Save Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const http = require('http');\nconst input = $input.first().json;\n\n// Send WhatsApp summary\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: input.waSummary } });\nconst opts = {\n  hostname: 'host.docker.internal', port: 8081,\n  path: '/message/sendText/Aidan', method: 'POST',\n  headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on('data', function(){}); res.on('end', r); });\n  req.on('error', r); req.write(msgBody); req.end();\n});\n\n// Callback to Aidan\nconst cbBody = JSON.stringify({\n  agent: 'Pulse',\n  summary: input.waSummary,\n  savedTo: input.savedTo,\n  timestamp: new Date().toISOString()\n});\nconst cbOpts = {\n  hostname: 'host.docker.internal', port: 5678,\n  path: '/webhook/aidan-callback', method: 'POST',\n  headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(cbBody) }\n};\nconst cbReq = http.request(cbOpts, function(res) { res.on('data', function(){}); res.on('end', function(){}); });\ncbReq.on('error', function(){});\ncbReq.write(cbBody);\ncbReq.end();\n\nreturn [{ json: { success: true, agent: 'Pulse', savedTo: input.savedTo } }];"
+      },
+      "id": "pulse-006",
+      "name": "WhatsApp + Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger":   { "main": [[{ "node": "Query Supabase",    "type": "main", "index": 0 }]] },
+    "Daily 10AM Trigger":{ "main": [[{ "node": "Query Supabase",    "type": "main", "index": 0 }]] },
+    "Query Supabase":    { "main": [[{ "node": "Build Pulse Report","type": "main", "index": 0 }]] },
+    "Build Pulse Report":{ "main": [[{ "node": "Save Report",       "type": "main", "index": 0 }]] },
+    "Save Report":       { "main": [[{ "node": "WhatsApp + Callback","type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": true },
+  "tags": [{ "name": "KAI-Netics" }, { "name": "Pulse" }, { "name": "Metrics" }, { "name": "Supabase" }]
+}

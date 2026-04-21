@@ -1,0 +1,165 @@
+SCOUT v4 — KAI-NETICS
+Mode: GRANT
+Source: SBIR + Private Foundations
+Query: SBIR DHS DoD drone autonomous UAS trust cybersecurity hardware 2026 Phase I grant site:sbir.gov OR DroneDeploy Resilient Futures grant 2026 nonprofit OR Northrop Grumman Foundation STEM workforce drone grant
+Generated: 2026-04-17T15:01:05.073Z
+Scheduled: true
+
+# SCOUT GRANT INTELLIGENCE FILE
+### KAI-Netics | Prepared by Scout | Date: April 17, 2026
+
+---
+
+> ⚠️ **SCOUT TRANSPARENCY NOTICE — READ BEFORE ACTING**
+> My knowledge cutoff is early 2025. I cannot browse live databases, sbir.gov, or foundation portals in real time. What follows is the most precise intelligence I can construct from verified pre-cutoff knowledge of these programs, combined with known program cycles and structural patterns. Every deadline, award amount, and URL is flagged with a confidence rating. **Jordan must independently verify all specifics before drafting or submitting anything.** I have marked unconfirmed details with 🔍 [VERIFY].
+
+---
+
+---
+
+# GRANT FILE #1 — PRIMARY RECOMMENDATION
+
+---
+
+**FUNDER:** U.S. Department of Homeland Security, Science and Technology Directorate (DHS S&T)
+**PROGRAM:** Small Business Innovation Research (SBIR) — DHS S&T SBIR Program, likely FY2026 Phase I Open BAA or Solicitation Cycle
+**DEADLINE:** 🔍 [VERIFY] DHS S&T typically releases one to two SBIR solicitations per fiscal year. FY2025 solicitations closed in late 2024/early 2025. A FY2026 solicitation would likely open Q2–Q3 FY2026 (approximately April–July 2026 calendar). **Check sbir.gov/agencies/dhs immediately — an active solicitation may be open right now or imminent.**
+**AWARD RANGE:** Phase I: $150,000–$250,000 (6 months) | Phase II: $750,000–$1,000,000 (24 months) | 🔍 DHS SBIR Phase I awards have historically ranged $100,000–$250,000 depending on topic area
+**PORTAL / CONTACT:** https://sbir.gov/agencies/dhs | DHS S&T SBIR Office: hsbp@hq.dhs.gov 🔍 [VERIFY EMAIL] | https://www.dhs.gov/science-and-technology/sbir
+**ELIGIBILITY:**
+- U.S.-based small business, for-profit, fewer than 500 employees
+- Primary employment of principal investigator must be with applicant firm at time of award
+- At least 51% U.S.-owned and independently operated
+- **MONK LLC (once formed) or FP (Kevin Alexander International LLC) are the correct applicants — EAF as a nonprofit is INELIGIBLE for SBIR directly**
+- No cost-sharing required for Phase I
+- PI must perform minimum 51% of Phase I R&D effort
+
+**EAF FIT SCORE:** 15% — EAF is a nonprofit and cannot be the SBIR prime applicant. EAF could potentially be named as a subcontractor/workforce development partner in a Phase II, but this is not a primary path.
+**FP FIT SCORE:** 82% — Kevin Alexander International LLC dba KAI-Netics is the natural prime applicant. MONK LLC, once formed, is the ideal applicant entity given its IP-holding and R&D role.
+
+**FIT RATIONALE:** MONK's hardware-anchored cryptographic trust layer for autonomous drone operations maps precisely to DHS S&T priority areas in border security, critical infrastructure protection, and aviation cybersecurity. Kevin's 33-year IT background including TSA and federal agency experience, combined with CISSP and FAA Part 107 credentials, gives the team rare operational credibility on the government reviewer's rubric. DHS has historically funded UAS identity authentication and counter-UAS trust architecture topics that MONK directly addresses.
+
+---
+
+**TOP 3 ALIGNMENT POINTS:**
+1. **MONK hardware trust layer = DHS UAS identity priority.** DHS S&T has published topics on authenticated UAS operations, remote ID trust infrastructure, and tamper-resistant mission authorization — MONK's core function is a direct technical response to these requirements.
+2. **Kevin's TSA background is a differentiator.** Former TSA IT leadership applying for DHS SBIR funding creates a credibility signal that academic or pure-commercial teams cannot replicate. Reviewers notice this.
+3. **NDAA-compliance architecture built into MONK.** DHS procurement concerns about foreign-manufactured drone hardware (DJI prohibition etc.) make MONK's hardware-anchored, supply-chain-aware trust layer a timely and politically resonant solution.
+
+**TOP 2 RISKS:**
+1. **MONK LLC not yet formed.** The ideal applicant entity for a SBIR with IP and R&D as its core value proposition is MONK LLC — but it is still in formation. If a DHS solicitation closes before MONK LLC has an active EIN, FP must apply and internal IP assignment agreements must be airtight before submission. James Scott Esq. must review this structure before any SBIR submission.
+2. **Topic alignment dependency.** SBIR awards are topic-driven — DHS must publish a solicitation topic that maps to MONK's function. If the FY2026 solicitation does not include a UAS trust/identity/cybersecurity topic, FP/MONK cannot force a fit. Monitor sbir.gov topic release actively.
+
+**COMPETING APPLICANTS:** AeroVironment, Dedrone (LookingGlass), Fortem Technologies, university spinouts from MIT Lincoln Lab and Georgia Tech GTRI, and mid-size defense primes with SBIR set-aside units. The advantage for FP/MONK is genuine small-business status and operational IP rather than academic prototype work.
+
+**RECOMMENDED ACTION:** ⚡ **APPLY IMMEDIATELY — prerequisite steps must begin TODAY**
+
+**NEXT STEP:** Kevin or Jordan must go to **https://sbir.gov/agencies/dhs** right now and confirm whether a FY2026 DHS SBIR solicitation is currently open. Simultaneously, accelerate MONK LLC formation and EIN issuance so the correct applicant entity is ready. Contact James Scott Esq. this week for SBIR IP agreement review.
+
+---
+
+**LOI DRAFT:**
+> *Note: DHS SBIR does not typically use a formal LOI process — applications go direct to solicitation. The following is drafted as a pre-solicitation white paper / capability statement letter suitable for DHS S&T program managers, which is standard practice for building visibility before a solicitation opens. Jordan should treat this as a capability briefing, not a traditional LOI.*
+
+---
+
+To: DHS Science and Technology Directorate, SBIR Program Office
+From: Kevin Alexander International LLC dba KAI-Netics
+Re: SBIR Pre-Solicitation Capability Statement — Hardware-Anchored UAS Trust Architecture (MONK)
+Date: April 2026
+
+KAI-Netics respectfully submits this capability statement in anticipation of forthcoming DHS S&T SBIR solicitation topics addressing unmanned aircraft system identity authentication, mission authorization integrity, and supply-chain-aware trust architecture for autonomous operations.
+
+KAI-Netics has developed MONK, a hardware-anchored trust layer designed specifically for autonomous and BVLOS drone operations. MONK provides cryptographically signed mission authorization, authenticated identity broadcast, and tamper-resistant mission evidence — addressing the exact failure modes that DHS has identified in current UAS deployment environments: spoofable remote ID, unverifiable operator credentials, and the absence of a defensible chain of custody for mission data.
+
+Our principal investigator, Kevin Alexander Smith, PMP, CISSP, FAA Part 107 (#5250157), brings 33 years of federal IT leadership across the Transportation Security Administration, Centers for Medicare and Medicaid Services, MedStar Health, and Johns Hopkins, with deep expertise in zero-trust architecture and critical infrastructure protection. This background is not theoretical — it is operational, and it directly shaped MONK's design requirements.
+
+The MONK prototype (v1.0 in development, provisional patent pending) is being developed within a compliance architecture purpose-built for federal deployment: NDAA-compliant fleet segregation, supply-chain-verified hardware selection, and cryptographic identity protocols aligned with NIST SP 800-207 zero-trust principles.
+
+KAI-Netics operates across seven commercial verticals in the Maryland/DC Metro region, including infrastructure inspection, public safety Drone as First Responder programs, and aerial cybersecurity red team operations. This commercial deployment base provides a proven testbed for DHS-relevant operational scenarios that most SBIR Phase I applicants lack.
+
+We request a pre-solicitation meeting with DHS S&T program staff to align MONK's technical roadmap with forthcoming solicitation topics. We are prepared to submit a full Phase I proposal upon topic release.
+
+Contact: Kevin Alexander Smith | KAI-Netics | [contact info]
+
+---
+
+---
+
+# GRANT FILE #2 — SECONDARY RECOMMENDATION
+
+---
+
+**FUNDER:** Northrop Grumman Foundation
+**PROGRAM:** 🔍 [VERIFY PROGRAM NAME] — Northrop Grumman Foundation has historically funded STEM workforce development, engineering education, and underrepresented community pipeline programs. No program specifically branded "drone grant" has been confirmed in my training data. The most relevant programs are their **STEM grants to K-12 and community organizations** and their **"Weightless Flights of Discovery"** and **workforce pipeline initiatives.**
+**DEADLINE:** 🔍 [VERIFY] Northrop Grumman Foundation grant cycles have historically operated on annual cycles with letters of inquiry accepted on rolling or quarterly basis. No specific 2026 deadline confirmed.
+**AWARD RANGE:** 🔍 [VERIFY] Historically $5,000–$100,000 for community STEM/workforce grants. Larger multi-year grants up to $500,000+ for strategic partnerships have been reported but are typically by invitation.
+**PORTAL / CONTACT:** https://www.northropgrumman.com/foundation/ | 🔍 [VERIFY — portal may have changed] | foundation@ngc.com 🔍 [VERIFY EMAIL]
+**ELIGIBILITY:**
+- 501(c)(3) nonprofit organizations — **EAF is the correct applicant once IRS determination is received**
+- Programs must align with STEM education, workforce development, or engineering talent pipeline
+- Geographic preference sometimes given to communities near Northrop Grumman facilities (Maryland — Linthicum, Annapolis Junction — is a PRIMARY location, which is highly favorable for EAF)
+- 🔍 Match requirements vary by program cycle — confirm current requirements
+
+**EAF FIT SCORE:** 71% — CAKO's zero-tuition STEM certification pathway (FAA Part 107, Security+, CAPM, Python) aligns strongly with Northrop Grumman Foundation's workforce pipeline priorities, particularly given EAF's equity mission and Maryland geography adjacent to NGC's primary campus.
+**FP FIT SCORE:** 8% — FP is a for-profit LLC and is not eligible for Northrop Grumman Foundation grants.
+
+**FIT RATIONALE:** Northrop Grumman Foundation has a documented history of funding workforce development programs that build the defense and aerospace talent pipeline, particularly for underrepresented communities in the mid-Atlantic region. EAF's CAKO program — delivering zero-tuition FAA Part 107, Security+, CAPM, and Python certifications on a 12–16 week cohort model — is precisely the type of accessible, industry-credentialed pipeline program NGC Foundation invests in. The geographic alignment with Northrop Grumman's Maryland headquarters is a material advantage.
+
+---
+
+**TOP 3 ALIGNMENT POINTS:**
+1. **CAKO = defense workforce pipeline.** FAA Part 107 + Security+ as a bundled zero-cost certification program directly produces drone operations and cybersecurity talent that feeds into NGC's own supply chain — a self-interested funder rationale that grant reviewers find compelling.
+2. **Maryland geography.** Northrop Grumman's largest campuses are in Anne Arundel County and Howard County, Maryland — EAF's priority service counties. Foundation programs routinely prioritize local community impact.
+3. **Equity and access mission.** EAF's zero-tuition model targeting workforce entrants who cannot afford traditional certification pathways aligns with NGC Foundation's stated equity commitments in STEM access.
+
+**TOP 2 RISKS:**
+1. **IRS 501(c)(3) determination not yet received.** EAF's Form 1023 is in preparation as of today. Northrop Grumman Foundation requires confirmed 501(c)(3) status for most grant applications. EAF may not be eligible until the IRS determination letter is in hand — this could be 6–12 months from 1023 submission depending on IRS processing times. Fiscal sponsorship or a fiscal agent arrangement may be a bridge solution.
+2. **No confirmed drone-specific program exists.** The query referenced "Northrop Grumman Foundation STEM workforce drone grant 2026" — Scout could not confirm a program by this exact description in training data. This may be a newly launched program, a misremembered program name, or it may not exist. Jordan must verify before any effort is invested.
+
+**COMPETING APPLICANTS:** Community colleges (AACC, Howard Community College, Montgomery College), established workforce nonprofits (Goodwill Industries, Per Scholas, Year Up), Boys & Girls Clubs with STEM programs. EAF's differentiator is the specificity of drone + cybersecurity + project management as a bundled credential stack, rather than general STEM programming.
+
+**RECOMMENDED ACTION:** 🔍 **WATCH / VERIFY BEFORE ACTING**
+
+**NEXT STEP:** Jordan should go directly to **https://www.northropgrumman.com/foundation/** today to confirm: (1) whether a drone/UAS or workforce development grant cycle is currently open, (2) whether LOI-first applications are accepted prior to 501(c)(3) determination, and (3) whether a program officer contact exists for a pre-application conversation. Simultaneously, Kevin should prioritize completing and submitting EAF's Form 1023 — IRS determination letter is the gating item for all foundation grants.
+
+---
+
+**LOI DRAFT:**
+
+---
+
+To: Northrop Grumman Foundation, Grants Administration
+From: KAI-Netics Equity & Autonomy Foundry, Inc. (EAF)
+Re: Letter of Intent — CAKO Workforce Development Program, Cohort 1
+Date: April 2026
+
+The KAI-Netics Equity & Autonomy Foundry, Inc. (EAF) respectfully submits this Letter of Intent to request grant support for the Certified Autonomous Knowledge Operations (CAKO) program, a zero-tuition 12–16 week certification cohort delivering FAA Part 107 drone operations, CompTIA Security+, CAPM project management, and Python programming credentials to workforce entrants in the Maryland/DC Metro region.
+
+EAF was incorporated in Maryland in February 2026 as a nonprofit dedicated to removing economic barriers from advanced technology career pathways. IRS 501(c)(3) determination is pending. Our founding team is led by Kevin Alexander Smith, PMP, CISSP, FAA Part 107 Certified Remote Pilot (#5250157), whose 33-year career spans the Transportation Security Administration, Centers for Medicare and Medicaid Services, Johns Hopkins Medicine, and Capital One — providing CAKO participants with instruction from practitioners, not academics.
+
+CAKO Cohort 1 launches in Month 4 of 2026 in the Baltimore/Anne Arundel County corridor — the same community where Northrop Grumman maintains its largest Maryland operations. We are not training participants for generic technology careers. We are building the next generation of drone operations specialists, cybersecurity analysts, and autonomous systems project managers that the aerospace and defense industry urgently needs and currently cannot find in sufficient numbers.
+
+A Northrop Grumman Foundation investment in CAKO would directly produce credentialed, job-ready talent in NGC's own backyard, at zero tuition cost to participants who could not otherwise access these pathways. We are requesting $[AMOUNT TO BE DETERMINED AFTER PROGRAM REVIEW] to fund Cohort 1 and Cohort 2 participant support, curriculum materials, and exam vouchers.
+
+We welcome the opportunity to discuss alignment with your current program priorities. We are available for a pre-application conversation at your earliest convenience.
+
+Respectfully,
+Kevin Alexander Smith, Founder & Executive Director
+KAI-Netics Equity & Autonomy Foundry, Inc.
+[Contact Information]
+
+---
+
+---
+
+# SCOUT PRIORITY ACTION BOARD
+
+| Action | Owner | Deadline | Priority |
+|---|---|---|---|
+| Check sbir.gov/agencies/dhs for open FY2026 solicitation | Kevin / Jordan | TODAY | 🔴 CRITICAL |
+| Accelerate MONK LLC formation + EIN | Kevin + James Scott Esq. | This week | 🔴 CRITICAL |
+| Submit EAF Form 1023 to IRS | Kevin | ASAP | 🔴 CRITICAL — gates all foundation grants |
+| Verify Northrop Grumman Foundation portal + open cycles | Jordan | This week | 🟡 HIGH |
+| Confirm MONK provisional patent filing status | Kevin | This week | 🟡 HIGH — required for SBIR submission |
+| James Scott Esq. review of SBIR IP assignment structure | Kevin + James Scott | Before any SBIR submission | 🔴

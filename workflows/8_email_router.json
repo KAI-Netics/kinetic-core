@@ -1,0 +1,162 @@
+{
+  "name": "Aidan - Email Router",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinutes", "value": 5 }]
+        },
+        "filters": {
+          "readStatus": "unread"
+        },
+        "options": {
+          "downloadAttachments": false
+        }
+      },
+      "id": "router-001",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "credentials": { "gmailOAuth2": { "id": "placeholder", "name": "KAI-Netics Gmail" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Extract email metadata\nconst fromHeader = input.from || input.payload && input.payload.headers && input.payload.headers.find(function(h) { return h.name === 'From'; }) && input.payload.headers.find(function(h) { return h.name === 'From'; }).value || '';\nconst subject = input.subject || input.payload && input.payload.headers && input.payload.headers.find(function(h) { return h.name === 'Subject'; }) && input.payload.headers.find(function(h) { return h.name === 'Subject'; }).value || '';\nconst body = input.snippet || input.body || '';\nconst messageId = input.id || '';\nconst fromLower = fromHeader.toLowerCase();\nconst subjectLower = subject.toLowerCase();\nconst bodyLower = body.toLowerCase();\n\n// Routing rules — order matters, first match wins\nlet route = 'GENERAL';\nlet agent = 'Aidan';\nlet priority = 'medium';\nlet reason = '';\n\n// eMMA — Maryland state procurement\nif (fromLower.indexOf('emma') !== -1 || fromLower.indexOf('emma.maryland') !== -1 || subjectLower.indexOf('solicitation') !== -1 || subjectLower.indexOf('bpm id') !== -1 || subjectLower.indexOf('rfx') !== -1) {\n  route = 'NOVA';\n  agent = 'Nova';\n  priority = 'high';\n  reason = 'eMMA procurement notification';\n}\n// SAM.gov — federal procurement\nelse if (fromLower.indexOf('sam.gov') !== -1 || fromLower.indexOf('beta.sam.gov') !== -1 || subjectLower.indexOf('sam.gov') !== -1 || subjectLower.indexOf('uei') !== -1 || subjectLower.indexOf('cage code') !== -1) {\n  route = 'IRIS';\n  agent = 'Iris';\n  priority = 'critical';\n  reason = 'SAM.gov registration update';\n}\n// IRS / Tax compliance\nelse if (fromLower.indexOf('irs.gov') !== -1 || fromLower.indexOf('treasury.gov') !== -1 || subjectLower.indexOf('form 1023') !== -1 || subjectLower.indexOf('990') !== -1 || subjectLower.indexOf('ein') !== -1) {\n  route = 'IRIS';\n  agent = 'Iris';\n  priority = 'critical';\n  reason = 'IRS / tax compliance';\n}\n// Maryland state agencies — grants\nelse if (fromLower.indexOf('maryland.gov') !== -1 || fromLower.indexOf('dllr') !== -1 || fromLower.indexOf('tedco') !== -1 || subjectLower.indexOf('grant') !== -1 || subjectLower.indexOf('award') !== -1 || subjectLower.indexOf('lighthouse') !== -1 || subjectLower.indexOf('earn') !== -1) {\n  route = 'JORDAN';\n  agent = 'Jordan';\n  priority = 'high';\n  reason = 'Maryland grant / state agency';\n}\n// Federal grants\nelse if (fromLower.indexOf('grants.gov') !== -1 || fromLower.indexOf('hrsa') !== -1 || fromLower.indexOf('sbir') !== -1 || subjectLower.indexOf('nofa') !== -1 || subjectLower.indexOf('notice of funding') !== -1) {\n  route = 'JORDAN';\n  agent = 'Jordan';\n  priority = 'high';\n  reason = 'Federal grant notification';\n}\n// FAA / Drone regulatory\nelse if (fromLower.indexOf('faa.gov') !== -1 || subjectLower.indexOf('part 107') !== -1 || subjectLower.indexOf('part 108') !== -1 || subjectLower.indexOf('laanc') !== -1 || subjectLower.indexOf('remote id') !== -1) {\n  route = 'IRIS';\n  agent = 'Iris';\n  priority = 'critical';\n  reason = 'FAA regulatory update';\n}\n// BD pipeline — known contacts\nelse if (fromLower.indexOf('mdot') !== -1 || fromLower.indexOf('sha.maryland') !== -1 || fromLower.indexOf('bge.com') !== -1 || fromLower.indexOf('medstar') !== -1 || fromLower.indexOf('umms') !== -1 || fromLower.indexOf('jhmi.edu') !== -1) {\n  route = 'JORDAN';\n  agent = 'Jordan';\n  priority = 'critical';\n  reason = 'BD pipeline contact';\n}\n// Techstars / ecosystem\nelse if (fromLower.indexOf('techstars') !== -1 || fromLower.indexOf('tedco') !== -1 || fromLower.indexOf('meia') !== -1 || subjectLower.indexOf('accelerator') !== -1 || subjectLower.indexOf('cohort') !== -1) {\n  route = 'JORDAN';\n  agent = 'Jordan';\n  priority = 'high';\n  reason = 'Ecosystem / accelerator';\n}\n\nreturn [{ json: {\n  route: route,\n  agent: agent,\n  priority: priority,\n  reason: reason,\n  from: fromHeader,\n  subject: subject,\n  body: body.substring(0, 2000),\n  messageId: messageId,\n  timestamp: new Date().toISOString()\n}}];"
+      },
+      "id": "router-002",
+      "name": "Route by Sender + Subject",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "route-nova",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "NOVA",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "router-003",
+      "name": "Is Nova (RFP)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, -160]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "route-jordan",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "JORDAN",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "router-004",
+      "name": "Is Jordan (Grants/BD)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "route-iris",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "IRIS",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "router-005",
+      "name": "Is Iris (Compliance)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "const http = require('http');\nconst input = $input.first().json;\n\n// Fire Nova webhook with email content\nconst payload = JSON.stringify({\n  rfp_name: input.subject || 'Email RFP',\n  agency: input.from || 'Unknown',\n  rfp_text: input.body || '',\n  source: 'gmail_router',\n  email_from: input.from,\n  email_subject: input.subject\n});\n\nconst opts = {\n  hostname: 'host.docker.internal', port: 5678,\n  path: '/webhook/nova-rfp', method: 'POST',\n  headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }\n};\n\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on('data', function(){}); res.on('end', r); });\n  req.on('error', r); req.write(payload); req.end();\n});\n\nreturn [{ json: { routed: true, to: 'Nova', from: input.from, subject: input.subject, reason: input.reason } }];"
+      },
+      "id": "router-006",
+      "name": "Fire Nova",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, -240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const http = require('http');\nconst input = $input.first().json;\n\n// Send WhatsApp alert for Jordan-relevant email\nconst msgText = 'EMAIL ALERT -- ' + (input.priority === 'critical' ? 'CRITICAL' : 'HIGH') + '\\n\\nFrom: ' + input.from + '\\nSubject: ' + input.subject + '\\nReason: ' + input.reason + '\\n\\nReview in inbox: kas42869@gmail.com';\n\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: msgText } });\nconst opts = {\n  hostname: 'host.docker.internal', port: 8081,\n  path: '/message/sendText/Aidan', method: 'POST',\n  headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on('data', function(){}); res.on('end', r); });\n  req.on('error', r); req.write(msgBody); req.end();\n});\n\nreturn [{ json: { routed: true, to: 'Jordan/WhatsApp', from: input.from, subject: input.subject, reason: input.reason } }];"
+      },
+      "id": "router-007",
+      "name": "Alert Jordan via WhatsApp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const http = require('http');\nconst input = $input.first().json;\n\n// Fire Iris webhook for compliance-critical emails\nconst payload = JSON.stringify({\n  trigger: 'email_alert',\n  email_from: input.from,\n  email_subject: input.subject,\n  email_body: input.body,\n  reason: input.reason,\n  priority: input.priority\n});\n\nconst opts = {\n  hostname: 'host.docker.internal', port: 5678,\n  path: '/webhook/iris-monitor', method: 'POST',\n  headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }\n};\n\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on('data', function(){}); res.on('end', r); });\n  req.on('error', r); req.write(payload); req.end();\n});\n\n// Also send WhatsApp alert\nconst msgText = 'COMPLIANCE EMAIL -- CRITICAL\\n\\nFrom: ' + input.from + '\\nSubject: ' + input.subject + '\\nReason: ' + input.reason + '\\n\\nIris running compliance check now.';\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: msgText } });\nconst waOpts = {\n  hostname: 'host.docker.internal', port: 8081,\n  path: '/message/sendText/Aidan', method: 'POST',\n  headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(waOpts, function(res) { res.on('data', function(){}); res.on('end', r); });\n  req.on('error', r); req.write(msgBody); req.end();\n});\n\nreturn [{ json: { routed: true, to: 'Iris', from: input.from, subject: input.subject, reason: input.reason } }];"
+      },
+      "id": "router-008",
+      "name": "Fire Iris",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n// General email — log silently, no agent action needed\nconsole.log('Email router: GENERAL route for ' + input.from + ' | ' + input.subject);\nreturn [{ json: { routed: false, route: 'GENERAL', from: input.from, subject: input.subject } }];"
+      },
+      "id": "router-009",
+      "name": "Log General (No Action)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 320]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger":          { "main": [[{ "node": "Route by Sender + Subject", "type": "main", "index": 0 }]] },
+    "Route by Sender + Subject": { "main": [[
+      { "node": "Is Nova (RFP)?",        "type": "main", "index": 0 },
+      { "node": "Is Jordan (Grants/BD)?","type": "main", "index": 0 },
+      { "node": "Is Iris (Compliance)?", "type": "main", "index": 0 }
+    ]]},
+    "Is Nova (RFP)?":         { "main": [
+      [{ "node": "Fire Nova",                "type": "main", "index": 0 }],
+      [{ "node": "Is Jordan (Grants/BD)?",   "type": "main", "index": 0 }]
+    ]},
+    "Is Jordan (Grants/BD)?": { "main": [
+      [{ "node": "Alert Jordan via WhatsApp","type": "main", "index": 0 }],
+      [{ "node": "Is Iris (Compliance)?",    "type": "main", "index": 0 }]
+    ]},
+    "Is Iris (Compliance)?":  { "main": [
+      [{ "node": "Fire Iris",                "type": "main", "index": 0 }],
+      [{ "node": "Log General (No Action)",  "type": "main", "index": 0 }]
+    ]}
+  },
+  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": true },
+  "tags": [{ "name": "KAI-Netics" }, { "name": "Aidan" }, { "name": "Email" }, { "name": "Router" }]
+}

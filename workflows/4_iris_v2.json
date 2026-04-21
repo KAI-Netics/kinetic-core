@@ -1,0 +1,34 @@
+{
+  "name": "Iris - Compliance Monitor v2",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "iris-monitor", "options": {} },
+      "type": "n8n-nodes-base.webhook", "typeVersion": 2.1, "position": [0, 80],
+      "id": "iris-001", "name": "Webhook", "webhookId": "41a73734-f3bf-4b0f-8d8c-5da8db94cdbb"
+    },
+    {
+      "parameters": { "rule": { "interval": [{ "triggerAtHour": 8 }] } },
+      "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.3, "position": [0, -80],
+      "id": "iris-002", "name": "Daily 8AM Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8')); } catch(e) { ctx = {}; }\nconst dates = ctx.key_dates || {}, compliance = ctx.compliance_rules || [], verticals = ctx.verticals || {};\nconst today = new Date();\nconst daysUntil = s => Math.ceil((new Date(s) - today) / (1000*60*60*24));\nconst deadlines = [\n  { item: 'MEIA Capstone Submission', date: dates.meia_capstone || '2026-04-14', entity: 'EAF', owner: 'Kevin' },\n  { item: 'EAF Annual Report', date: dates.eaf_annual_report || '2026-04-15', entity: 'EAF', owner: 'Kevin' },\n  { item: 'OMB M-26-02 Federal Drone Compliance', date: dates.omb_m2602_deadline || '2026-05-20', entity: 'FP', owner: 'Kevin' },\n  { item: 'IRS Form 1023 — 501c3 Filing', date: dates.form_1023 || '2026-06-01', entity: 'EAF', owner: 'Kevin' },\n  { item: 'MONK LLC Formation', date: '2026-05-01', entity: 'MONK', owner: 'Kevin' },\n  { item: 'CAKO Cohort 1 Launch', date: dates.cako_cohort1_launch || '2026-07-01', entity: 'EAF', owner: 'Kevin' },\n  { item: 'Fleet 1 Arrival', date: dates.fleet1_arrival || '2026-07-01', entity: 'FP', owner: 'Kevin' },\n  { item: 'Microsoft for Nonprofits', date: '2026-04-12', entity: 'EAF', owner: 'Kevin' },\n  { item: 'Google for Nonprofits / TechSoup', date: '2026-04-12', entity: 'EAF', owner: 'Kevin' },\n  { item: 'Supabase Setup', date: '2026-04-12', entity: 'FP', owner: 'Kevin' },\n  { item: 'FAA Part 107 Renewal', date: '2027-12-31', entity: 'FP', owner: 'Kevin' },\n];\nconst overdue = deadlines.filter(d => daysUntil(d.date) < 0);\nconst critical = deadlines.filter(d => { const n = daysUntil(d.date); return n >= 0 && n <= 7; });\nconst urgent = deadlines.filter(d => { const n = daysUntil(d.date); return n > 7 && n <= 21; });\nconst upcoming = deadlines.filter(d => { const n = daysUntil(d.date); return n > 21 && n <= 90; });\nlet report = `IRIS COMPLIANCE MONITOR v2\\nGenerated: ${today.toLocaleString('en-US',{timeZone:'America/New_York'})} EST\\nKAI_Context.json: loaded\\n\\n`;\nif (overdue.length) { report += '🔴 OVERDUE:\\n'; overdue.forEach(d => { report += `  • ${d.item} — ${Math.abs(daysUntil(d.date))}d overdue [${d.entity}]\\n`; }); report += '\\n'; }\nif (critical.length) { report += '🚨 CRITICAL (7 days):\\n'; critical.forEach(d => { report += `  • ${d.item} — ${daysUntil(d.date)}d (${d.date}) [${d.entity}] Owner: ${d.owner}\\n`; }); report += '\\n'; }\nif (urgent.length) { report += '⚠️ URGENT (21 days):\\n'; urgent.forEach(d => { report += `  • ${d.item} — ${daysUntil(d.date)}d (${d.date}) [${d.entity}]\\n`; }); report += '\\n'; }\nif (upcoming.length) { report += '📅 UPCOMING (90 days):\\n'; upcoming.forEach(d => { report += `  • ${d.item} — ${daysUntil(d.date)}d (${d.date}) [${d.entity}]\\n`; }); report += '\\n'; }\nreport += `COMPLIANCE RULES:\\n${compliance.map(r=>'• '+r).join('\\n')}\\n\\n`;\nreport += `REGULATORY WATCH:\\n• FAA Part 108 BVLOS final rule INCOMING — flagged for Atlas SBIR\\n• FAA-2022-1258 BVLOS rulemaking active\\n• OMB M-26-02 deadline: ${dates.omb_m2602_deadline || '2026-05-20'}\\n`;\nconst outputPath = `/data/Aidan_Outputs/Iris/Iris_Report_${today.toISOString().replace(/[:.]/g,'-')}.txt`;\nfs.mkdirSync('/data/Aidan_Outputs/Iris', { recursive: true });\nfs.writeFileSync(outputPath, report, 'utf8');\nlet whatsappMsg = 'Bot reply: IRIS COMPLIANCE REPORT\\n\\n';\nif (overdue.length) { whatsappMsg += `🔴 OVERDUE (${overdue.length}):\\n`; overdue.forEach(d => { whatsappMsg += `• ${d.item}\\n`; }); whatsappMsg += '\\n'; }\nif (critical.length) { whatsappMsg += `🚨 CRITICAL (${critical.length}):\\n`; critical.forEach(d => { whatsappMsg += `• ${d.item} — ${daysUntil(d.date)}d\\n`; }); whatsappMsg += '\\n'; }\nif (urgent.length) { whatsappMsg += `⚠️ URGENT (${urgent.length}):\\n`; urgent.forEach(d => { whatsappMsg += `• ${d.item} — ${daysUntil(d.date)}d\\n`; }); }\nwhatsappMsg += '\\nPart 108 BVLOS: INCOMING — flagged for Atlas.';\nconst summary = `IRIS COMPLETE\\nCritical: ${critical.length} | Urgent: ${urgent.length} | Overdue: ${overdue.length}\\nSaved: /data/Aidan_Outputs/Iris/`;\nreturn [{ json: { report, whatsappMsg, summary, criticalCount: critical.length, urgentCount: urgent.length, overdueCount: overdue.length, savedTo: outputPath } }];"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [220, 0], "id": "iris-003", "name": "Iris Brain v2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const http = require('http');\nconst { whatsappMsg, summary = 'Iris complete.', criticalCount, urgentCount } = $input.first().json;\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: whatsappMsg } });\nconst opts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) } };\nawait new Promise(r => { const req = http.request(opts, res => { res.on('data',()=>{}); res.on('end',r); }); req.on('error',r); req.write(msgBody); req.end(); });\nconst cbBody = JSON.stringify({ agent: 'Iris', summary, criticalCount, urgentCount, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: 'host.docker.internal', port: 5678, path: '/webhook/aidan-callback', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, res => { res.on('data',()=>{}); res.on('end',()=>{}); }); cbReq.on('error',()=>{}); cbReq.write(cbBody); cbReq.end();\nreturn [{ json: { success: true, agent: 'Iris', summary } }];"
+      },
+      "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [440, 0], "id": "iris-004", "name": "Aidan Callback"
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Iris Brain v2", "type": "main", "index": 0 }]] },
+    "Daily 8AM Trigger": { "main": [[{ "node": "Iris Brain v2", "type": "main", "index": 0 }]] },
+    "Iris Brain v2": { "main": [[{ "node": "Aidan Callback", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": true },
+  "tags": [{ "name": "KAI-Netics" }, { "name": "Iris" }, { "name": "Compliance" }]
+}
