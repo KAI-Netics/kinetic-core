@@ -1,0 +1,101 @@
+{
+  "name": "Sage - Send Newsletter Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sage-send-board",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "sage-send-001",
+      "name": "Webhook Board",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, -80],
+      "webhookId": "kai-sage-send-board"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sage-send-market",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "sage-send-005",
+      "name": "Webhook Market",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 80],
+      "webhookId": "kai-sage-send-market"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { type: 'board' } }];"
+      },
+      "id": "sage-send-006",
+      "name": "Set Board Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, -80]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { type: 'market' } }];"
+      },
+      "id": "sage-send-007",
+      "name": "Set Market Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nconst input = $input.first().json;\nconst type = input.type;\n\n// TEST MODE — set false when ready for real sends\nconst TEST_MODE = true;\nconst TEST_EMAIL = 'kas42869@gmail.com';\n\nconst sageDir = '/data/Aidan_Outputs/Sage/';\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8')); } catch(e) { ctx = {}; }\n\nconst boardMembers = (ctx.eaf_board && ctx.eaf_board.members) ? ctx.eaf_board.members : [\n  { name: 'James L. Scott, Esq.', email: 'jlslaw@yahoo.com' },\n  { name: 'Keith Millard', email: 'keithrmillard@gmail.com' },\n  { name: 'Maurice Ellis', email: 'bjet.1234@yahoo.com' }\n];\n\nconst month = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'America/New_York' });\n\nlet draftPath = null;\nlet draftContent = '';\nlet subject = '';\nlet toEmail = '';\nlet ccEmails = '';\nlet recipientDisplay = '';\n\nif (type === 'board') {\n  let files = [];\n  try { files = fs.readdirSync(sageDir).filter(function(f) { return f.startsWith('Board_Newsletter') && f.endsWith('.txt'); }).sort().reverse(); } catch(e) { files = []; }\n  if (files.length === 0) {\n    return [{ json: { error: true, message: 'No board newsletter draft found. Say Sage board to generate one first.' } }];\n  }\n  draftPath = sageDir + files[0];\n  draftContent = fs.readFileSync(draftPath, 'utf8');\n  subject = (TEST_MODE ? '[TEST] ' : '') + 'EAF Board Newsletter — ' + month;\n  if (TEST_MODE) {\n    toEmail = TEST_EMAIL;\n    ccEmails = '';\n    recipientDisplay = 'Kevin Smith TEST <' + TEST_EMAIL + '>';\n  } else {\n    toEmail = boardMembers[0].email;\n    ccEmails = boardMembers.slice(1).map(function(m) { return m.email; }).join(',');\n    recipientDisplay = boardMembers.map(function(m) { return m.name + ' <' + m.email + '>'; }).join(', ');\n  }\n} else {\n  let files = [];\n  try { files = fs.readdirSync(sageDir).filter(function(f) { return f.startsWith('Market_Newsletter') && f.endsWith('.txt'); }).sort().reverse(); } catch(e) { files = []; }\n  if (files.length === 0) {\n    return [{ json: { error: true, message: 'No market newsletter draft found. Say Sage market to generate one first.' } }];\n  }\n  draftPath = sageDir + files[0];\n  draftContent = fs.readFileSync(draftPath, 'utf8');\n  subject = (TEST_MODE ? '[TEST] ' : '') + 'KAI-Netics Update — ' + month;\n  if (TEST_MODE) {\n    toEmail = TEST_EMAIL;\n    ccEmails = '';\n    recipientDisplay = 'Kevin Smith TEST <' + TEST_EMAIL + '>';\n  } else {\n    toEmail = 'kas@kevin-llc.com';\n    ccEmails = boardMembers.map(function(m) { return m.email; }).join(',');\n    recipientDisplay = 'Kevin + Board';\n  }\n}\n\nconst safeContent = draftContent.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst headerColor = type === 'board' ? '#1a1a2e' : '#0a3d62';\nconst headerLabel = (TEST_MODE ? 'TEST — ' : '') + (type === 'board' ? 'EAF Board Newsletter' : 'KAI-Netics Market Update');\nconst entityLine = type === 'board' ? 'KAI-Netics Equity &amp; Autonomy Foundry, Inc. | EIN: 41-4820296' : 'Kevin Alexander International LLC dba KAI-Netics';\n\nconst htmlBody = (TEST_MODE ? '<div style=\"background:#ff6600;padding:10px;text-align:center\"><strong style=\"color:#fff\">TEST MODE — Board members NOT notified</strong></div>' : '') +\n  '<div style=\"font-family:Arial,sans-serif;max-width:700px;margin:0 auto\">' +\n  '<div style=\"background:' + headerColor + ';padding:24px;border-radius:8px 8px 0 0\">' +\n  '<h1 style=\"color:#00d4ff;margin:0;font-size:20px\">KAI-Netics</h1>' +\n  '<p style=\"color:#8888aa;margin:4px 0 0 0;font-size:13px\">' + headerLabel + ' | ' + month + '</p>' +\n  '</div>' +\n  '<div style=\"background:#ffffff;padding:28px;border:1px solid #e0e0e0\">' +\n  '<p style=\"color:#555;font-size:12px;margin:0 0 16px 0\">' + entityLine + '</p>' +\n  '<div style=\"white-space:pre-wrap;font-size:14px;line-height:1.7;color:#222\">' + safeContent + '</div>' +\n  '</div>' +\n  '<div style=\"background:' + headerColor + ';padding:16px;border-radius:0 0 8px 8px;text-align:center\">' +\n  '<p style=\"color:#8888aa;margin:0;font-size:12px\">Kevin Alexander Smith | KAI-Netics | kas@kevin-llc.com | 443.257.6836</p>' +\n  '<p style=\"color:#8888aa;margin:4px 0 0 0;font-size:11px\">FAA Part 107 Certified | MEIA Phase 2 Cohort | MWVOB</p>' +\n  '</div></div>';\n\nreturn [{ json: {\n  type: type,\n  testMode: TEST_MODE,\n  subject: subject,\n  htmlBody: htmlBody,\n  toEmail: toEmail,\n  ccEmails: ccEmails,\n  recipientDisplay: recipientDisplay,\n  draftPath: draftPath,\n  month: month\n}}];"
+      },
+      "id": "sage-send-002",
+      "name": "Load Draft + Build Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 0]
+    },
+    {
+      "parameters": {
+        "fromEmail": "kas@kevin-llc.com",
+        "toEmail": "={{ $json.toEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "html": "={{ $json.htmlBody }}",
+        "options": {
+          "ccList": "={{ $json.ccEmails }}"
+        }
+      },
+      "id": "sage-send-003",
+      "name": "Send via SMTP",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [640, 0],
+      "credentials": { "smtp": { "id": "placeholder", "name": "KAI-Netics SMTP" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nconst http = require('http');\nconst input = $input.first().json;\n\nif (input.error) {\n  const errMsg = 'SAGE SEND ERROR: ' + input.message;\n  const msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: errMsg } });\n  const opts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) } };\n  await new Promise(function(r) { const req = http.request(opts, function(res) { res.on('data',function(){}); res.on('end',r); }); req.on('error',r); req.write(msgBody); req.end(); });\n  return [{ json: { success: false, error: input.message } }];\n}\n\nconst logPrefix = input.type === 'board' ? 'BOARD' : 'MARKET';\nconst testTag = input.testMode ? '_TEST' : '';\nconst logPath = '/data/Aidan_Outputs/Sage/' + logPrefix + testTag + '_SENT_' + new Date().toISOString().replace(/[:.]/g,'-') + '.log';\nconst logContent = 'Sent: ' + new Date().toISOString() + '\\nType: ' + input.type + '\\nTest: ' + input.testMode + '\\nSubject: ' + input.subject + '\\nTo: ' + input.toEmail + '\\nCC: ' + input.ccEmails + '\\nRecipients: ' + input.recipientDisplay + '\\nDraft: ' + input.draftPath + '\\n';\nfs.mkdirSync('/data/Aidan_Outputs/Sage', { recursive: true });\nfs.writeFileSync(logPath, logContent, 'utf8');\n\nlet confirmMsg = (input.testMode ? 'SAGE TEST EMAIL SENT' : 'SAGE EMAIL SENT') + '\\n\\n';\nconfirmMsg += 'Type: ' + (input.type === 'board' ? 'EAF Board Newsletter' : 'FP Market Newsletter') + '\\n';\nconfirmMsg += 'Subject: ' + input.subject + '\\n';\nconfirmMsg += 'To: ' + input.recipientDisplay + '\\n';\nif (input.testMode) { confirmMsg += '\\nTEST MODE ON\\nBoard NOT notified.\\nChange TEST_MODE=false when ready for real send.'; }\n\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: confirmMsg } });\nconst opts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) } };\nawait new Promise(function(r) { const req = http.request(opts, function(res) { res.on('data',function(){}); res.on('end',r); }); req.on('error',r); req.write(msgBody); req.end(); });\n\nreturn [{ json: { success: true, type: input.type, testMode: input.testMode, subject: input.subject, to: input.toEmail, logPath: logPath } }];"
+      },
+      "id": "sage-send-004",
+      "name": "Log + WhatsApp Confirm",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Board":           { "main": [[{ "node": "Set Board Type",          "type": "main", "index": 0 }]] },
+    "Webhook Market":          { "main": [[{ "node": "Set Market Type",         "type": "main", "index": 0 }]] },
+    "Set Board Type":          { "main": [[{ "node": "Load Draft + Build Email","type": "main", "index": 0 }]] },
+    "Set Market Type":         { "main": [[{ "node": "Load Draft + Build Email","type": "main", "index": 0 }]] },
+    "Load Draft + Build Email":{ "main": [[{ "node": "Send via SMTP",           "type": "main", "index": 0 }]] },
+    "Send via SMTP":           { "main": [[{ "node": "Log + WhatsApp Confirm",  "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": true },
+  "tags": [{ "name": "KAI-Netics" }, { "name": "Sage" }, { "name": "Email" }, { "name": "Newsletter" }]
+}

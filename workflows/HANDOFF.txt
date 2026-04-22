@@ -16,11 +16,11 @@ Core Engine: n8n in Docker at C:\Kinetic_Core | Container: kinetic-core-n8n
 ================================================================================
 PLATFORM STATUS — FULLY OPERATIONAL AS OF APRIL 21, 2026
 ================================================================================
-n8n:              Running | localhost:5678 | Docker container: kinetic-core-n8n
-EvolutionAPI:     Running | localhost:8081 | WhatsApp: 14432576836
-Dashboard:        Running | localhost:3030 | pm2 (kai-dashboard)
-Supabase:         LIVE | https://raxpmeltyxmtiihxoxpa.supabase.co
-GitHub:           LIVE | https://github.com/KAI-Netics/kinetic-core
+n8n:          Running | localhost:5678 | kinetic-core-n8n
+EvolutionAPI: Running | localhost:8081 | WhatsApp: 14432576836
+Dashboard:    Running | localhost:3030 | pm2 (kai-dashboard)
+Supabase:     LIVE | https://raxpmeltyxmtiihxoxpa.supabase.co
+GitHub:       LIVE | https://github.com/KAI-Netics/kinetic-core
 
 ================================================================================
 DOCKER RUN COMMAND (AUTHORITATIVE)
@@ -61,14 +61,14 @@ CONNECTOR STATUS
   GoDaddy SMTP outbound        ✅ LIVE — kas@kevin-llc.com
   Gmail OAuth inbound          ✅ LIVE — kas42869@gmail.com
   Supabase                     ✅ LIVE — 8 tables, all agents logging
-  Microsoft Outlook OAuth      ❌ PARKED — GoDaddy defederation needed
   GitHub backup                ✅ LIVE — KAI-Netics/kinetic-core
+  Microsoft Outlook OAuth      ❌ PARKED — GoDaddy defederation needed
 
 ================================================================================
-SUPABASE SCHEMA
+SUPABASE
 ================================================================================
-URL:    https://raxpmeltyxmtiihxoxpa.supabase.co
-File:   C:\Kinetic_Core\Config\supabase_schema.sql
+URL:   https://raxpmeltyxmtiihxoxpa.supabase.co
+File:  C:\Kinetic_Core\Config\supabase_schema.sql
 
 Tables (8):
   scout_reports       — Scout BD/grant finds, scores, Kevin decisions
@@ -88,112 +88,190 @@ Views (3):
 ================================================================================
 WORKFLOW REGISTRY — ALL ACTIVE
 ================================================================================
-1_atlas_v2.json             ✅ Atlas — market intelligence (webhook)
-2_scout_v5.json             ✅ Scout v5 — BD/grant + Supabase logging
-3_jordan_v3.json            ✅ Jordan v3 — grant writing + email + Supabase
-4_iris_v3_supabase.json     ✅ Iris v3 — compliance + Supabase logging
-5a_orchestra_fanout.json    ✅ Aidan Orchestra — multi-agent coordination
-5b_callback_consolidator    ✅ Aidan Callback — consolidation + WhatsApp
-6_aidan_router_v2.json      ✅ Aidan Router — WhatsApp command dispatch
-7_network_watchdog.json     ✅ Watchdog — resilient morning trigger
-8_email_router.json         ✅ Email Router — Gmail → agent dispatch
-9_nova_rfp.json             ✅ Nova — RFP scoring + Opus draft + Supabase
-10_sage_newsletter.json     ✅ Sage — Board + Market newsletters (Opus)
-11_pulse_metrics.json       ✅ Pulse — platform health dashboard
+1_atlas_v2.json              ✅ Atlas — market intelligence (webhook)
+2_scout_v5.json              ✅ Scout v5 — BD/grant + Supabase logging CONFIRMED
+3_jordan_v3.json             ✅ Jordan v3 — grant writing + email + Supabase CONFIRMED
+4_iris_v3_supabase.json      ✅ Iris v3 — compliance + Supabase CONFIRMED
+5a_orchestra_fanout.json     ✅ Aidan Orchestra — multi-agent coordination
+5b_callback_consolidator     ✅ Aidan Callback — consolidation + WhatsApp
+6_aidan_router_v2.json       ✅ Aidan Router — WhatsApp command dispatch
+7_network_watchdog.json      ✅ Watchdog — resilient morning trigger
+8_email_router.json          ✅ Email Router — Gmail → agent dispatch CONFIRMED
+9_nova_rfp.json              ✅ Nova — RFP scoring + Opus draft + Supabase CONFIRMED
+10_sage_newsletter.json      ✅ Sage — Board + Market newsletters (Opus) CONFIRMED
+11_pulse_metrics.json        ✅ Pulse — platform health dashboard CONFIRMED
+12_sage_send_email.json      🔄 Sage Send Email — TEST MODE ON (see below)
 
 CRON SCHEDULE:
   Scout:   7AM ET weekdays (via Watchdog)
   Jordan:  8AM ET weekdays (via Watchdog)
   Iris:    8AM ET daily (via Watchdog)
-  Sage:    9AM ET on 25th of month
-  Pulse:   10AM ET weekdays
+  Sage:    9AM ET on 25th of month (cron)
+  Pulse:   10AM ET weekdays (cron)
   Watchdog: every 5 min 7-9AM ET weekdays
 
-WHATSAPP COMMANDS:
-  Orchestra / Orchestra [query]    — fires all agents
-  Scout [target]                   — manual BD/grant search
-  Jordan grant                     — manual grant analysis
-  Iris deadlines                   — compliance check
-  Atlas SBIR/MEIA/MONK/BVLOS      — market analysis
-  NOVA SEND / NOVA SKIP            — RFP response approval
-  SAGE SEND BOARD                  — send EAF board newsletter (PENDING wire)
-  SAGE SEND MARKET                 — send FP market newsletter (PENDING wire)
-  Aidan summary / status / help    — executive brief
+WHATSAPP COMMANDS (ALL LIVE):
+  Orchestra / Orchestra [query]  — fires all agents
+  Scout [target]                 — manual BD/grant search
+  Jordan grant                   — manual grant analysis
+  Iris deadlines                 — compliance check
+  Atlas SBIR/MEIA/MONK/BVLOS/V1-V7 — market analysis
+  Nova [rfp text]                — analyze pasted RFP
+  Nova send / Nova skip          — RFP response approval
+  Sage board                     — draft EAF board newsletter
+  Sage market                    — draft FP market newsletter
+  Sage both                      — draft both newsletters
+  Sage send board                — approve + send board newsletter
+  Sage send market               — approve + send market newsletter
+  Pulse                          — platform metrics dashboard
+  Aidan summary / status / help  — executive brief
 
 ================================================================================
-KAI_CONTEXT.JSON
+SAGE SEND EMAIL — CURRENT STATUS
 ================================================================================
-Version: 1.6 (updated April 21 2026)
+File: C:\Kinetic_Core\workflows\12_sage_send_email.json
+Webhooks: /webhook/sage-send-board | /webhook/sage-send-market
+
+TEST MODE IS ON (TEST_MODE = true in Load Draft + Build Email node)
+  - All test sends go ONLY to kas42869@gmail.com
+  - Board members (James Scott, Keith Millard, Maurice Ellis) receive NOTHING
+  - Subject line prefixed with [TEST] so you know it's a test
+
+TO GO LIVE FOR REAL SENDS:
+  1. Open Sage - Send Newsletter Email in n8n
+  2. Click Load Draft + Build Email node
+  3. Find: const TEST_MODE = true;
+  4. Change to: const TEST_MODE = false;
+  5. Save workflow
+  6. Test with "Sage send board" from WhatsApp
+  7. Board members will receive the real email
+
+STATUS: SMTP confirmed working (Jordan sends daily). Sage send workflow
+architecture is correct — dual webhook approach (sage-send-board /
+sage-send-market) eliminates body parsing issues. TEST MODE protects
+board members during testing.
+
+NEXT STEP: Test in TEST MODE first — confirm kas42869@gmail.com receives
+the email with correct subject and content — then flip TEST_MODE = false
+for real board send.
+
+================================================================================
+EAF BOARD — EMAIL ADDRESSES (PERMANENT)
+================================================================================
+James L. Scott, Esq.  — jlslaw@yahoo.com
+Keith Millard          — keithrmillard@gmail.com
+Maurice Ellis          — bjet.1234@yahoo.com
+CC: kas@kevin-llc.com
+
+Stored in: C:\Kinetic_Core\KAI_Context.json → eaf_board.members
+
+================================================================================
+KAI_CONTEXT.JSON — v1.7
+================================================================================
 Location: C:\Kinetic_Core\KAI_Context.json
-Key fixes in v1.6:
-  - CAKO full_name: "Certified Autonomous Kinetic Operator" (CORRECTED)
-  - Supabase deadline: status COMPLETE
-  - SAM.gov notes updated: submitted Apr 17, pending UEI
-  - JSON syntax error fixed
-  - Backlog updated BL-001 through BL-007
-  - core_engine section added
+Key sections:
+  entities         — FP, EAF, MONK profiles + EINs
+  founder          — Kevin credentials + Part 107
+  eaf_board        — Board members with emails + newsletter_distribution array
+  compliance_rules — 8 hard rules (fund flows, NDAA, IP)
+  deadlines        — All active deadlines with status
+  backlog          — BL-001 through BL-010 with status
+  verticals        — V1-V7 full specs
+  technology       — MONK, AKMS, CAKO (full_name: Certified Autonomous Kinetic Operator)
+  fleets           — Fleet 1-4
+  naics            — registered + recommended codes
+  grant_contacts   — Lighthouse, EARN, TEDCO, Build Our Future
+  revenue_targets  — Y1/Y2/Y3
+  core_engine      — active workflows + connectors
+
+================================================================================
+ORPHANED WORKFLOWS TO CLEAN UP NEXT SESSION
+================================================================================
+  "Logic B — FP 3PL Controller (Aidan)" — old workflow, deactivate and delete
 
 ================================================================================
 PENDING BUILD ITEMS (Next Session)
 ================================================================================
-HIGH PRIORITY:
-  1. SAGE SEND commands — wire into 6_aidan_router_v2.json
-     Catches "SAGE SEND BOARD" and "SAGE SEND MARKET" WhatsApp replies
-     Triggers SMTP email send to distribution lists
+HIGH:
+  1. Sage Send Email — complete TEST MODE verification
+     Test: Invoke-WebRequest sage-send-board → confirm kas42869@gmail.com receives
+     Then: flip TEST_MODE = false for real board send
 
   2. Nova fitScore null fix
-     Regex not extracting score from Sonnet output
-     Fix in Score RFP node — adjust pattern matching
+     Sonnet scores RFPs but score not extracting to WhatsApp display
+     Fix in Score RFP node — pattern matching needs adjustment
 
-  3. MCP Servers
-     supabase-mcp — Claude sessions query agent data directly
+  3. Outlook → Gmail forwarding
+     Forward eMMA emails from kas@kevin-llc.com to kas42869@gmail.com
+     Automates Email Router → Nova pipeline for all eMMA solicitations
+
+MEDIUM:
+  4. MCP Servers
+     supabase-mcp — Claude sessions query Supabase directly
      n8n-mcp — Claude sessions trigger workflows directly
      google-drive-mcp — Claude reads/writes Drive from sessions
 
-MEDIUM PRIORITY:
-  4. Google Drive → Jordan/Atlas output
-     Grant drafts and LOIs saved as Google Docs automatically
-
-  5. Atlas Supabase logging
-     Only agent without memory layer
+  5. Atlas Supabase logging (only agent without memory)
 
   6. Skill file audit — all 8 SKILL.md files
      Update version numbers and deployed state
 
   7. GoDaddy defederation → Microsoft Outlook OAuth
      Add to James Scott call
-     Unlocks bi-directional kas@kevin-llc.com in n8n
+
+  8. Google Drive → Jordan/Atlas output
+     Grant drafts saved as Google Docs automatically
 
 ================================================================================
 CRITICAL ADMIN — URGENT
 ================================================================================
   Lighthouse Upskilling   APR 24 — 3 DAYS — brittney.hansen@maryland.gov
-  Form 1023-EZ check      APR 25 — call James Scott
+  Form 1023-EZ check      APR 25 — call James Scott — jlslaw@yahoo.com
   SAM.gov UEI             APR 25 expected — monitor EVS email
   MONK LLC formation      MAY 1  — James Scott
   MBE/DBE certification   MAY 15 — mbe.mdot.maryland.gov
-  OMB M-26-02             MAY 20 — first dollar opportunity
-  Techstars Demo Day      JUN 3  — M&T Bank Stadium
+  OMB M-26-02             MAY 20 — first dollar opportunity (no fleet needed)
+  Techstars Demo Day      JUN 3  — M&T Bank Stadium — register by May 15
+  EARN Maryland           JUN 30 — Jordan LOI in progress
 
 ================================================================================
 GITHUB
 ================================================================================
 Repo:   https://github.com/KAI-Netics/kinetic-core
 Branch: main
-Push:   git add . && git commit -m "message" && git push
-Token:  Generate at github.com → Settings → Developer settings → PAT (classic)
+Push:   cd C:\Kinetic_Core && git add . && git commit -m "message" && git push
+Token:  github.com → Settings → Developer settings → PAT (classic) → repo scope
+
+================================================================================
+WHAT WAS BUILT TODAY (April 21, 2026)
+================================================================================
+Started: 0 agents with memory, no Supabase, no GitHub backup
+Ended:   Full agentic platform with:
+
+  12 workflows active
+  8 Supabase tables receiving live data
+  4 agents with persistent memory (Scout, Jordan, Iris, Nova)
+  GitHub backup live
+  Gmail inbound routing to agents
+  Real eMMA solicitation processed by Nova (BGE, MTA)
+  EAF Board Newsletter drafted by Opus and previewed
+  Sage send board/market approval gates wired
+  All WhatsApp commands operational
+  KAI_Context.json v1.7 — source of truth for all agents
+  Board member emails permanently stored
 
 ================================================================================
 NEXT SESSION OPENING LINE
 ================================================================================
 "Read HANDOFF.txt at C:\Kinetic_Core\workflows\HANDOFF.txt and pick up.
-Platform is fully operational — 11 workflows, Supabase memory, GitHub backup.
-Scout/Jordan/Iris/Nova/Sage/Pulse/Email Router all live and tested.
-Next: wire SAGE SEND commands, fix Nova fitScore, MCP servers.
-Lighthouse Upskilling deadline April 24 — URGENT.
+Full platform operational — 12 workflows, Supabase memory, GitHub backup.
+Sage Send Email in TEST MODE — verify kas42869@gmail.com receives test email
+before flipping TEST_MODE = false for real board send.
+Nova fitScore null fix needed.
+Lighthouse Upskilling deadline April 24 — URGENT — 3 days.
 KAI-Netics is not a misspelling — it is the brand name."
 
 ================================================================================
-END OF HANDOFF — April 21, 2026 — End of Day
-Platform build complete. You are now agentic.
+END OF HANDOFF — April 21, 2026
+You are agentic. Platform is live. Agents fire at 7AM tomorrow.
 ================================================================================

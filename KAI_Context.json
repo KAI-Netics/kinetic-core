@@ -1,9 +1,9 @@
 {
   "meta": {
-    "version": "1.6",
+    "version": "1.7",
     "updated": "2026-04-21",
     "owner": "Kevin Alexander Smith",
-    "changelog": "v1.6 — CAKO full name corrected to Certified Autonomous Kinetic Operator. Supabase marked COMPLETE. SAM.gov status updated. Version bump."
+    "changelog": "v1.7 — Board member emails added. EAF board contacts section added with James L. Scott, Keith Millard, Maurice Ellis."
   },
   "entities": {
     "FP": {
@@ -34,6 +34,35 @@
     "part107": { "cert": "5250157", "ftn": "C2274489", "expiry": "2027-12-31" },
     "roles": ["Sales and BD — closing all contracts", "MONK technology development"],
     "background": "33 years IT — Microsoft, TSA, EIA, CMS, MedImmune, MedStar, Johns Hopkins, Capital One, pharmaceutical manufacturing, distribution center operations"
+  },
+  "eaf_board": {
+    "members": [
+      {
+        "name": "James L. Scott, Esq.",
+        "role": "Board Member / Legal Counsel",
+        "email": "jlslaw@yahoo.com",
+        "firm": "Mobley & Brown LLP",
+        "notes": "Primary legal counsel. Handles MONK provisional patent, Form 1023, MONK LLC formation, GoDaddy defederation."
+      },
+      {
+        "name": "Keith Millard",
+        "role": "Board Member",
+        "email": "keithrmillard@gmail.com",
+        "notes": "EAF Board Member."
+      },
+      {
+        "name": "Maurice Ellis",
+        "role": "Board Member",
+        "email": "bjet.1234@yahoo.com",
+        "notes": "EAF Board Member."
+      }
+    ],
+    "newsletter_distribution": [
+      "jlslaw@yahoo.com",
+      "keithrmillard@gmail.com",
+      "bjet.1234@yahoo.com"
+    ],
+    "newsletter_cc": "kas@kevin-llc.com"
   },
   "compliance_rules": [
     "NO funds flow from FP to EAF — IRS private benefit prohibition",
@@ -68,14 +97,14 @@
       "entity": "FP",
       "owner": "Kevin",
       "status": "COMPLETE",
-      "notes": "COMPLETED April 21 2026. Project: KAI-Netics at raxpmeltyxmtiihxoxpa.supabase.co. 8 tables live. Scout, Jordan, Iris all logging confirmed."
+      "notes": "COMPLETED April 21 2026. Project: KAI-Netics at raxpmeltyxmtiihxoxpa.supabase.co. 8 tables live. Scout, Jordan, Iris, Nova all logging confirmed."
     },
     {
       "item": "Form 1023-EZ Eligibility Check — James Scott",
       "date": "2026-04-25",
       "entity": "EAF",
       "owner": "Kevin",
-      "notes": "URGENT — TechSoup and Google for Nonprofits blocked until 501c3 determination received. 1023-EZ takes 2-4 weeks but requires EAF to project under $50,000 gross receipts first 3 years. James Scott must run eligibility worksheet. Fee: $275 at pay.gov if eligible. Full 1023 fee: $600."
+      "notes": "URGENT — TechSoup and Google for Nonprofits blocked until 501c3 determination received. James Scott must run eligibility worksheet. Fee: $275 at pay.gov if eligible. Full 1023 fee: $600."
     },
     {
       "item": "Maryland Lighthouse Upskilling Application",
@@ -89,14 +118,14 @@
       "date": "2026-04-30",
       "entity": "MONK",
       "owner": "Kevin",
-      "notes": "Non-negotiable before any further public MONK disclosure. File via James L. Scott Esq."
+      "notes": "Non-negotiable before any further public MONK disclosure. File via James L. Scott Esq. — jlslaw@yahoo.com"
     },
     {
       "item": "Microsoft for Nonprofits — EAF Application",
       "date": "2026-04-30",
       "entity": "EAF",
       "owner": "Kevin",
-      "notes": "nonprofit.microsoft.com. EAF EIN 41-4820296. May accept pending 501c3 status — apply now and reference Form 1023 in preparation."
+      "notes": "nonprofit.microsoft.com. EAF EIN 41-4820296. May accept pending 501c3 status — apply now."
     },
     {
       "item": "Google for Nonprofits — EAF Application",
@@ -117,14 +146,14 @@
       "date": "2026-05-01",
       "entity": "MONK",
       "owner": "Kevin",
-      "notes": "File via James L. Scott Esq., Mobley & Brown LLP. IP protection prerequisite — do not delay."
+      "notes": "File via James L. Scott Esq. — jlslaw@yahoo.com — Mobley & Brown LLP. IP protection prerequisite."
     },
     {
       "item": "IRS Form 1023 — EAF 501c3 Filing",
       "date": "2026-05-01",
       "entity": "EAF",
       "owner": "Kevin",
-      "notes": "BLOCKING ITEM — TechSoup, Google for Nonprofits, EARN Maryland, and most foundation grants require determination letter. Full Form 1023 takes 6 months. File by May 1 for ~November 2026 determination. 1023-EZ (2-4 week turnaround) may apply — James Scott must confirm. File at pay.gov. EIN: 41-4820296. 27-month retroactive window expires May 2028."
+      "notes": "BLOCKING ITEM. Full Form 1023 takes 6 months. File by May 1 for ~November 2026 determination. James Scott must confirm 1023-EZ eligibility first. File at pay.gov. EIN: 41-4820296."
     },
     {
       "item": "MBE/DBE Certification — MDOT",
@@ -138,7 +167,7 @@
       "date": "2026-05-20",
       "entity": "FP",
       "owner": "Kevin",
-      "notes": "All federal drone operators must comply. Affects V3 DFR and government contracts. First dollar opportunity — no fleet needed for consulting."
+      "notes": "All federal drone operators must comply. First dollar opportunity — no fleet needed for consulting."
     },
     {
       "item": "EARN Maryland Grant Application",
@@ -166,7 +195,7 @@
       "date": "2027-05-15",
       "entity": "EAF",
       "owner": "Kevin",
-      "notes": "Electronic only at apps.irs.gov/app/ePostcard. Due 15th day of 5th month after 12/31/2026 tax year close. Extension outer limit: 2027-08-15."
+      "notes": "Electronic only at apps.irs.gov/app/ePostcard. Due 15th day of 5th month after 12/31/2026 tax year close."
     },
     {
       "item": "EAF Annual Report — Maryland SDAT (Year 2)",
@@ -188,65 +217,61 @@
       "id": "BL-001",
       "title": "Sage Newsletter Automation — Dual Audience",
       "status": "COMPLETE",
-      "priority": "HIGH",
-      "entity": "EAF + FP",
-      "owner": "Kevin",
-      "agent": "Sage",
-      "notes": "COMPLETED April 21 2026. Workflow: 10_sage_newsletter.json. Board newsletter (Opus, monthly, 25th trigger). Market newsletter (Opus, quarterly/milestone). Both confirmed working. SAGE SEND BOARD/MARKET commands need wiring in Aidan Router."
+      "notes": "COMPLETED April 21 2026. Board newsletter drafting + approval gate live. SAGE SEND BOARD/MARKET wired in Aidan Router. Full SMTP send to board pending — board emails now stored in eaf_board section."
     },
     {
       "id": "BL-002",
       "title": "MCP Email Integration",
       "status": "PARTIAL",
-      "priority": "HIGH",
-      "entity": "FP + EAF",
-      "owner": "Kevin",
-      "notes": "SMTP outbound live (kas@kevin-llc.com). Gmail OAuth inbound live (kas42869@gmail.com). GoDaddy external forwarding BLOCKED by tenant policy. Microsoft Outlook OAuth blocked by GoDaddy federated tenant — requires defederation. Add to James Scott call."
+      "notes": "SMTP outbound live. Gmail OAuth inbound live. GoDaddy Outlook blocked — defederation needed. Add to James Scott call."
     },
     {
       "id": "BL-003",
       "title": "Supabase Agent Memory Layer",
       "status": "COMPLETE",
-      "priority": "HIGH",
-      "entity": "FP",
-      "owner": "Kevin",
       "notes": "COMPLETED April 21 2026. 8 tables live. Scout, Jordan, Iris, Nova all logging confirmed."
     },
     {
       "id": "BL-004",
-      "title": "GitHub Backup — C:\\Kinetic_Core",
-      "status": "PENDING",
-      "priority": "HIGH",
-      "entity": "FP",
-      "owner": "Kevin",
-      "notes": "Private repo needed. All workflows, skills, config files. Do today."
+      "title": "GitHub Backup",
+      "status": "COMPLETE",
+      "notes": "COMPLETED April 21 2026. Repo: https://github.com/KAI-Netics/kinetic-core"
     },
     {
       "id": "BL-005",
       "title": "Pulse Metrics Workflow",
-      "status": "PENDING",
-      "priority": "MEDIUM",
-      "entity": "FP",
-      "owner": "Kevin",
-      "notes": "Platform health + pipeline dashboard. Reads Supabase views. Build next session."
+      "status": "COMPLETE",
+      "notes": "COMPLETED April 21 2026. Workflow: 11_pulse_metrics.json. Reads Supabase views. WhatsApp dashboard confirmed working."
     },
     {
       "id": "BL-006",
       "title": "SAGE SEND Commands — Aidan Router",
-      "status": "PENDING",
-      "priority": "MEDIUM",
-      "entity": "FP + EAF",
-      "owner": "Kevin",
-      "notes": "Wire SAGE SEND BOARD and SAGE SEND MARKET into 6_aidan_router_v2.json. Triggers email delivery via SMTP to distribution lists."
+      "status": "COMPLETE",
+      "notes": "COMPLETED April 21 2026. Sage board/market/both/send board/send market all wired. Approval gate confirmed working. Full SMTP delivery to board pending board emails — now stored in eaf_board section."
     },
     {
       "id": "BL-007",
       "title": "GoDaddy Defederation — Microsoft Outlook OAuth",
       "status": "PENDING",
-      "priority": "MEDIUM",
-      "entity": "FP",
-      "owner": "Kevin",
-      "notes": "Add to James Scott call. Defederation unlocks full Azure App Registration and Microsoft Outlook OAuth in n8n. Enables bi-directional kas@kevin-llc.com email."
+      "notes": "Add to James Scott call. Defederation unlocks full Azure App Registration and Microsoft Outlook OAuth in n8n."
+    },
+    {
+      "id": "BL-008",
+      "title": "Nova fitScore null fix",
+      "status": "PENDING",
+      "notes": "Fit score calculated by Sonnet but not extracting to WhatsApp display. Fix regex in Score RFP node."
+    },
+    {
+      "id": "BL-009",
+      "title": "Sage Board Newsletter — Full SMTP Send",
+      "status": "PENDING",
+      "notes": "Board emails now stored. Wire SMTP send in Aidan Router SAGE SEND BOARD handler. Recipients: jlslaw@yahoo.com, keithrmillard@gmail.com, bjet.1234@yahoo.com. CC: kas@kevin-llc.com. Kevin must approve before every send — no automatic sending."
+    },
+    {
+      "id": "BL-010",
+      "title": "Outlook → Gmail Forwarding",
+      "status": "PENDING",
+      "notes": "Forward eMMA emails from kas@kevin-llc.com Outlook to kas42869@gmail.com. Automates Email Router → Nova pipeline for eMMA solicitations."
     }
   ],
   "verticals": {
@@ -267,14 +292,14 @@
     "V3": {
       "name": "Public Safety, DFR & Aerial Cybersecurity",
       "status": "Day 1 — Kevin delivers personally",
-      "key_regulations": ["Safer Skies Act", "OMB M-26-02 deadline May 20 2026", "NDAA compliance per fleet", "DHS SLTT drone guidance", "Drones for First Responders Act", "CISSP framework", "DCSA facility security", "FedRAMP PE-6"],
+      "key_regulations": ["Safer Skies Act", "OMB M-26-02 deadline May 20 2026", "NDAA compliance per fleet", "DHS SLTT drone guidance", "Drones for First Responders Act", "CISSP framework"],
       "pricing": "$5,000-30,000 SOP packages, $10,000-150,000 pen test/red team",
       "margin": "80-90%"
     },
     "V4": {
       "name": "Entertainment, Events & Aerial Shows",
       "status": "Month 6+ — requires Fleet 3",
-      "key_regulations": ["FAA Part 107 waiver", "ITAR-cleared Skybrush software", "FEMA C-UAS grant compliance", "FIFA venue security mandates", "FAA NOTAM"],
+      "key_regulations": ["FAA Part 107 waiver", "ITAR-cleared Skybrush software", "FEMA C-UAS grant compliance", "FIFA venue security mandates"],
       "pricing": "$35,000-200,000 per show, $5,000-15,000 per DTI event",
       "margin": "55-68%"
     },
@@ -288,7 +313,7 @@
     "V6": {
       "name": "Fleet Services, DaaS & Inside the Fence",
       "status": "Year 2+",
-      "key_regulations": ["NDAA fleet certification per client", "DaaS contract structures", "Confined space OSHA 29 CFR 1910.146", "Digital twin data ownership", "ITAR export compliance"],
+      "key_regulations": ["NDAA fleet certification per client", "DaaS contract structures", "Confined space OSHA 29 CFR 1910.146", "ITAR export compliance"],
       "services": ["Drone-as-a-Service leasing", "Fleet maintenance and repair", "Pilot-on-demand staffing", "Confined space inspection", "Persistent autonomous monitoring", "Digital twin generation"]
     },
     "V7": {
@@ -362,7 +387,7 @@
     "tedco": {
       "program": "TEDCO — Multiple Programs",
       "portal": "https://tedco.md",
-      "notes": "Builder Fund, Social Innovation Fund, SBIR Proposal Lab, Maryland Innovation Initiative. Check portal for current open rounds."
+      "notes": "Builder Fund, Social Innovation Fund, SBIR Proposal Lab, Maryland Innovation Initiative."
     },
     "earn_maryland": {
       "program": "Maryland EARN Workforce Development Grant",
@@ -377,7 +402,7 @@
       "portal": "https://commerce.maryland.gov",
       "amount": "up to $2,000,000 matching",
       "applicant": "FP or EAF",
-      "notes": "Eligible sectors: autonomous tech, cybersecurity, aerospace, defense, manufacturing. Monitor for next round."
+      "notes": "Eligible sectors: autonomous tech, cybersecurity, aerospace, defense, manufacturing."
     }
   },
   "revenue_targets": {
@@ -390,6 +415,7 @@
   "core_engine": {
     "version": "Phase 2 — April 21 2026",
     "supabase_url": "https://raxpmeltyxmtiihxoxpa.supabase.co",
+    "github": "https://github.com/KAI-Netics/kinetic-core",
     "workflows_active": [
       "1_atlas_v2.json",
       "2_scout_v5.json",
@@ -401,16 +427,17 @@
       "7_network_watchdog.json",
       "8_email_router.json",
       "9_nova_rfp.json",
-      "10_sage_newsletter.json"
+      "10_sage_newsletter.json",
+      "11_pulse_metrics.json"
     ],
     "connectors_live": [
       "GoDaddy SMTP — outbound email (kas@kevin-llc.com)",
       "Gmail OAuth — inbound email (kas42869@gmail.com)",
-      "Supabase — structured agent memory (8 tables)"
+      "Supabase — structured agent memory (8 tables)",
+      "GitHub — KAI-Netics/kinetic-core (backup)"
     ],
     "connectors_pending": [
       "Microsoft Outlook OAuth — blocked, needs GoDaddy defederation",
-      "Pulse Metrics workflow — build next session",
       "MCP servers — supabase-mcp, n8n-mcp, google-drive-mcp"
     ]
   }
