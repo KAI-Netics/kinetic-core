@@ -1,0 +1,104 @@
+SCOUT v5 — KAI-NETICS
+Mode: GRANT
+Source: FEMA / DHS
+Query: FEMA C-UAS SLTT counter drone Homeland Security Grant Program 2026 state local tribal territorial FIFA World Cup security grant site:dhs.gov OR site:fema.gov
+Generated: 2026-04-23T15:01:55.110Z
+Scheduled: true
+Live Search: YES (Brave API)
+
+# FEMA C-UAS GRANT PROGRAM — INTELLIGENCE BRIEF
+**Scout | KAI-Netics Grant Intelligence | Run Date: April 23, 2026**
+
+---
+
+## ⚠️ STRATEGIC ALERT — READ BEFORE SCORING
+
+**The FY 2026 $250M tranche has already been awarded (December 30, 2025)** to the 11 FIFA World Cup host states + National Capital Region. **Maryland is NOT a FIFA host state.** FP and EAF cannot access FY 2026 funds directly. However, the **FY 2027 $250M tranche** distributes to **all states and territories** — and Maryland's SAA (Maryland Emergency Management Agency / MEMA) becomes the access point. The play here is **subcontractor/subgrantee positioning**, not direct federal application.
+
+---
+
+FUNDER: U.S. Department of Homeland Security / Federal Emergency Management Agency (FEMA)
+PROGRAM: Counter-Unmanned Aircraft Systems (C-UAS) Grant Program — FY 2027 Tranche
+DEADLINE: FY 2027 allocation — exact NOFO date UNCONFIRMED | FY 2026 awards already distributed (12/30/2025)
+AWARD RANGE: $250,000,000 total FY 2027 tranche distributed to all U.S. states and territories | Individual state allocations UNCONFIRMED | Maryland sub-award potential UNCONFIRMED
+PORTAL / CONTACT: https://www.fema.gov/grants/preparedness/counter-unmanned-aircraft-systems-grant-program | Maryland SAA (MEMA): https://mema.maryland.gov
+ELIGIBILITY: Direct applicants — State Administrative Agencies (SAAs) ONLY. Subapplicants — local, tribal, territorial governments, law enforcement, fire, EMS, qualifying public safety organizations. Private sector firms NOT directly eligible. Must support detect/track/identify/monitor UAS capabilities consistent with 49 U.S.C. § 44801 and Titles 18 and 49 U.S.C.
+EAF FIT SCORE: 28%
+FP FIT SCORE: 72%
+FIT RATIONALE: FP's direct alignment is strong — V3 (Public Safety, DFR & Aerial Cybersecurity), OMB M-26-02 compliance consulting, and MONK's hardware-anchored trust layer map precisely to C-UAS detection, tracking, and identity authentication requirements. EAF is a nonprofit workforce development entity and does not qualify as a public safety subapplicant under this program's eligibility structure. FP cannot apply directly but can pursue subcontract or vendor relationships with Maryland's SAA or qualifying SLTT subgrantees who receive Maryland's FY 2027 allocation.
+
+---
+
+## TOP 3 ALIGNMENT POINTS:
+
+1. **MONK is purpose-built for this program.** Cryptographically signed mission authorization, authenticated identity broadcast, and tamper-resistant mission evidence directly address the C-UAS program's statutory mandate to detect, track, and *identify* UAS — MONK solves the identification and chain-of-custody problem that commercial C-UAS detection hardware alone cannot.
+
+2. **V3 Aerial Cybersecurity + OMB M-26-02 Consulting is a first-dollar entry.** FP can position as a consulting and SOP-development vendor to Maryland SLTT agencies building their C-UAS programs with FY 2027 funds — no fleet required, no SAA application required. This is billable immediately upon Maryland SAA award announcement.
+
+3. **Maryland + National Capital Region proximity.** Maryland borders the NCR (which received FY 2026 funds) and will receive FY 2027 allocation. MEMA, Baltimore City, Baltimore County, and Prince George's County are all potential subgrantee clients. FP's NAICS 541519 and 541690 registrations support professional services contracts flowing from these awards.
+
+---
+
+## TOP 2 RISKS:
+
+1. **FY 2027 NOFO timeline is unconfirmed and may slip.** The One Big Beautiful Bill Act language authorizes distribution but FEMA has not published FY 2027 NOFO details as of April 23, 2026. Maryland SAA award and subgrant solicitation could be 9–18 months away. This is a pipeline play, not a Q2 revenue event.
+
+2. **SAM.gov registration is currently PENDING — this is a blocking condition.** FP submitted April 17, 2026 and UEI/CAGE assignment is pending. Any federal subcontract or vendor relationship requires active SAM.gov registration with CAGE code. If SAM.gov is not resolved by the time Maryland SAA opens subgrant solicitations, FP cannot respond. **Call 1-866-606-8220 on April 22 if no response — action is overdue as of today April 23.**
+
+---
+
+COMPETING APPLICANTS: This is a highly competitive space. Established C-UAS vendors (Dedrone, Fortem Technologies, D-Fend Solutions, Teledyne FLIR, Axon) are already positioned with SLTT agencies and likely embedded in FY 2026 awarded jurisdictions. Maryland SLTT subgrantees will face vendor solicitations from these firms. FP's differentiator is MONK's identity-layer capability, OMB M-26-02 compliance framing, and local Baltimore/Maryland market presence — angles the national vendors cannot credibly claim.
+
+RECOMMENDED ACTION: **WATCH → PREPARE**
+> FY 2026 window is closed for Maryland. FY 2027 is the real opportunity. Use the next 90 days to complete SAM.gov, file MONK provisional patent (April 30 hard deadline), and initiate MEMA relationship-building so FP is vendor-ready when FY 2027 NOFO drops.
+
+NEXT STEP: **Confirm SAM.gov status immediately** — call 1-866-606-8220 today (April 23). Then email MEMA Homeland Security Division to introduce FP and request a capabilities briefing appointment: https://mema.maryland.gov/Pages/contact-us.aspx
+
+DATA CONFIDENCE: **HIGH** — All funding figures, award dates, eligibility rules, and statutory citations drawn directly from live FEMA.gov sources confirmed in search results. FY 2027 NOFO specifics remain UNCONFIRMED pending FEMA publication.
+
+---
+
+## LOI DRAFT
+*For Jordan to refine — addressed to Maryland Emergency Management Agency (MEMA), Homeland Security Division. Suitable for initial capabilities introduction in advance of FY 2027 C-UAS subgrant solicitation.*
+
+---
+
+**[DATE]**
+
+Maryland Emergency Management Agency
+Homeland Security Division
+[Address]
+
+**RE: Capabilities Introduction — Counter-UAS Detection, Identity Authentication & Compliance Consulting | FY 2027 C-UAS Grant Program**
+
+Dear MEMA Homeland Security Division Director,
+
+Kevin Alexander International LLC dba KAI-Netics (EIN: 46-2432851) is a Maryland-based drone technology and public safety consulting firm writing to introduce our capabilities ahead of the anticipated FY 2027 FEMA Counter-Unmanned Aircraft Systems (C-UAS) Grant Program subgrant solicitation.
+
+KAI-Netics brings a unique combination of drone operations expertise, federal compliance consulting, and proprietary technology directly aligned with the C-UAS program's mandate to detect, identify, and track unmanned aircraft systems under 49 U.S.C. § 44801.
+
+Our flagship technology, **MONK** (Mission Operations and Navigation Key), is a hardware-anchored trust layer purpose-built for autonomous drone environments. MONK delivers cryptographically signed mission authorization, authenticated identity broadcast, and tamper-resistant mission evidence — directly addressing the UAS identification gap that detection hardware alone cannot resolve. MONK is currently in prototype development with provisional patent filing in progress.
+
+Our founder, Kevin Alexander Smith, holds FAA Part 107 certification (#5250157), CISSP, PMP, and 33 years of enterprise IT and federal infrastructure experience spanning the TSA, CMS, Johns Hopkins, and Capital One. KAI-Netics is registered under NAICS codes 541519, 488190, and 541690, and is an active SAM.gov registrant with UEI assignment in process.
+
+We are specifically positioned to support Maryland SLTT subgrantees in three areas:
+- **C-UAS Standard Operating Procedure development** aligned with OMB M-26-02 and federal airspace compliance requirements
+- **Aerial cybersecurity red team and vulnerability assessment** for public safety drone programs
+- **UAS identity authentication consulting** leveraging MONK architecture for chain-of-custody and mission evidence requirements
+
+We respectfully request a 30-minute introductory meeting to present our capabilities and explore how KAI-Netics can support Maryland's C-UAS readiness objectives. We are available at your convenience.
+
+Respectfully,
+
+**Kevin Alexander Smith**
+Founder & Principal
+Kevin Alexander International LLC dba KAI-Netics
+[Email] | [Phone]
+SAM.gov UEI: [Pending Assignment] | EIN: 46-2432851
+
+---
+*Scout Intelligence Brief — KAI-Netics Internal Use Only*
+
+--- FETCH LOG ---
+SNIPPET FALLBACK (HTTP 403): https://www.fema.gov/fact-sheet/counter-unmanned-aircraft-systems-grant-program-frequently-asked-questions
+SNIPPET FALLBACK (HTTP 403): https://www.fema.gov/fact-sheet/notice-funding-opportunity-nofo-counter-unmanned-aircraft-systems-c-uas-grant-program

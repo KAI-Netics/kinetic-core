@@ -1,0 +1,98 @@
+SCOUT v5 — KAI-NETICS
+Mode: GRANT
+Source: Maryland Commerce — Build Our Future / DECADE Act
+Query: Maryland "Build Our Future" grant 2026 OR "DECADE Act" autonomous technology cybersecurity aerospace defense nonprofit private company site:commerce.maryland.gov OR site:governor.maryland.gov
+Generated: 2026-04-22T15:00:00.218Z
+Scheduled: true
+Live Search: YES (Brave API)
+
+# SCOUT INTELLIGENCE REPORT
+## Maryland Build Our Future Grant Program — Round 3
+**Query Date:** April 22, 2026 | **Compiled by:** Scout, KAI-Netics Grant Intelligence Agent
+
+---
+
+> ⚠️ **TIMING ADVISORY:** Live search data confirms Round 3 applications **opened August 25, 2025** with awards expected **spring 2026**. Round 3 is almost certainly **closed or in evaluation**. This report profiles the program for **Round 4 positioning**, which based on the annual pattern should open **August 2026**. See Recommended Action below.
+
+---
+
+**FUNDER:** Maryland Department of Commerce
+**PROGRAM:** Build Our Future Grant Pilot Program — Round 3 (FY2026)
+**DEADLINE:** Round 3 portal opened August 25, 2025 — application window likely **CLOSED**. Round 4 deadline: **UNCONFIRMED** (pattern suggests August 2026 open)
+**AWARD RANGE:** Up to $2,000,000 (matching grant required) | Program funded at $7M for FY2026
+**PORTAL / CONTACT:** https://commerce.maryland.gov/fund/build-our-future-grant-program
+**ELIGIBILITY:** Private companies, nonprofit entities, local governments, colleges and universities in Maryland. Eligible sectors: Advanced Manufacturing, Aerospace, **Artificial Intelligence**, Biotechnology, Blue Technology, **Cybersecurity**, **Defense**, Energy and Sustainability, Life Sciences, Quantum, **Sensors and Robotics**. Eligible project types include: cyber ranges, prototype manufacturing centers, research spaces, SCIFs, wet labs, and similar innovation infrastructure.
+
+**EAF FIT SCORE:** 74%
+**FP FIT SCORE:** 81%
+
+**FIT RATIONALE:** KAI-Netics sits at the exact intersection of Cybersecurity, Defense, Aerospace, AI, and Sensors & Robotics — five of the program's twelve eligible sectors. The matching grant requirement is manageable if tied to Fleet 1 acquisition ($55K) or MONK prototype lab buildout. EAF scores slightly lower because infrastructure grants traditionally favor entities with physical facility plans; FP's operational profile and revenue-generating infrastructure plans are a stronger fit narrative for this round.
+
+---
+
+**TOP 3 ALIGNMENT POINTS:**
+1. **Sector bull's-eye across five categories simultaneously** — MONK (cybersecurity + defense + sensors), AKMS (AI + autonomous systems), drone operations (aerospace + robotics) maps directly to the program's eligible sectors with zero narrative stretching required.
+2. **Cyber range eligibility is an explicit named project type** — FP's V3 vertical (Aerial Cybersecurity, DFR, red team exercises) and MONK's hardware trust layer could anchor a legitimate cyber range or drone security research facility proposal, exactly what previous awardees built.
+3. **Maryland economic impact narrative is built-in** — CAKO Cohort 1 (Baltimore underserved workforce), Fleet 1 arrival, and MONK LLC formation all happening in FY2026 create a compelling job creation + innovation infrastructure story that aligns with the program's proven award rationale (655 jobs, $48.7M private investment leveraged to date).
+
+---
+
+**TOP 2 RISKS:**
+1. **Matching requirement may strain current cash position** — Up to $2M in grants requires dollar-for-dollar or comparable private match. If Fleet 1 ($55K) and MONK prototype costs are the match basis, the ask must be scaled accordingly or a capital partner must be identified before application. Overstating match capacity is a fatal application error.
+2. **Round 3 is almost certainly in evaluation right now** — Applying in April 2026 for a window that opened August 25, 2025 is likely too late. Premature engagement with Commerce staff before Round 4 is announced could be perceived as pressure; must position as relationship-building, not a live application push.
+
+---
+
+**COMPETING APPLICANTS:** Based on prior rounds (11 awarded Round 1, 10 awarded Round 2), competition is stiff but not overwhelming. Previous awardees skewed toward biotech, wet labs, and cyber workforce training centers. **KAI-Netics would be among very few — possibly the only — autonomous drone / aerial cybersecurity applicants**, which is a genuine differentiation advantage. University of Maryland, Northrop Grumman supply chain firms, and established Maryland cybersecurity companies (Tenable, CACI, Leidos primes) are likely competitors in adjacent sectors.
+
+**RECOMMENDED ACTION:** ⏳ **WATCH — Prepare for Round 4**
+Round 3 window is closed. Begin relationship-building with Maryland Commerce NOW so KAI-Netics is a known entity when Round 4 opens (likely August 2026). Use the next 4 months to build the match funding case, finalize MONK prototype documentation, and draft the infrastructure narrative around a drone operations + cyber range facility.
+
+**NEXT STEP:** Email Maryland Department of Commerce Business Development team to introduce KAI-Netics and request a pre-application conversation ahead of Round 4. Start at: https://commerce.maryland.gov/fund/build-our-future-grant-program — locate program contact and send introduction email by **April 30, 2026**.
+
+**DATA CONFIDENCE:** HIGH — Multiple official Maryland Commerce and Governor's Office sources confirm program structure, eligibility, award ceiling, and Round 3 timeline. Round 4 dates are UNCONFIRMED but inferred from consistent annual pattern (Round 1: 2023, Round 2: 2024, Round 3: August 2025).
+
+---
+
+## LOI DRAFT
+*For Jordan to refine — framed as a Round 4 introduction letter to Maryland Department of Commerce*
+
+---
+
+**[Date]**
+
+Maryland Department of Commerce
+Office of Business Development
+World Trade Center, 401 E. Pratt Street
+Baltimore, Maryland 21202
+
+**Re: Introduction — Build Our Future Grant Program — Round 4 Interest**
+
+Dear Maryland Department of Commerce Team,
+
+I am writing to introduce KAI-Netics — a Maryland-based technology company and its affiliated nonprofit, the KAI-Netics Equity & Autonomy Foundry, Inc. (EAF) — and to express strong interest in the Build Our Future Grant Program ahead of its anticipated fourth round.
+
+KAI-Netics operates at the convergence of five of your program's twelve eligible sectors: Cybersecurity, Defense, Aerospace, Artificial Intelligence, and Sensors and Robotics. Our flagship technology, MONK, is a hardware-anchored trust layer for autonomous drone operations — providing cryptographically signed mission authorization, authenticated identity broadcast, and tamper-resistant mission evidence for commercial and government UAV platforms. Complementing MONK is AKMS, our autonomous swarm management operating system currently in active development for BVLOS logistics and HD swarm coordination.
+
+The Build Our Future program's explicit support for cyber ranges and prototype manufacturing centers aligns directly with our planned infrastructure: a Maryland-based drone operations and aerial cybersecurity research facility that would serve as the home base for MONK prototype testing, red team exercise execution, and the training of the next generation of drone security professionals.
+
+Our nonprofit EAF operates CAKO — a zero-tuition, 12-16 week workforce certification program training underserved Baltimore community members as FAA Part 107-licensed drone operators with concurrent cybersecurity credentials. Cohort 1 launches July 2026. A Build Our Future infrastructure grant would accelerate both the facility buildout and the workforce pipeline simultaneously, producing exactly the kind of job creation and private capital leverage your program has delivered in prior rounds.
+
+We would welcome a brief introductory conversation with your team to understand Round 4 priorities and determine the strongest alignment between our infrastructure plans and program objectives.
+
+Thank you for your time and for the Moore-Miller Administration's continued investment in Maryland's innovation economy.
+
+Respectfully,
+
+Kevin Alexander Smith
+Founder & Principal
+Kevin Alexander International LLC dba KAI-Netics
+[Phone] | [Email]
+EIN: 46-2432851 | NAICS: 541519, 488190, 541690
+
+---
+*Scout Note to Jordan: Confirm Commerce program contact name before sending. Check commerce.maryland.gov for staff directory or call main line. Do not send blind — find the right program officer first.*
+
+--- FETCH LOG ---
+SNIPPET FALLBACK (only 118 words): https://commerce.maryland.gov/fund/build-our-future-grant-program
+FULL CONTENT (560 words): https://governor.maryland.gov/news/press/pages/governor-moore-announces-third-round-of-build-our-future-grants-to-make-marylands-economy-more-competitive.aspx

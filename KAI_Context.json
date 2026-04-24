@@ -365,6 +365,16 @@
       { "code": "541715", "description": "Research and Development in Physical Sciences — AKMS/MONK R&D" }
     ]
   },
+"programs": [
+  {
+    "name": "MEIA",
+    "full_name": "Maryland E-Nnovation Initiative Award",
+    "entity": "FP",
+    "status": "COMPLETE",
+    "notes": "Phase 2 submitted April 14 2026 to Emily Sheppard",
+    "active": false
+  }
+],
   "grant_contacts": {
     "lighthouse_upskilling": {
       "program": "Maryland Lighthouse Industries Upskilling and Reskilling Program",
