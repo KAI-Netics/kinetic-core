@@ -1,0 +1,50 @@
+ATLAS v2 — KAI-NETICS
+Command: Atlas Monk
+Generated: 2026-04-24T03:31:16.055Z
+Words: 183
+
+# MONK Architecture — Technical Brief
+
+---
+
+## What I Can Tell You
+
+Based on my current context, **MONK's architecture parameters are undefined** in my loaded configuration.
+
+This means I cannot responsibly brief you on:
+
+- Specific system topology
+- Sensor fusion stack
+- Communication architecture
+- Autonomy layers
+- Compliance mapping to FAA Part 108 (BVLOS final rule)
+
+---
+
+## What This Means Operationally
+
+> **Dr. Kott's standard applies here:** I will not fabricate architecture claims that haven't been validated and loaded into my context.
+
+If I generate MONK specifications from assumption, those claims could:
+
+1. **Conflict with actual design decisions** already made
+2. **Create compliance liability** if cited against FAA Part 108
+3. **Undermine SBIR technical narratives** if inconsistent
+4. **Fail Dr. Kott's review** immediately
+
+---
+
+## What You Should Do
+
+To unlock my full MONK technical briefing capability, provide:
+
+- [ ] MONK architecture definition
+- [ ] Vertical integration context
+- [ ] BVLOS compliance posture
+- [ ] Current program status
+
+---
+
+**I'm ready to work the moment the parameters are loaded.**
+
+*— Atlas, KAI-Netics Senior Technical Architect*
