@@ -7,156 +7,296 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "*/5 11-13 * * 1-5"
+              "expression": "*/5 11-13 * * *"
             }
           ]
         }
       },
-      "id": "watchdog-001",
+      "id": "59f9eafe-306d-4957-bb5c-88eb3b646074",
       "name": "Check Every 5 Min (7-9AM ET)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 0]
+      "position": [
+        -1104,
+        160
+      ]
     },
     {
       "parameters": {
         "jsCode": "const https = require('https');\n\n// Test connectivity to Brave Search API\nconst result = await new Promise((resolve) => {\n  const req = https.request({\n    hostname: 'api.search.brave.com',\n    port: 443,\n    path: '/',\n    method: 'HEAD',\n    timeout: 5000\n  }, (res) => {\n    resolve({ online: true, statusCode: res.statusCode });\n  });\n  req.on('error', (e) => resolve({ online: false, reason: e.message }));\n  req.on('timeout', () => {\n    req.destroy();\n    resolve({ online: false, reason: 'timeout' });\n  });\n  req.end();\n});\n\nconst now = new Date();\nconst timeET = now.toLocaleString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false });\n\nreturn [{ json: { ...result, checkedAt: now.toISOString(), timeET } }];"
       },
-      "id": "watchdog-002",
+      "id": "a5e8ded9-91b5-4dde-ba08-817c9dfe0916",
       "name": "Test Network Connectivity",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [220, 0]
+      "position": [
+        -880,
+        160
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "net-check",
               "leftValue": "={{ $json.online }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true" }
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
             }
           ],
           "combinator": "and"
         },
         "options": {}
       },
-      "id": "watchdog-003",
+      "id": "cb06b012-e720-4102-8ecb-36cc94a8c7e1",
       "name": "Network Online?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [440, 0]
+      "position": [
+        -656,
+        160
+      ]
     },
     {
       "parameters": {
         "jsCode": "const fs = require('fs');\n\n// Check if Orchestra has already run today\nconst today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }); // YYYY-MM-DD\nconst flagDir = '/data/Aidan_Outputs/Orchestra';\nconst flagPath = `${flagDir}/ran_${today}.flag`;\n\nfs.mkdirSync(flagDir, { recursive: true });\n\nconst alreadyRan = fs.existsSync(flagPath);\n\nreturn [{ json: { alreadyRan, today, flagPath } }];"
       },
-      "id": "watchdog-004",
+      "id": "e7c2be46-0904-4bf4-bdd9-c605ac94c216",
       "name": "Already Run Today?",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [660, -80]
+      "position": [
+        -448,
+        80
+      ]
     },
     {
       "parameters": {
         "jsCode": "// Network is down — log silently and stop\nconst { reason, checkedAt, timeET } = $input.first().json;\nconsole.log(`[Watchdog] Network offline at ${timeET} ET — ${reason || 'unknown'}. Will retry in 5 min.`);\nreturn [{ json: { skipped: true, reason, checkedAt } }];"
       },
-      "id": "watchdog-005",
+      "id": "ed3e7454-2f06-48a7-acb7-289811fe18f8",
       "name": "Log Offline — Retry Next Tick",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [660, 80]
+      "position": [
+        -448,
+        240
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": false, "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "ran-check",
               "leftValue": "={{ $json.alreadyRan }}",
               "rightValue": false,
-              "operator": { "type": "boolean", "operation": "false" }
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              }
             }
           ],
           "combinator": "and"
         },
         "options": {}
       },
-      "id": "watchdog-006",
+      "id": "0c3a9c96-7aee-44f0-9607-2c2c0e1615e7",
       "name": "Not Run Yet Today?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [880, -80]
+      "position": [
+        -224,
+        80
+      ]
     },
     {
       "parameters": {
         "jsCode": "const fs = require('fs');\nconst http = require('http');\nconst { flagPath, today } = $input.first().json;\n\n// Write flag file FIRST to prevent double-firing\nfs.writeFileSync(flagPath, `Orchestra fired at ${new Date().toISOString()}`, 'utf8');\n\n// Fire Orchestra\nconst body = JSON.stringify({\n  command: 'morning brief',\n  source: 'network-watchdog',\n  date: today\n});\n\nconst opts = {\n  hostname: 'host.docker.internal',\n  port: 5678,\n  path: '/webhook/aidan-orchestra',\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n    'Content-Length': Buffer.byteLength(body)\n  }\n};\n\nconst result = await new Promise((resolve) => {\n  const req = http.request(opts, (res) => {\n    let d = '';\n    res.on('data', c => d += c);\n    res.on('end', () => resolve({ fired: true, status: res.statusCode, response: d }));\n  });\n  req.on('error', (e) => resolve({ fired: false, error: e.message }));\n  req.write(body);\n  req.end();\n});\n\nconst timeET = new Date().toLocaleString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: true });\n\nreturn [{ json: { ...result, today, flagPath, firedAt: timeET } }];"
       },
-      "id": "watchdog-007",
+      "id": "cc2a1950-437d-4ef6-920a-f4a4d43a9e87",
       "name": "Fire Orchestra + Write Flag",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1100, -160]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
         "jsCode": "// Already ran today — skip silently\nconst { today } = $input.first().json;\nconsole.log(`[Watchdog] Orchestra already ran today (${today}). Skipping.`);\nreturn [{ json: { skipped: true, reason: 'already_ran', today } }];"
       },
-      "id": "watchdog-008",
+      "id": "2d5598a7-6999-4cb2-b2f0-cf79a6cbbd65",
       "name": "Already Ran — Skip",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1100, 0]
+      "position": [
+        0,
+        160
+      ]
     },
     {
       "parameters": {
         "jsCode": "const http = require('http');\nconst { fired, firedAt, today, error } = $input.first().json;\n\nif (!fired) {\n  // Orchestra fire failed — send WhatsApp alert\n  const alertMsg = `⚠️ WATCHDOG ALERT\\nOrchestra failed to fire at ${firedAt} ET\\nError: ${error || 'unknown'}\\nManual trigger: say Orchestra`;\n  const msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: alertMsg } });\n  const opts = {\n    hostname: 'host.docker.internal',\n    port: 8081,\n    path: '/message/sendText/Aidan',\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) }\n  };\n  await new Promise(r => {\n    const req = http.request(opts, res => { res.on('data', () => {}); res.on('end', r); });\n    req.on('error', r);\n    req.write(msgBody);\n    req.end();\n  });\n}\n\nreturn [{ json: { success: fired, firedAt, today } }];"
       },
-      "id": "watchdog-009",
+      "id": "20ef8038-15ae-491d-91f8-407893435da0",
       "name": "Alert on Failure",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, -160]
+      "position": [
+        224,
+        0
+      ]
     }
   ],
+  "pinData": {
+    "Check Every 5 Min (7-9AM ET)": [
+      {
+        "json": {
+          "timestamp": "2026-04-28T14:19:43.029-04:00",
+          "Readable date": "April 28th 2026, 2:19:43 pm",
+          "Readable time": "2:19:43 pm",
+          "Day of week": "Tuesday",
+          "Year": "2026",
+          "Month": "April",
+          "Day of month": "28",
+          "Hour": "14",
+          "Minute": "19",
+          "Second": "43",
+          "Timezone": "America/New_York (UTC-04:00)"
+        }
+      }
+    ]
+  },
   "connections": {
     "Check Every 5 Min (7-9AM ET)": {
-      "main": [[{ "node": "Test Network Connectivity", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Test Network Connectivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Test Network Connectivity": {
-      "main": [[{ "node": "Network Online?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Network Online?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Network Online?": {
       "main": [
-        [{ "node": "Already Run Today?", "type": "main", "index": 0 }],
-        [{ "node": "Log Offline — Retry Next Tick", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Already Run Today?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Offline — Retry Next Tick",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Already Run Today?": {
-      "main": [[{ "node": "Not Run Yet Today?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Not Run Yet Today?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Not Run Yet Today?": {
       "main": [
-        [{ "node": "Fire Orchestra + Write Flag", "type": "main", "index": 0 }],
-        [{ "node": "Already Ran — Skip", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Fire Orchestra + Write Flag",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Ran — Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Fire Orchestra + Write Flag": {
-      "main": [[{ "node": "Alert on Failure", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Alert on Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
+  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "saveManualExecutions": true
+    "binaryMode": "separate"
   },
+  "versionId": "8aa82d1c-1a8a-49c7-be31-6ba6a9d4b2b2",
+  "meta": {
+    "instanceId": "7912e0e7adcd7343a625bb37c874985a5d34dd3aa3c039277d1df96852bff0ff"
+  },
+  "id": "SyfpMRh1XmZC7qMD",
   "tags": [
-    { "name": "KAI-Netics" },
-    { "name": "Aidan" },
-    { "name": "Watchdog" },
-    { "name": "Infrastructure" }
+    {
+      "updatedAt": "2026-04-07T01:42:36.347Z",
+      "createdAt": "2026-04-07T01:42:36.347Z",
+      "id": "4GdpfuL6OhWIXCXO",
+      "name": "KAI-Netics"
+    },
+    {
+      "updatedAt": "2026-04-21T16:15:36.392Z",
+      "createdAt": "2026-04-21T16:15:36.392Z",
+      "id": "7OG1npZpMsCCRNJd",
+      "name": "Infrastructure"
+    },
+    {
+      "updatedAt": "2026-04-07T01:42:36.295Z",
+      "createdAt": "2026-04-07T01:42:36.295Z",
+      "id": "B0QrEiqfwdS6WU2L",
+      "name": "Aidan"
+    },
+    {
+      "updatedAt": "2026-04-21T16:15:36.472Z",
+      "createdAt": "2026-04-21T16:15:36.472Z",
+      "id": "d3onD4qnskR0rNLA",
+      "name": "Watchdog"
+    }
   ]
 }
