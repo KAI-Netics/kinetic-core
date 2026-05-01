@@ -1,336 +1,291 @@
-﻿{
+{
   "meta": {
-    "version": "1.8",
-    "updated": "2026-04-23",
+    "version": "2.0",
+    "updated": "2026-05-01",
     "owner": "Kevin Alexander Smith",
-    "changelog": "v1.7 â€” Board member emails added. EAF board contacts section added with James L. Scott, Keith Millard, Maurice Ellis."
+    "changelog": "v2.0 -- Complete rebuild. Phase narrative added in founder voice. Demand cluster framework replacing fixed verticals taxonomy. Three-game strategy encoded. MONK legacy statement added. Encoding fixed. Stale items archived. Living context architecture established."
   },
+
+  "mission": {
+    "statement": "KAI-Netics is building a business that provides for Kevin's family today and leaves a legacy for his grandson MONK tomorrow. Starting at net zero, bootstrapped, lean, and growth-focused. The short game funds the long game. The long game builds the platform. The platform builds the legacy.",
+    "founder_voice": "I want to build a business that will take care of my expenses, support my family, and leave a legacy for my grandson. I need to put myself to work and start with a bootstrap model -- very lean but growth focused. I need to engage with the long money for long term success and I need small wins and experience all around. I need to have short game, long game, and longer game building on each other and I need to look like a strong long term outfit.",
+    "legacy": {
+      "name": "MONK",
+      "note": "Kevin's grandson. The platform, the IP holding company, and the hardware trust layer are all named in his honor. Everything built here is ultimately for him."
+    }
+  },
+
+  "three_games": {
+    "short_game": {
+      "horizon": "Now through Month 12",
+      "objective": "Personal income. Kevin on the ground delivering personally. First inspection contracts under Part 107. OMB M-26-02 compliance consulting. Bootstrap everything. No overhead that does not generate revenue.",
+      "success_metric": "Livable wage achieved. First contract signed. First flight logged commercially.",
+      "key_actions": [
+        "OMB M-26-02 consulting -- CISSP + Part 107 -- zero flight hours required -- May 20 deadline",
+        "First infrastructure inspection contract -- utility, bridge, or highway -- DMV",
+        "BGE supplier registration and T&D outreach -- fleet arrives July 1",
+        "SAM.gov UEI confirmed -- gates all federal work",
+        "IRS Form 1023 filed -- gates all grant funding"
+      ]
+    },
+    "long_game": {
+      "horizon": "Month 12 through Month 36",
+      "objective": "EAF cohorts producing certified operators. Fleet growing. Managed service contracts replacing one-off work. MRR building toward $30K-46K/month. MONK licensing conversations starting. Grant funding subsidizing EAF operating costs.",
+      "success_metric": "CAKO Cohort 1 complete. First managed service SLA signed. First grant awarded.",
+      "key_actions": [
+        "CAKO Cohort 1 launch Q3-Q4 2026",
+        "First MRR contract -- UMMS or BGE",
+        "EARN Maryland grant awarded",
+        "MONK provisional patent issued",
+        "MBE/DBE certification active"
+      ]
+    },
+    "longer_game": {
+      "horizon": "Month 36 and beyond",
+      "objective": "CAKO graduates employed across the DMV. KAI-Netics as the infrastructure drone operator for Maryland. MONK as a licensed technology standard. AKMS data moat generating licensing revenue. Legacy built for MONK.",
+      "success_metric": "50+ CAKO graduates employed. $5M+ ARR. MONK licensed to 3+ OEM partners.",
+      "key_actions": [
+        "Part 135 certificate -- medical and logistics delivery",
+        "CURN commercial operations -- Baltimore endpoint",
+        "MONK DHS approved technology list",
+        "AKMS data licensing -- proprietary flight dataset",
+        "UMMS managed service -- $10K-15K/month"
+      ]
+    }
+  },
+
+  "phase": {
+    "current": "Bootstrap Launch -- Pre-Revenue",
+    "as_of": "2026-05-01",
+    "narrative": "KAI-Netics is in its first operational month. The platform is live. All 8 agents are running. The legal entities are established. Kevin holds active FAA Part 107 certification and a deep credential stack. No revenue has been earned yet. The immediate priority is first dollar -- OMB M-26-02 compliance consulting requires zero flight hours and closes in 19 days. The first infrastructure inspection contract requires building flight proficiency in parallel with BD outreach. The EAF 501c3 determination is the critical path item blocking all grant funding. Every action this month either generates income or unblocks the next income source.",
+    "priority_stack": [
+      "1. OMB M-26-02 compliance consulting -- first dollar, no drone required, May 20 deadline",
+      "2. IRS Form 1023 filing -- unblocks all grant funding -- call James Scott",
+      "3. SAM.gov UEI confirmation -- unblocks all federal contracting",
+      "4. BGE outreach -- first inspection contract -- fleet arrives July 1",
+      "5. Flight hours -- build proficiency in parallel, not as a blocker",
+      "6. CAKO pre-cohort -- identify first students while compliance is being built"
+    ],
+    "first_dollar_path": "OMB M-26-02 federal drone compliance consulting. Every federal contractor operating drones must comply by May 20, 2026. Kevin's CISSP + Part 107 combination is uniquely qualified to audit and advise. No flight hours required. This is a consulting engagement, not an inspection service. Rate: $150-250/hour or $5,000-15,000 fixed engagement."
+  },
+
   "entities": {
     "FP": {
       "name": "Kevin Alexander International LLC dba KAI-Netics",
       "ein": "46-2432851",
-      "type": "Maryland LLC â€” For-Profit",
+      "type": "Maryland LLC -- For-Profit",
       "role": "Commercial operations, revenue engine, MONK LLC parent",
       "status": "Operational"
     },
     "EAF": {
       "name": "KAI-Netics Equity & Autonomy Foundry, Inc.",
       "ein": "41-4820296",
-      "type": "Maryland Nonstock Corporation â€” Nonprofit",
+      "type": "Maryland Nonstock Corporation -- Nonprofit",
       "role": "Fleet ownership, workforce development, grants, DFR SOP consulting",
-      "status": "Incorporated 2/15/2026, certified 3/4/2026, board seated, IRS Form 1023 in preparation"
+      "status": "Incorporated 2/15/2026, certified 3/4/2026, board seated, IRS Form 1023 in preparation -- CRITICAL BLOCKER"
     },
     "MONK": {
       "name": "MONK LLC",
-      "ein": "TBD â€” formation in progress",
-      "type": "Maryland LLC â€” For-Profit, wholly-owned by FP",
+      "ein": "TBD -- formation in progress",
+      "type": "Maryland LLC -- For-Profit, wholly-owned by FP",
       "role": "IP holding, SBIR applicant, legacy asset container, technology licensing",
-      "status": "Formation in progress"
+      "status": "Formation in progress -- provisional patent filing overdue"
     }
   },
+
   "founder": {
     "name": "Kevin Alexander Smith",
     "credentials": ["PMP", "CISSP", "FAA Part 107 #5250157", "CCNA", "MCSE", "Security+"],
     "part107": { "cert": "5250157", "ftn": "C2274489", "expiry": "2027-12-31" },
-    "roles": ["Sales and BD â€” closing all contracts", "MONK technology development"],
-    "background": "33 years IT â€” Microsoft, TSA, EIA, CMS, MedImmune, MedStar, Johns Hopkins, Capital One, pharmaceutical manufacturing, distribution center operations"
+    "roles": ["Sales and BD -- closing all contracts", "MONK technology development", "Lead operator -- all V1 inspections"],
+    "background": "33 years IT -- Microsoft, TSA, EIA, CMS, MedImmune, MedStar, Johns Hopkins, Capital One, pharmaceutical manufacturing, distribution center operations",
+    "flight_status": "Certificate active. Flight hours in development. Building proficiency in parallel with BD outreach.",
+    "insider_advantages": [
+      "Medline Industries -- medical supply chain economics -- proprietary BD advantage for UMMS/Hopkins/MedStar",
+      "MedStar Health -- institutional knowledge of operations and procurement",
+      "Microsoft -- enterprise sales and technology positioning",
+      "Capital One -- financial services compliance and risk frameworks"
+    ]
   },
+
+  "demand_clusters": {
+    "framework": "Anywhere autonomous flight creates a data, delivery, security, or efficiency advantage that was previously uneconomical or impossible. Jevons Paradox applies -- as drone economics improve, demand expands into use cases that did not previously exist as purchased services. The cluster list grows as the technology matures and regulations evolve.",
+    "clusters": {
+      "A": {
+        "name": "Mandated Infrastructure Inspection",
+        "jevons_driver": "Federal mandates make inspection non-discretionary. Drone cuts cost 80%. Frequency expands from annual to monthly. A utility that inspected 200 miles annually will inspect 2,000 miles when the cost drops from $50K to $2K per run.",
+        "regulations": ["NERC FAC-001/003", "PHMSA 49 CFR 192", "FHWA 23 CFR 650", "FRA 49 CFR 213", "FAA AC 150/5370", "MD Dam Safety Act", "FERC Part 12", "Clean Water Act TMDL", "MS4 NPDES"],
+        "target_profile": "Infrastructure owner in DMV with non-discretionary federal inspection mandate, currently using helicopters or ground crews",
+        "kevin_angle": "Part 107 + MWVOB + Maryland-based + MBE pending",
+        "phase": "Now -- V1 revenue",
+        "pricing": "$1,500-6,000 per inspection, $2,500-12,000/month retainer",
+        "discovered_targets": []
+      },
+      "B": {
+        "name": "Federal Compliance and Drone Cybersecurity",
+        "jevons_driver": "OMB M-26-02 created a forced buying event for every federal contractor. Compliance market did not exist before May 2026. Deadline creates urgency. CISSP + Part 107 is a rare combination -- most cybersecurity consultants cannot speak to drone operations.",
+        "regulations": ["OMB M-26-02 May 20 2026", "NDAA fleet certification", "DHS SLTT drone guidance", "CISSP framework", "Safer Skies Act"],
+        "target_profile": "Federal contractor or agency operating drones in DMV, needing compliance posture before May 20 deadline",
+        "kevin_angle": "CISSP + Part 107 -- zero flight hours required -- consulting engagement",
+        "phase": "Now -- immediate revenue, no drone required",
+        "pricing": "$5,000-30,000 SOP packages, $10,000-150,000 pen test/red team",
+        "discovered_targets": []
+      },
+      "C": {
+        "name": "Public Safety, DFR and Emergency Response",
+        "jevons_driver": "Drone-as-first-responder programs expanding nationally. FEMA and DHS funding available. Cost of aerial situational awareness drops from $1,500/hour helicopter to $50/hour drone. Departments that never had air support will run it continuously.",
+        "regulations": ["Drones for First Responders Act", "DHS SLTT drone guidance", "FEMA C-UAS SLTT grant", "Safer Skies Act"],
+        "target_profile": "Maryland county or city with active or planned DFR program -- Baltimore City, Anne Arundel, Howard, Prince George's",
+        "kevin_angle": "Part 107 + CISSP + EAF workforce pipeline -- graduates become DFR operators",
+        "phase": "Now -- consulting and SOP; fleet-dependent for managed service",
+        "eaf_connection": "CAKO graduates are the operator pipeline for DFR programs",
+        "discovered_targets": []
+      },
+      "D": {
+        "name": "Supply Chain and Warehouse Intelligence",
+        "jevons_driver": "Cost of knowing inventory in real time drops from expensive manual labor to near-zero with autonomous drones. Companies that counted inventory quarterly will count it hourly. Kevin's Medline and MedImmune background is proprietary insider knowledge of this disruption.",
+        "regulations": ["OSHA 29 CFR 1910", "FDA GMP", "WMS data security", "OSHA PSM 29 CFR 1910.119"],
+        "target_profile": "Warehouse, distribution center, or 3PL operator in Maryland with high SKU count and labor-intensive inventory processes",
+        "kevin_angle": "Medline insider knowledge -- understands the economics before the client does",
+        "phase": "Consulting Day 1, managed service Month 6+",
+        "discovered_targets": []
+      },
+      "E": {
+        "name": "Medical and Critical Delivery",
+        "jevons_driver": "Unit economics of medical delivery flip when Part 135 arrives. A hospital that pays $50K per helicopter delivery will run 10x the deliveries at $5K per drone. CURN is the infrastructure. UMMS Sparrows Point serves 11 hospitals -- one endpoint, massive reach.",
+        "regulations": ["FAA Part 135", "Part 108 BVLOS final rule incoming", "FDA cold chain requirements", "HIPAA compliance for patient data"],
+        "target_profile": "Health system or hospital network in Baltimore with supply chain inefficiency and sustainability mandate",
+        "kevin_angle": "Medline + MedStar + MedImmune insider knowledge -- MEIA cohort -- Dr. Amukele Hopkins connection",
+        "phase": "Relationship building now -- revenue Year 2+ pending Part 135",
+        "key_contact": "Dr. Timothy Kien Amukele, tamukele@jhmi.edu -- drone medical delivery pioneer",
+        "discovered_targets": ["UMMS (Pat Vizzard, VP Supply Chain)", "MedStar Health (Bradley Chambers, SVP/COO)", "Johns Hopkins Health System"]
+      },
+      "F": {
+        "name": "Environmental Monitoring and Compliance",
+        "jevons_driver": "EPA mandates create non-discretionary monitoring budgets. Annual Chesapeake Bay TMDL reporting becomes continuous monitoring when drone cost drops below field crew cost. MS4 NPDES stormwater compliance creates recurring inspection contracts for every municipality.",
+        "regulations": ["Clean Water Act TMDL", "MS4 NPDES", "Chesapeake Bay Program", "EPA 40 CFR 122", "Maryland Critical Areas Act"],
+        "target_profile": "Maryland municipality, watershed authority, or environmental consulting firm with recurring EPA compliance obligations",
+        "kevin_angle": "Part 107 + scientific data collection capability + Maryland-based",
+        "phase": "Month 6+ -- requires some flight proficiency and data analysis workflow",
+        "discovered_targets": []
+      },
+      "G": {
+        "name": "Entertainment, Events and Experiential",
+        "jevons_driver": "Drone shows replace fireworks at events where FAA restrictions apply. Stadium security adds aerial layer at fraction of helicopter cost. FIFA 2026 creates a specific high-value event opportunity in the DMV.",
+        "regulations": ["FAA Part 107 waiver", "ITAR-cleared Skybrush software", "FEMA C-UAS grant compliance", "FIFA venue security mandates"],
+        "target_profile": "Event promoter, venue, or municipality needing aerial entertainment or security capability",
+        "kevin_angle": "Fleet 3 (250 LED drones) + ITAR-cleared Skybrush + CISSP for security layer",
+        "phase": "Month 6+ -- requires Fleet 3",
+        "fifa_2026": "DMV venues hosting FIFA World Cup 2026 -- priority target for drone show and security contracts",
+        "discovered_targets": []
+      },
+      "H": {
+        "name": "Agriculture and Land Management",
+        "jevons_driver": "Precision agriculture on Maryland Eastern Shore -- cost of crop scouting drops from $200/acre manual to $5/acre drone. Farmers who scouted once per season will scout weekly. Chesapeake Bay watershed management creates environmental overlay.",
+        "regulations": ["USDA crop insurance requirements", "Chesapeake Bay Program", "Maryland Agricultural Cost Share Program"],
+        "target_profile": "Large-scale farm operation on Maryland Eastern Shore or conservation organization with land management mandate",
+        "kevin_angle": "Part 107 + thermal and multispectral imaging capability",
+        "phase": "Year 2 -- requires NDVI/thermal sensor payload and agronomic knowledge",
+        "discovered_targets": []
+      },
+      "I": {
+        "name": "Real Estate, Construction and Asset Documentation",
+        "jevons_driver": "Cost of progress documentation drops from expensive helicopter or scaffolding to near-zero with drone. Developers who documented monthly will document daily. Insurance inspection after storm events creates high-volume surge demand.",
+        "regulations": ["FAA Part 107", "Maryland real estate disclosure requirements", "Insurance carrier inspection standards"],
+        "target_profile": "Commercial real estate developer, general contractor, or insurance carrier in Maryland",
+        "kevin_angle": "Part 107 + same-day turnaround + Maryland-based",
+        "phase": "Month 8+ -- volume play, low barrier to entry, builds flight hours",
+        "discovered_targets": []
+      },
+      "J": {
+        "name": "Technology Platform, MONK and Data Products",
+        "jevons_driver": "Every flight by every operator in every cluster generates data that compounds into a moat no competitor can replicate. 250 drones x show hours x red team exercises = proprietary flight dataset. MONK hardware trust layer becomes a licensed standard as BVLOS regulations require authenticated operations.",
+        "regulations": ["SBIR reauthorization", "MONK patent prosecution", "ITAR compliance for AKMS export", "FAA authorized technology designation", "DHS approved technology list"],
+        "target_profile": "OEM drone manufacturer, fleet operator, or federal agency needing hardware-anchored trust for BVLOS operations",
+        "kevin_angle": "MONK is the only hardware-anchored cryptographic mission authorization system in the market -- Dr. Alexander Kott validates",
+        "phase": "MONK prototype Month 4-8 -- licensing Year 3+ -- SBIR Phase I pending reauthorization",
+        "monk_legacy": "MONK is named for Kevin's grandson. The technology, the company, and the legacy are one.",
+        "discovered_targets": []
+      }
+    }
+  },
+
+  "cako_workforce_pipeline": {
+    "description": "CAKO graduates are not just trainees -- they are KAI-Netics' talent supply chain. When contracts are won, CAKO graduates fill the operator roles. When graduates are trained, contracts must exist to place them. The business feeds itself when both sides are active.",
+    "temp_agency_model": "Kevin runs a drone operator staffing function -- placing CAKO graduates with infrastructure clients, DFR programs, and managed service accounts. Kevin must know the frontlines and deliver the jobs. This is both a revenue stream and a workforce development outcome.",
+    "cohort_1_target": "Q3-Q4 2026",
+    "operator_pipeline": "Each cohort produces 10-20 FAA Part 107 certified operators ready for placement",
+    "employer_partners_needed": 3,
+    "employer_1": "Kevin Alexander International LLC dba KAI-Netics (FP)"
+  },
+
   "eaf_board": {
     "members": [
       {
         "name": "James L. Scott, Esq.",
         "role": "Board Member / Legal Counsel",
         "email": "jlslaw@yahoo.com",
+        "phone": "(410) 908-4454",
         "firm": "Mobley & Brown LLP",
         "notes": "Primary legal counsel. Handles MONK provisional patent, Form 1023, MONK LLC formation, GoDaddy defederation."
       },
       {
         "name": "Keith Millard",
         "role": "Board Member",
-        "email": "keithrmillard@gmail.com",
-        "notes": "EAF Board Member."
+        "email": "keithrmillard@gmail.com"
       },
       {
         "name": "Maurice Ellis",
         "role": "Board Member",
-        "email": "bjet.1234@yahoo.com",
-        "notes": "EAF Board Member."
+        "email": "bjet.1234@yahoo.com"
       }
     ],
-    "newsletter_distribution": [
-      "jlslaw@yahoo.com",
-      "keithrmillard@gmail.com",
-      "bjet.1234@yahoo.com"
-    ],
+    "newsletter_distribution": ["jlslaw@yahoo.com", "keithrmillard@gmail.com", "bjet.1234@yahoo.com"],
     "newsletter_cc": "kas@kevin-llc.com"
   },
+
   "compliance_rules": [
-    "NO funds flow from FP to EAF â€” IRS private benefit prohibition",
-    "MONK IP belongs to MONK LLC only â€” never EAF or FP property",
-    "NDAA fleet segregation â€” Green UAS never mixed with non-NDAA hardware on government contracts",
+    "NO funds flow from FP to EAF -- IRS private benefit prohibition",
+    "MONK IP belongs to MONK LLC only -- never EAF or FP property",
+    "NDAA fleet segregation -- Green UAS never mixed with non-NDAA hardware on government contracts",
     "Red team exercises require written authorization + James Scott Esq. review before execution",
     "EAF compliance always beats FP efficiency when they conflict",
-    "DJI M350 RTK for private sector only â€” never on government contract",
-    "Fleet 3 show hardware â€” private entertainment only, never government contracts",
-    "Fleet 4 FPV â€” private EAF property and contracted private-sector red team only"
+    "DJI M350 RTK for private sector only -- never on government contract",
+    "Fleet 3 show hardware -- private entertainment only, never government contracts",
+    "Fleet 4 FPV -- private EAF property and contracted private-sector red team only",
+    "NOTHING leaves the platform outwardly without Kevin explicit approval -- no emails sent, no applications filed, no outreach dispatched without Kevin WhatsApp approval"
   ],
+
   "deadlines": [
-    {
-      "item": "MEIA Capstone Submission",
-      "date": "2026-04-14",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "status": "FILED",
-      "notes": "Submitted to Emily Sheppard on 2026-04-14"
-    },
-    {
-      "item": "EAF Annual Report â€” Maryland SDAT",
-      "date": "2027-04-15",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "status": "FILED",
-      "notes": "EXEMPT in 2026 â€” incorporated Feb 2026, first calendar year exemption under Maryland law. Next filing due 2027-04-15."
-    },
-    {
-      "item": "Supabase Setup â€” Core Engine",
-      "date": "2026-04-21",
-      "entity": "FP",
-      "owner": "Kevin",
-      "status": "COMPLETE",
-      "notes": "COMPLETED April 21 2026. Project: KAI-Netics at raxpmeltyxmtiihxoxpa.supabase.co. 8 tables live. Scout, Jordan, Iris, Nova all logging confirmed."
-    },
-    {
-      "item": "Form 1023-EZ Eligibility Check â€” James Scott",
-      "date": "2026-04-25",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "notes": "URGENT â€” TechSoup and Google for Nonprofits blocked until 501c3 determination received. James Scott must run eligibility worksheet. Fee: $275 at pay.gov if eligible. Full 1023 fee: $600."
-    },
-    {
-      "item": "Maryland Lighthouse Upskilling Application",
-      "date": "2026-04-24",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "notes": "Up to $200,000. Contact: Brittney Hansen brittney.hansen@maryland.gov. Must partner with 3+ employers. CAKO is the program. FP is employer #1."
-    },
-    {
-      "item": "MONK Provisional Patent Filing",
-      "date": "2026-04-30",
-      "entity": "MONK",
-      "owner": "Kevin",
-      "notes": "Non-negotiable before any further public MONK disclosure. File via James L. Scott Esq. â€” jlslaw@yahoo.com"
-    },
-    {
-      "item": "Microsoft for Nonprofits â€” EAF Application",
-      "date": "2026-04-30",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "notes": "nonprofit.microsoft.com. EAF EIN 41-4820296. May accept pending 501c3 status â€” apply now."
-    },
-    {
-      "item": "Google for Nonprofits â€” EAF Application",
-      "date": "2026-04-30",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "notes": "google.org/nonprofits. Requires 501c3 determination letter. BLOCKED until Form 1023 approved."
-    },
-    {
-      "item": "SAM.gov Registration â€” UEI + CAGE Code",
-      "date": "2026-04-30",
-      "entity": "FP",
-      "owner": "Kevin",
-      "notes": "Submitted April 17 2026. Status: Pending UEI Assignment. Monitor EVS email. If no response by April 22 call 1-866-606-8220."
-    },
-    {
-      "item": "MONK LLC Formation",
-      "date": "2026-05-01",
-      "entity": "MONK",
-      "owner": "Kevin",
-      "notes": "File via James L. Scott Esq. â€” jlslaw@yahoo.com â€” Mobley & Brown LLP. IP protection prerequisite."
-    },
-    {
-      "item": "IRS Form 1023 â€” EAF 501c3 Filing",
-      "date": "2026-05-01",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "notes": "BLOCKING ITEM. Full Form 1023 takes 6 months. File by May 1 for ~November 2026 determination. James Scott must confirm 1023-EZ eligibility first. File at pay.gov. EIN: 41-4820296."
-    },
-    {
-      "item": "MBE/DBE Certification â€” MDOT",
-      "date": "2026-05-15",
-      "entity": "FP",
-      "owner": "Kevin",
-      "notes": "Maryland Department of Transportation. 90-120 day clock. Unlocks state procurement pipeline."
-    },
-    {
-      "item": "OMB M-26-02 Federal Drone Compliance",
-      "date": "2026-05-20",
-      "entity": "FP",
-      "owner": "Kevin",
-      "notes": "All federal drone operators must comply. First dollar opportunity â€” no fleet needed for consulting."
-    },
-    {
-      "item": "EARN Maryland Grant Application",
-      "date": "2026-06-30",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "notes": "$50,000-$500,000. 25% match required. CAKO program is anchor. Jordan has LOI draft. Portal: dllr.state.md.us/earn"
-    },
-    {
-      "item": "CAKO Cohort 1 Launch",
-      "date": "2026-07-01",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "notes": "12-16 week zero-tuition program. FAA Part 107, Security+, CAPM, PCEP. Target: underserved Baltimore communities."
-    },
-    {
-      "item": "Fleet 1 Arrival",
-      "date": "2026-07-01",
-      "entity": "FP",
-      "owner": "Kevin",
-      "notes": "Skydio X10 + Freefly Astro Max + DJI M350 RTK. $55,000. Skydio + Freefly NDAA compliant. DJI M350 private sector only."
-    },
-    {
-      "item": "IRS Form 990-N â€” EAF e-Postcard",
-      "date": "2027-05-15",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "notes": "Electronic only at apps.irs.gov/app/ePostcard. Due 15th day of 5th month after 12/31/2026 tax year close."
-    },
-    {
-      "item": "EAF Annual Report â€” Maryland SDAT (Year 2)",
-      "date": "2027-04-15",
-      "entity": "EAF",
-      "owner": "Kevin",
-      "notes": "First active filing year. Set status ACTIVE when approaching 2027."
-    },
-    {
-      "item": "FAA Part 107 Renewal",
-      "date": "2027-12-31",
-      "entity": "FP",
-      "owner": "Kevin",
-      "notes": "Cert #5250157, FTN C2274489. Recurrent knowledge test required. Exam ID: 90120420255897530."
-    }
+    { "item": "MEIA Capstone Submission", "date": "2026-04-14", "status": "COMPLETE", "entity": "FP", "notes": "Submitted April 14 to Emily Sheppard" },
+    { "item": "Maryland Annual Report -- KAL", "date": "2026-06-30", "status": "EXTENSION FILED", "entity": "KAL", "notes": "2-month extension filed" },
+    { "item": "Maryland Annual Report -- FP", "date": "2026-06-30", "status": "EXTENSION FILED", "entity": "FP", "notes": "2-month extension filed" },
+    { "item": "EAF Annual Report", "date": "2027-04-15", "status": "EXEMPT", "entity": "EAF", "notes": "First-year exemption -- incorporated Feb 2026" },
+    { "item": "IRS Form 990-N", "date": "2027-05-15", "status": "PENDING", "entity": "EAF", "notes": "First filing due May 2027" },
+    { "item": "Form 1023-EZ Eligibility Check", "date": "2026-04-25", "status": "OVERDUE", "entity": "EAF", "owner": "James Scott", "notes": "Call (410) 908-4454 immediately. Blocks TechSoup, Google for Nonprofits, all 501c3-dependent programs." },
+    { "item": "Maryland Lighthouse Upskilling Application", "date": "2026-04-24", "status": "OVERDUE", "entity": "EAF", "notes": "Contact Brittney Hansen brittney.hansen@maryland.gov. Deadline passed -- assess if still open." },
+    { "item": "MONK Provisional Patent Filing", "date": "2026-04-30", "status": "OVERDUE", "entity": "MONK", "owner": "James Scott", "notes": "Call (410) 908-4454 immediately. IP protection window eroding." },
+    { "item": "Microsoft for Nonprofits Application", "date": "2026-04-30", "status": "OVERDUE", "entity": "EAF", "notes": "nonprofit.microsoft.com -- EIN 41-4820296. May accept pending 501c3." },
+    { "item": "Google for Nonprofits Application", "date": "2026-04-30", "status": "BLOCKED", "entity": "EAF", "notes": "Blocked -- requires 501c3 determination letter. Cannot proceed until Form 1023 approved." },
+    { "item": "SAM.gov UEI + CAGE Registration", "date": "2026-04-30", "status": "OVERDUE", "entity": "FP", "notes": "Call 1-866-606-8220. Submitted April 17 -- confirm status. Gates all federal contracts and SBIR." },
+    { "item": "MONK LLC Formation", "date": "2026-05-01", "status": "OVERDUE", "entity": "MONK", "owner": "James Scott", "notes": "businessexpress.maryland.gov -- sequenced after patent filing." },
+    { "item": "IRS Form 1023 -- EAF 501c3", "date": "2026-05-01", "status": "OVERDUE", "entity": "EAF", "owner": "James Scott", "notes": "PRIMARY BLOCKING ITEM. Filing at pay.gov. $275 (1023-EZ) or $600 (full 1023). Eligibility check prerequisite." },
+    { "item": "MBE/DBE Certification -- MDOT", "date": "2026-05-15", "status": "PENDING", "entity": "FP", "notes": "mbe.mdot.maryland.gov -- 90-120 day clock. Start immediately." },
+    { "item": "OMB M-26-02 Federal Drone Compliance", "date": "2026-05-20", "status": "OPPORTUNITY", "entity": "FP", "notes": "FIRST DOLLAR OPPORTUNITY. Kevin's CISSP + Part 107 qualifies for compliance consulting. No drone required. $5K-30K per engagement." },
+    { "item": "Techstars AI Health Baltimore Demo Day", "date": "2026-06-03", "status": "PENDING", "entity": "FP", "notes": "M&T Bank Stadium. Register by May 15. techstars.com/accelerators/baltimore-ai-health." },
+    { "item": "EARN Maryland Grant Application", "date": "2026-06-30", "status": "PENDING", "entity": "EAF", "notes": "25% match required. CAKO is anchor program. Jordan has LOI draft. $50K-$500K." }
   ],
-  "backlog": [
-    {
-      "id": "BL-001",
-      "title": "Sage Newsletter Automation â€” Dual Audience",
-      "status": "COMPLETE",
-      "notes": "COMPLETED April 21 2026. Board newsletter drafting + approval gate live. SAGE SEND BOARD/MARKET wired in Aidan Router. Full SMTP send to board pending â€” board emails now stored in eaf_board section."
-    },
-    {
-      "id": "BL-002",
-      "title": "MCP Email Integration",
-      "status": "PARTIAL",
-      "notes": "SMTP outbound live. Gmail OAuth inbound live. GoDaddy Outlook blocked â€” defederation needed. Add to James Scott call."
-    },
-    {
-      "id": "BL-003",
-      "title": "Supabase Agent Memory Layer",
-      "status": "COMPLETE",
-      "notes": "COMPLETED April 21 2026. 8 tables live. Scout, Jordan, Iris, Nova all logging confirmed."
-    },
-    {
-      "id": "BL-004",
-      "title": "GitHub Backup",
-      "status": "COMPLETE",
-      "notes": "COMPLETED April 21 2026. Repo: https://github.com/KAI-Netics/kinetic-core"
-    },
-    {
-      "id": "BL-005",
-      "title": "Pulse Metrics Workflow",
-      "status": "COMPLETE",
-      "notes": "COMPLETED April 21 2026. Workflow: 11_pulse_metrics.json. Reads Supabase views. WhatsApp dashboard confirmed working."
-    },
-    {
-      "id": "BL-006",
-      "title": "SAGE SEND Commands â€” Aidan Router",
-      "status": "COMPLETE",
-      "notes": "COMPLETED April 21 2026. Sage board/market/both/send board/send market all wired. Approval gate confirmed working. Full SMTP delivery to board pending board emails â€” now stored in eaf_board section."
-    },
-    {
-      "id": "BL-007",
-      "title": "GoDaddy Defederation â€” Microsoft Outlook OAuth",
-      "status": "PENDING",
-      "notes": "Add to James Scott call. Defederation unlocks full Azure App Registration and Microsoft Outlook OAuth in n8n."
-    },
-    {
-      "id": "BL-008",
-      "title": "Nova fitScore null fix",
-      "status": "PENDING",
-      "notes": "Fit score calculated by Sonnet but not extracting to WhatsApp display. Fix regex in Score RFP node."
-    },
-    {
-      "id": "BL-009",
-      "title": "Sage Board Newsletter â€” Full SMTP Send",
-      "status": "PENDING",
-      "notes": "Board emails now stored. Wire SMTP send in Aidan Router SAGE SEND BOARD handler. Recipients: jlslaw@yahoo.com, keithrmillard@gmail.com, bjet.1234@yahoo.com. CC: kas@kevin-llc.com. Kevin must approve before every send â€” no automatic sending."
-    },
-    {
-      "id": "BL-010",
-      "title": "Outlook â†’ Gmail Forwarding",
-      "status": "PENDING",
-      "notes": "Forward eMMA emails from kas@kevin-llc.com Outlook to kas42869@gmail.com. Automates Email Router â†’ Nova pipeline for eMMA solicitations."
-    }
-  ],
-  "verticals": {
-    "V1": {
-      "name": "Infrastructure Inspection & Data Services",
-      "status": "Day 1 â€” Kevin delivers personally",
-      "key_regulations": ["FHWA 23 CFR 650", "NERC FAC-001/003", "PHMSA 49 CFR 192", "FRA 49 CFR 213", "FAA AC 150/5370", "MD Dam Safety Act", "FERC Part 12", "Clean Water Act TMDL", "MS4 NPDES"],
-      "pricing": "$1,500-6,000 per inspection, $2,500-12,000/month retainer",
-      "margin": "70-88%"
-    },
-    "V2": {
-      "name": "Warehouse & Distribution Center Autonomous Operations",
-      "status": "Consulting Day 1, managed service Month 6+",
-      "key_regulations": ["OSHA 29 CFR 1910", "FDA GMP", "WMS data security", "OSHA PSM 29 CFR 1910.119"],
-      "pricing": "$3,500-7,500 assessment, $8,000-15,000/month managed service",
-      "margin": "65-80%"
-    },
-    "V3": {
-      "name": "Public Safety, DFR & Aerial Cybersecurity",
-      "status": "Day 1 â€” Kevin delivers personally",
-      "key_regulations": ["Safer Skies Act", "OMB M-26-02 deadline May 20 2026", "NDAA compliance per fleet", "DHS SLTT drone guidance", "Drones for First Responders Act", "CISSP framework"],
-      "pricing": "$5,000-30,000 SOP packages, $10,000-150,000 pen test/red team",
-      "margin": "80-90%"
-    },
-    "V4": {
-      "name": "Entertainment, Events & Aerial Shows",
-      "status": "Month 6+ â€” requires Fleet 3",
-      "key_regulations": ["FAA Part 107 waiver", "ITAR-cleared Skybrush software", "FEMA C-UAS grant compliance", "FIFA venue security mandates"],
-      "pricing": "$35,000-200,000 per show, $5,000-15,000 per DTI event",
-      "margin": "55-68%"
-    },
-    "V5": {
-      "name": "Drone-Enabled Logistics & Delivery",
-      "status": "VLOS Month 8+, BVLOS Year 2-3, 3PL Year 5+",
-      "key_regulations": ["FAA BVLOS rulemaking FAA-2022-1258", "Part 108 final rule incoming", "Part 135 certificate requirements", "CURN airspace designation"],
-      "pricing": "$5,000-8,000/month VLOS retainer",
-      "revenue_projection": "$0 Y1, $360,000 Y2, $924,000 Y3"
-    },
-    "V6": {
-      "name": "Fleet Services, DaaS & Inside the Fence",
-      "status": "Year 2+",
-      "key_regulations": ["NDAA fleet certification per client", "DaaS contract structures", "Confined space OSHA 29 CFR 1910.146", "ITAR export compliance"],
-      "services": ["Drone-as-a-Service leasing", "Fleet maintenance and repair", "Pilot-on-demand staffing", "Confined space inspection", "Persistent autonomous monitoring", "Digital twin generation"]
-    },
-    "V7": {
-      "name": "Technology Commercialization â€” MONK, AKMS, Data Products",
-      "status": "MONK prototype Month 4-8, licensing Year 3+",
-      "key_regulations": ["SBIR reauthorization status", "MONK patent prosecution", "ITAR compliance for AKMS export", "FAA authorized technology designation", "DHS approved technology list"],
-      "services": ["MONK module licensing $150-250/unit", "AKMS swarm OS licensing", "Proprietary flight data products", "Part 135 readiness consulting", "OEM integration agreements"]
-    }
-  },
+
   "technology": {
     "MONK": {
       "full_name": "Modular Operational Network Kernel",
+      "named_for": "Kevin's grandson MONK -- the legacy this platform is building",
       "description": "Hardware-anchored trust layer for autonomous drone operations. Cryptographically signed mission authorization, authenticated identity broadcast, tamper-resistant mission evidence.",
-      "status": "Prototype v1.0 in development. Provisional patent pending. MONK LLC formation in progress.",
-      "sbir_target": "DHS S&T or DoD â€” ~$175,000 Phase I. Pending Congressional reauthorization.",
+      "status": "Prototype v1.0 in development. Provisional patent OVERDUE. MONK LLC formation in progress.",
+      "sbir_target": "DHS S&T or DoD -- ~$175,000 Phase I. Pending Congressional reauthorization.",
       "licensing_model": "$150-250 per module. OEM integration Year 3+.",
-      "bvlos_relevance": "MONK safety architecture is the core of Part 108 compliance case. TSA security requirements in BVLOS NPRM directly favor MONK-equipped fleets."
+      "bvlos_relevance": "MONK safety architecture is the core of Part 108 compliance case. TSA security requirements in BVLOS NPRM directly favor MONK-equipped fleets.",
+      "validator": "Dr. Alexander Kott, PhD -- alexander.kott@scorevolunteer.org -- validates MONK architecture claims"
     },
     "AKMS": {
       "full_name": "Autonomous Kinetic Management System",
@@ -340,16 +295,29 @@
     "CAKO": {
       "full_name": "Certified Autonomous Kinetic Operator",
       "description": "12-16 week EAF-run zero-tuition certification: FAA Part 107, Security+, CAPM, PCEP. Trains underserved Baltimore community members as professional drone operators.",
-      "cohort_1_target": "Month 4 launch",
-      "pipeline": "Each cohort adds certified operators to FP Talent Pipeline Agreement"
+      "cohort_1_target": "Q3-Q4 2026",
+      "pipeline": "Each cohort adds certified operators to FP Talent Pipeline Agreement and DMV employer network"
     }
   },
+
   "fleets": {
-    "Fleet1": { "name": "Blue UAS Inspection", "units": "3 specialist", "hardware": "Skydio X10 + Freefly Astro Max + DJI M350 RTK", "ndaa": "Skydio + Freefly NDAA compliant. DJI M350 private sector only â€” NEVER government contract.", "cost": "$55,000", "timeline": "Month 3" },
-    "Fleet2": { "name": "Green UAS MONK/DTI", "units": "10-20", "hardware": "Inspired Flight IF800 Tomcat or equivalent", "ndaa": "Green UAS certified â€” NDAA compliant", "cost": "$80,000-150,000", "timeline": "Month 6" },
-    "Fleet3": { "name": "Show/Swarm Entertainment", "units": "250 + 25 spare", "hardware": "LED choreography drones + Skybrush ITAR-cleared software", "ndaa": "Private entertainment only â€” never government contracts", "cost": "$261,000-320,000", "timeline": "Month 6" },
-    "Fleet4": { "name": "FPV Racing/Red Team", "units": "20-30", "hardware": "FPV racing drones", "ndaa": "Non-NDAA â€” private property and contracted private-sector red team only", "cost": "$28,000-35,000", "timeline": "Month 4" }
+    "Fleet1": { "name": "Blue UAS Inspection", "units": "3 specialist", "hardware": "Skydio X10 + Freefly Astro Max + DJI M350 RTK", "ndaa": "Skydio + Freefly NDAA compliant. DJI M350 private sector only -- NEVER government contract.", "cost": "$55,000", "timeline": "Month 3" },
+    "Fleet2": { "name": "Green UAS MONK/DTI", "units": "10-20", "hardware": "Inspired Flight IF800 Tomcat or equivalent", "ndaa": "Green UAS certified -- NDAA compliant", "cost": "$80,000-150,000", "timeline": "Month 6" },
+    "Fleet3": { "name": "Show/Swarm Entertainment", "units": "250 + 25 spare", "hardware": "LED choreography drones + Skybrush ITAR-cleared software", "ndaa": "Private entertainment only -- never government contracts", "cost": "$261,000-320,000", "timeline": "Month 6" },
+    "Fleet4": { "name": "FPV Racing/Red Team", "units": "20-30", "hardware": "FPV racing drones", "ndaa": "Non-NDAA -- private property and contracted private-sector red team only", "cost": "$28,000-35,000", "timeline": "Month 4" }
   },
+
+  "key_contacts": {
+    "legal": { "name": "James L. Scott, Esq.", "email": "jlslaw@yahoo.com", "phone": "(410) 908-4454", "firm": "Mobley & Brown LLP", "role": "EAF board, patent attorney, MONK LLC formation" },
+    "medical_delivery": { "name": "Dr. Timothy Kien Amukele", "email": "tamukele@jhmi.edu", "org": "Johns Hopkins", "role": "Drone medical delivery pioneer -- independent UMMS/Hopkins pathway" },
+    "umms_supply_chain": { "name": "Pat Vizzard", "title": "VP Supply Chain", "org": "UMMS", "role": "Primary UMMS BD contact" },
+    "uroc": { "name": "John Slaughter", "title": "UROC/CURN Director", "org": "UMGC/UROC", "role": "CURN network access, internship pathway" },
+    "monk_technical": { "name": "Dr. Alexander Kott", "email": "alexander.kott@scorevolunteer.org", "role": "Technical advisor, SBIR/MONK architecture validator" },
+    "meia": { "name": "Emily Sheppard", "phone": "301-314-6095", "role": "MEIA program -- keep relationship warm for future cohorts" },
+    "umgc_cyber": { "name": "Dr. Helen Barker", "email": "helen.barker@umgc.edu", "role": "UMGC Cybersecurity Chair -- CISSP/MONK angle" },
+    "umgc_dean": { "name": "Dr. Lauren Segura", "email": "lauren.segura@umgc.edu", "role": "UMGC Dean SIPS -- CAKO/workforce angle -- Academic Advisor" }
+  },
+
   "naics": {
     "registered": [
       { "code": "541519", "description": "Other Computer Related Services" },
@@ -357,99 +325,68 @@
       { "code": "541690", "description": "Other Scientific and Technical Consulting Services" }
     ],
     "recommended": [
-      { "code": "541330", "description": "Engineering Services â€” bridge and infrastructure inspection" },
-      { "code": "561621", "description": "Security Systems Services â€” DTI and aerial cybersecurity" },
-      { "code": "611699", "description": "All Other Miscellaneous Schools and Instruction â€” CAKO training" },
-      { "code": "336413", "description": "Other Aircraft Parts and Equipment â€” MONK hardware" },
-      { "code": "517410", "description": "Satellite Telecommunications â€” BVLOS operations" },
-      { "code": "541715", "description": "Research and Development in Physical Sciences â€” AKMS/MONK R&D" }
+      { "code": "541330", "description": "Engineering Services -- bridge and infrastructure inspection" },
+      { "code": "561621", "description": "Security Systems Services -- DTI and aerial cybersecurity" },
+      { "code": "611699", "description": "All Other Miscellaneous Schools and Instruction -- CAKO training" },
+      { "code": "336413", "description": "Other Aircraft Parts and Equipment -- MONK hardware" },
+      { "code": "517410", "description": "Satellite Telecommunications -- BVLOS operations" },
+      { "code": "541715", "description": "Research and Development in Physical Sciences -- AKMS/MONK R&D" }
     ]
   },
-"programs": [
-  {
-    "name": "MEIA",
-    "full_name": "Maryland E-Nnovation Initiative Award",
-    "entity": "FP",
-    "status": "COMPLETE",
-    "notes": "Phase 2 submitted April 14 2026 to Emily Sheppard",
-    "active": false
-  }
-],
-  "grant_contacts": {
-    "lighthouse_upskilling": {
-      "program": "Maryland Lighthouse Industries Upskilling and Reskilling Program",
-      "contact": "Brittney Hansen",
-      "email": "brittney.hansen@maryland.gov",
-      "portal": "https://www.dllr.state.md.us",
-      "amount": "up to $200,000",
-      "deadline": "2026-04-24",
-      "applicant": "EAF",
-      "notes": "Must partner with at least 3 employers. CAKO is the program. FP is employer #1."
-    },
-    "lighthouse_internship": {
-      "program": "Maryland Lighthouse Industries and AI Internship Program",
-      "portal": "https://www.dllr.state.md.us",
-      "amount": "up to $150,000 â€” $10,000 per intern",
-      "deadline": "rolling until exhausted",
-      "applicant": "FP or EAF",
-      "notes": "Apply immediately â€” rolling first-come first-served."
-    },
-    "tedco": {
-      "program": "TEDCO â€” Multiple Programs",
-      "portal": "https://tedco.md",
-      "notes": "Builder Fund, Social Innovation Fund, SBIR Proposal Lab, Maryland Innovation Initiative."
-    },
-    "earn_maryland": {
-      "program": "Maryland EARN Workforce Development Grant",
-      "portal": "https://www.dllr.state.md.us/earn",
-      "amount": "$50,000 - $500,000",
-      "deadline": "2026-06-30",
-      "applicant": "EAF",
-      "notes": "25% match required. CAKO program is anchor. Jordan has LOI draft."
-    },
-    "build_our_future": {
-      "program": "Build Our Future Grant â€” Maryland Department of Commerce",
-      "portal": "https://commerce.maryland.gov",
-      "amount": "up to $2,000,000 matching",
-      "applicant": "FP or EAF",
-      "notes": "Eligible sectors: autonomous tech, cybersecurity, aerospace, defense, manufacturing."
-    }
-  },
+
   "revenue_targets": {
     "year1_total": "$636,000",
     "year2_total": "$2,916,500",
     "year3_total": "$5,445,000",
     "path_to_1m_arr": "20 retainer clients at blended $5,000/month average",
-    "first_dollar": "Week 3-4 April 2026 â€” bridge inspection or OMB compliance consulting"
+    "first_dollar": "OMB M-26-02 compliance consulting -- CISSP + Part 107 -- May 20 2026 deadline"
   },
+
+  "grant_pipeline": {
+    "active": [
+      { "name": "EARN Maryland", "amount": "$50K-$500K", "deadline": "2026-06-30", "entity": "EAF", "status": "LOI in progress", "fit": "HIGH" },
+      { "name": "FAA Aviation Workforce Development", "amount": "$50K-$500K", "deadline": "UNCONFIRMED", "entity": "EAF", "status": "WATCH", "fit": "78%", "blocker": "501c3 required" },
+      { "name": "FEMA C-UAS SLTT", "amount": "TBD", "deadline": "TBD", "entity": "EAF/FP", "status": "RESEARCHING", "fit": "TBD" },
+      { "name": "MD Build Our Future / DECADE Act", "amount": "up to $2M matching", "deadline": "TBD", "entity": "FP or EAF", "status": "RESEARCHING", "fit": "TBD" }
+    ],
+    "archived": [
+      { "name": "Maryland Lighthouse Upskilling", "reason": "Deadline April 24 passed -- 25% fit", "status": "EXPIRED" }
+    ]
+  },
+
+  "competitive_moat": {
+    "dimensions": [
+      "FAA Part 107 + CISSP + PMP -- rare credential stack no competitor combines",
+      "Dual-entity structure -- EAF nonprofit absorbs workforce costs, FP captures revenue",
+      "MONK hardware trust layer -- only cryptographically authenticated mission system in market",
+      "AKMS data moat -- proprietary flight dataset compounds with every operation",
+      "CURN Baltimore endpoint -- 415,000 sq ft UMMS Sparrows Point serving 11 hospitals",
+      "Multi-vertical coverage -- infrastructure to entertainment to medical to technology",
+      "Insider supply chain intelligence -- Medline, MedImmune, MedStar, Capital One background"
+    ]
+  },
+
   "core_engine": {
-    "version": "Phase 2 â€” April 21 2026",
+    "version": "1.0 -- Bootstrap Launch",
+    "updated": "2026-05-01",
+    "agents": {
+      "Aidan": "Chief of Staff -- coordinates all agents, routes WhatsApp commands",
+      "Atlas": "Strategic Advisor -- SBIR, technology positioning, Dr. Kott-level thinking",
+      "Scout": "BD Manager -- pipeline, targets, market intelligence across all demand clusters",
+      "Jordan": "Grant Writer -- federal/state funding, LOIs, eligibility analysis",
+      "Iris": "Compliance Officer -- deadlines, regulatory calendar, risk flags",
+      "Nova": "Contracts Analyst -- RFP scoring, vendor awareness, procurement intelligence",
+      "Sage": "Communications Director -- newsletter, external narrative, board communications",
+      "Pulse": "Operations Analyst -- platform health, metrics, system status",
+      "Scribe": "PLANNED -- Executive Assistant -- differential KAI_Context patches after every session"
+    },
+    "governance": "NOTHING leaves the platform outwardly without Kevin explicit approval. Agents research, draft, score, and present. Kevin decides. Kevin approves. Then it executes.",
     "supabase_url": "https://raxpmeltyxmtiihxoxpa.supabase.co",
     "github": "https://github.com/KAI-Netics/kinetic-core",
-    "workflows_active": [
-      "1_atlas_v2.json",
-      "2_scout_v5.json",
-      "3_jordan_v3.json",
-      "4_iris_v3_supabase.json",
-      "5a_orchestra_fanout.json",
-      "5b_callback_consolidator.json",
-      "6_aidan_router_v2.json",
-      "7_network_watchdog.json",
-      "8_email_router.json",
-      "9_nova_rfp.json",
-      "10_sage_newsletter.json",
-      "11_pulse_metrics.json"
-    ],
-    "connectors_live": [
-      "GoDaddy SMTP â€” outbound email (kas@kevin-llc.com)",
-      "Gmail OAuth â€” inbound email (kas42869@gmail.com)",
-      "Supabase â€” structured agent memory (8 tables)",
-      "GitHub â€” KAI-Netics/kinetic-core (backup)"
-    ],
-    "connectors_pending": [
-      "Microsoft Outlook OAuth â€” blocked, needs GoDaddy defederation",
-      "MCP servers â€” supabase-mcp, n8n-mcp, google-drive-mcp"
-    ]
-  }
-}
+    "config_file": "C:\\Kinetic_Core\\Config\\kai_config.js"
+  },
 
+  "programs": [
+    { "name": "MEIA", "full_name": "Maryland E-Nnovation Initiative Award", "entity": "FP", "status": "COMPLETE", "notes": "Phase 2 submitted April 14 2026 to Emily Sheppard. Keep relationship warm.", "active": false }
+  ]
+}
