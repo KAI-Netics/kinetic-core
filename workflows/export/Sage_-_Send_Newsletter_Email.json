@@ -1,63 +1,108 @@
 ﻿{
-    "updatedAt":  "2026-04-22T02:21:42.000Z",
-    "createdAt":  "2026-04-22T02:04:34.561Z",
-    "id":  "u9sVd5EsjD1U1NMR",
+    "updatedAt":  "2026-05-01T14:56:11.145Z",
+    "createdAt":  "2026-04-22T03:04:02.831Z",
+    "id":  "ICIFC9FQo2ctSScE",
     "name":  "Sage - Send Newsletter Email",
     "description":  null,
-    "active":  false,
-    "isArchived":  true,
+    "active":  true,
+    "isArchived":  false,
     "nodes":  [
                   {
                       "parameters":  {
                                          "httpMethod":  "POST",
-                                         "path":  "sage-send-email",
+                                         "path":  "sage-send-board",
                                          "responseMode":  "lastNode",
                                          "options":  {
 
                                                      }
                                      },
-                      "id":  "1892989e-dc3b-4b1e-9cf8-325357b69b9c",
-                      "name":  "Webhook Trigger",
+                      "id":  "2161d1af-951a-410c-9596-efaeb731733c",
+                      "name":  "Webhook Board",
                       "type":  "n8n-nodes-base.webhook",
                       "typeVersion":  2,
                       "position":  [
                                        0,
                                        0
                                    ],
-                      "webhookId":  "kai-sage-send-email"
+                      "webhookId":  "kai-sage-send-board"
                   },
                   {
                       "parameters":  {
-                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\nconst body = input.body || input;\nconst type = String(body.type || \u0027board\u0027);\nconst sageDir = \u0027/data/Aidan_Outputs/Sage/\u0027;\n\n// Board recipients from KAI_Context.json\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) { ctx = {}; }\n\nconst boardMembers = ctx.eaf_board \u0026\u0026 ctx.eaf_board.members ? ctx.eaf_board.members : [\n  { name: \u0027James L. Scott, Esq.\u0027, email: \u0027jlslaw@yahoo.com\u0027 },\n  { name: \u0027Keith Millard\u0027, email: \u0027keithrmillard@gmail.com\u0027 },\n  { name: \u0027Maurice Ellis\u0027, email: \u0027bjet.1234@yahoo.com\u0027 }\n];\n\nconst month = new Date().toLocaleDateString(\u0027en-US\u0027, { month: \u0027long\u0027, year: \u0027numeric\u0027, timeZone: \u0027America/New_York\u0027 });\n\nlet draftPath = null;\nlet draftContent = \u0027\u0027;\nlet subject = \u0027\u0027;\nlet recipients = [];\n\nif (type === \u0027board\u0027) {\n  const files = fs.readdirSync(sageDir).filter(function(f) { return f.startsWith(\u0027Board_Newsletter\u0027) \u0026\u0026 f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n  if (files.length === 0) {\n    return [{ json: { error: true, message: \u0027No board newsletter draft found. Say Sage board to generate one first.\u0027 } }];\n  }\n  draftPath = sageDir + files[0];\n  draftContent = fs.readFileSync(draftPath, \u0027utf8\u0027);\n  subject = \u0027EAF Board Newsletter — \u0027 + month;\n  recipients = boardMembers.map(function(m) { return { name: m.name, email: m.email }; });\n\n} else if (type === \u0027market\u0027) {\n  const files = fs.readdirSync(sageDir).filter(function(f) { return f.startsWith(\u0027Market_Newsletter\u0027) \u0026\u0026 f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n  if (files.length === 0) {\n    return [{ json: { error: true, message: \u0027No market newsletter draft found. Say Sage market to generate one first.\u0027 } }];\n  }\n  draftPath = sageDir + files[0];\n  draftContent = fs.readFileSync(draftPath, \u0027utf8\u0027);\n  subject = \u0027KAI-Netics Update — \u0027 + month;\n  // Market recipients — BD pipeline contacts\n  // For now send to Kevin + board for review — expand list as BD pipeline grows\n  recipients = [\n    { name: \u0027Kevin Alexander Smith\u0027, email: \u0027kas@kevin-llc.com\u0027 },\n    { name: \u0027James L. Scott, Esq.\u0027, email: \u0027jlslaw@yahoo.com\u0027 },\n    { name: \u0027Keith Millard\u0027, email: \u0027keithrmillard@gmail.com\u0027 },\n    { name: \u0027Maurice Ellis\u0027, email: \u0027bjet.1234@yahoo.com\u0027 }\n  ];\n}\n\n// Build branded HTML email\nconst safeContent = draftContent.replace(/\u0026/g, \u0027\u0026amp;\u0027).replace(/\u003c/g, \u0027\u0026lt;\u0027).replace(/\u003e/g, \u0027\u0026gt;\u0027);\n\nlet headerColor = type === \u0027board\u0027 ? \u0027#1a1a2e\u0027 : \u0027#0a3d62\u0027;\nlet headerLabel = type === \u0027board\u0027 ? \u0027EAF Board Newsletter\u0027 : \u0027KAI-Netics Market Update\u0027;\nlet entityLine = type === \u0027board\u0027 ? \u0027KAI-Netics Equity \u0026amp; Autonomy Foundry, Inc. | EIN: 41-4820296\u0027 : \u0027Kevin Alexander International LLC dba KAI-Netics\u0027;\n\nconst htmlBody = \u0027\u003cdiv style=\"font-family:Arial,sans-serif;max-width:700px;margin:0 auto\"\u003e\u0027 +\n  \u0027\u003cdiv style=\"background:\u0027 + headerColor + \u0027;padding:24px;border-radius:8px 8px 0 0\"\u003e\u0027 +\n  \u0027\u003ch1 style=\"color:#00d4ff;margin:0;font-size:20px\"\u003eKAI-Netics\u003c/h1\u003e\u0027 +\n  \u0027\u003cp style=\"color:#8888aa;margin:4px 0 0 0;font-size:13px\"\u003e\u0027 + headerLabel + \u0027 | \u0027 + month + \u0027\u003c/p\u003e\u0027 +\n  \u0027\u003c/div\u003e\u0027 +\n  \u0027\u003cdiv style=\"background:#ffffff;padding:28px;border:1px solid #e0e0e0\"\u003e\u0027 +\n  \u0027\u003cp style=\"color:#555;font-size:12px;margin:0 0 16px 0\"\u003e\u0027 + entityLine + \u0027\u003c/p\u003e\u0027 +\n  \u0027\u003cdiv style=\"white-space:pre-wrap;font-size:14px;line-height:1.7;color:#222;font-family:Arial,sans-serif\"\u003e\u0027 + safeContent + \u0027\u003c/div\u003e\u0027 +\n  \u0027\u003c/div\u003e\u0027 +\n  \u0027\u003cdiv style=\"background:\u0027 + headerColor + \u0027;padding:16px;border-radius:0 0 8px 8px;text-align:center\"\u003e\u0027 +\n  \u0027\u003cp style=\"color:#8888aa;margin:0;font-size:12px\"\u003eKevin Alexander Smith | KAI-Netics | kas@kevin-llc.com | 443.257.6836\u003c/p\u003e\u0027 +\n  \u0027\u003cp style=\"color:#8888aa;margin:4px 0 0 0;font-size:11px\"\u003eFAA Part 107 Certified | MEIA Phase 2 Cohort | MWVOB\u003c/p\u003e\u0027 +\n  \u0027\u003c/div\u003e\u003c/div\u003e\u0027;\n\nreturn [{ json: {\n  type: type,\n  subject: subject,\n  htmlBody: htmlBody,\n  draftPath: draftPath,\n  recipients: recipients,\n  month: month,\n  recipientCount: recipients.length\n}}];"
+                                         "httpMethod":  "POST",
+                                         "path":  "sage-send-market",
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+
+                                                     }
                                      },
-                      "id":  "efb73a42-3385-453d-9fca-e8c4d30fe1d4",
-                      "name":  "Load Draft + Build Email",
+                      "id":  "979ff0dd-f858-48d1-952a-c072cce5b722",
+                      "name":  "Webhook Market",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       160
+                                   ],
+                      "webhookId":  "kai-sage-send-market"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "return [{ json: { type: \u0027board\u0027 } }];"
+                                     },
+                      "id":  "52951332-c579-4690-967b-6f46fbf66d1b",
+                      "name":  "Set Board Type",
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       224,
+                                       208,
                                        0
                                    ]
                   },
                   {
                       "parameters":  {
+                                         "jsCode":  "return [{ json: { type: \u0027market\u0027 } }];"
+                                     },
+                      "id":  "9077dc52-947b-4713-8ae7-b087074a7b72",
+                      "name":  "Set Market Type",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       208,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\nconst type = input.type;\n\n// TEST MODE -- set false when ready for real sends\nconst TEST_MODE = true;\nconst TEST_EMAIL = \u0027kas42869@gmail.com\u0027;\n\nconst sageDir = \u0027/data/Aidan_Outputs/Sage/\u0027;\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027).replace(/^\\uFEFF/, \u0027\u0027)); } catch(e) { ctx = {}; }\n\nconst boardMembers = (ctx.eaf_board \u0026\u0026 ctx.eaf_board.members) ? ctx.eaf_board.members : [\n  { name: \u0027James L. Scott, Esq.\u0027, email: \u0027jlslaw@yahoo.com\u0027 },\n  { name: \u0027Keith Millard\u0027, email: \u0027keithrmillard@gmail.com\u0027 },\n  { name: \u0027Maurice Ellis\u0027, email: \u0027bjet.1234@yahoo.com\u0027 }\n];\n\nconst month = new Date().toLocaleDateString(\u0027en-US\u0027, { month: \u0027long\u0027, year: \u0027numeric\u0027, timeZone: \u0027America/New_York\u0027 });\n\nlet draftPath = null;\nlet draftContent = \u0027\u0027;\nlet subject = \u0027\u0027;\nlet toEmail = \u0027\u0027;\nlet ccEmails = \u0027\u0027;\nlet recipientDisplay = \u0027\u0027;\n\nif (type === \u0027board\u0027) {\n  let files = [];\n  try { files = fs.readdirSync(sageDir).filter(function(f) { return f.startsWith(\u0027Board_Newsletter\u0027) \u0026\u0026 f.endsWith(\u0027.txt\u0027); }).sort().reverse(); } catch(e) { files = []; }\n  if (files.length === 0) {\n    return [{ json: { error: true, message: \u0027No board newsletter draft found. Say Sage board to generate one first.\u0027 } }];\n  }\n  draftPath = sageDir + files[0];\n  draftContent = fs.readFileSync(draftPath, \u0027utf8\u0027);\n  subject = (TEST_MODE ? \u0027[TEST] \u0027 : \u0027\u0027) + \u0027EAF Board Newsletter -- \u0027 + month;\n  if (TEST_MODE) {\n    toEmail = TEST_EMAIL;\n    ccEmails = \u0027\u0027;\n    recipientDisplay = \u0027Kevin Smith TEST \u003c\u0027 + TEST_EMAIL + \u0027\u003e\u0027;\n  } else {\n    // Kevin always receives the same copy as the board\n    toEmail = \u0027kas@kevin-llc.com\u0027;\n    ccEmails = boardMembers.map(function(m) { return m.email; }).join(\u0027,\u0027);\n    recipientDisplay = \u0027Kevin Smith \u003ckas@kevin-llc.com\u003e, \u0027 + boardMembers.map(function(m) { return m.name + \u0027 \u003c\u0027 + m.email + \u0027\u003e\u0027; }).join(\u0027, \u0027);\n  }\n} else {\n  let files = [];\n  try { files = fs.readdirSync(sageDir).filter(function(f) { return f.startsWith(\u0027Market_Newsletter\u0027) \u0026\u0026 f.endsWith(\u0027.txt\u0027); }).sort().reverse(); } catch(e) { files = []; }\n  if (files.length === 0) {\n    return [{ json: { error: true, message: \u0027No market newsletter draft found. Say Sage market to generate one first.\u0027 } }];\n  }\n  draftPath = sageDir + files[0];\n  draftContent = fs.readFileSync(draftPath, \u0027utf8\u0027);\n  subject = (TEST_MODE ? \u0027[TEST] \u0027 : \u0027\u0027) + \u0027KAI-Netics Update -- \u0027 + month;\n  if (TEST_MODE) {\n    toEmail = TEST_EMAIL;\n    ccEmails = \u0027\u0027;\n    recipientDisplay = \u0027Kevin Smith TEST \u003c\u0027 + TEST_EMAIL + \u0027\u003e\u0027;\n  } else {\n    // Kevin always on market sends too\n    toEmail = \u0027kas@kevin-llc.com\u0027;\n    ccEmails = boardMembers.map(function(m) { return m.email; }).join(\u0027,\u0027);\n    recipientDisplay = \u0027Kevin Smith \u003ckas@kevin-llc.com\u003e, \u0027 + boardMembers.map(function(m) { return m.name + \u0027 \u003c\u0027 + m.email + \u0027\u003e\u0027; }).join(\u0027, \u0027);\n  }\n}\n\nconst safeContent = draftContent\n  .replace(/\u0026/g, \u0027\u0026amp;\u0027)\n  .replace(/\u003c/g, \u0027\u0026lt;\u0027)\n  .replace(/\u003e/g, \u0027\u0026gt;\u0027);\n\nconst headerColor = type === \u0027board\u0027 ? \u0027#1a1a2e\u0027 : \u0027#0a3d62\u0027;\nconst headerLabel = (TEST_MODE ? \u0027TEST -- \u0027 : \u0027\u0027) + (type === \u0027board\u0027 ? \u0027EAF Board Newsletter\u0027 : \u0027KAI-Netics Market Update\u0027);\nconst entityLine = type === \u0027board\u0027 ? \u0027KAI-Netics Equity \u0026amp; Autonomy Foundry, Inc. | EIN: 41-4820296\u0027 : \u0027Kevin Alexander International LLC dba KAI-Netics\u0027;\n\nconst htmlBody =\n  (TEST_MODE ? \u0027\u003cdiv style=\"background:#ff6600;padding:10px;text-align:center\"\u003e\u003cstrong style=\"color:#fff\"\u003eTEST MODE -- Board members NOT notified\u003c/strong\u003e\u003c/div\u003e\u0027 : \u0027\u0027) +\n  \u0027\u003cdiv style=\"font-family:Arial,sans-serif;max-width:700px;margin:0 auto\"\u003e\u0027 +\n  \u0027\u003cdiv style=\"background:\u0027 + headerColor + \u0027;padding:24px;border-radius:8px 8px 0 0\"\u003e\u0027 +\n  \u0027\u003ch1 style=\"color:#00d4ff;margin:0;font-size:20px\"\u003eKAI-Netics\u003c/h1\u003e\u0027 +\n  \u0027\u003cp style=\"color:#8888aa;margin:4px 0 0 0;font-size:13px\"\u003e\u0027 + headerLabel + \u0027 | \u0027 + month + \u0027\u003c/p\u003e\u0027 +\n  \u0027\u003c/div\u003e\u0027 +\n  \u0027\u003cdiv style=\"background:#ffffff;padding:28px;border:1px solid #e0e0e0\"\u003e\u0027 +\n  \u0027\u003cp style=\"color:#555;font-size:12px;margin:0 0 16px 0\"\u003e\u0027 + entityLine + \u0027\u003c/p\u003e\u0027 +\n  \u0027\u003cdiv style=\"white-space:pre-wrap;font-size:14px;line-height:1.7;color:#222\"\u003e\u0027 + safeContent + \u0027\u003c/div\u003e\u0027 +\n  \u0027\u003c/div\u003e\u0027 +\n  \u0027\u003cdiv style=\"background:\u0027 + headerColor + \u0027;padding:16px;border-radius:0 0 8px 8px;text-align:center\"\u003e\u0027 +\n  \u0027\u003cp style=\"color:#8888aa;margin:0;font-size:12px\"\u003eKevin Alexander Smith | KAI-Netics | kas@kevin-llc.com | 443.257.6836\u003c/p\u003e\u0027 +\n  \u0027\u003cp style=\"color:#8888aa;margin:4px 0 0 0;font-size:11px\"\u003eFAA Part 107 Certified | MWVOB\u003c/p\u003e\u0027 +\n  \u0027\u003c/div\u003e\u003c/div\u003e\u0027;\n\nreturn [{ json: {\n  type: type,\n  testMode: TEST_MODE,\n  subject: subject,\n  htmlBody: htmlBody,\n  toEmail: toEmail,\n  ccEmails: ccEmails,\n  recipientDisplay: recipientDisplay,\n  draftPath: draftPath,\n  month: month\n}}];\n"
+                                     },
+                      "id":  "35025b3c-c68a-4f79-bf59-b3d48e6b6e37",
+                      "name":  "Load Draft + Build Email",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       432,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
                                          "fromEmail":  "kas@kevin-llc.com",
-                                         "toEmail":  "={{ $json.recipients[0].email }}",
-                                         "subject":  "={{ $json.subject }}",
-                                         "html":  "={{ $json.htmlBody }}",
+                                         "toEmail":  "=={{ $json.toEmail }}",
+                                         "subject":  "=={{ $json.subject }}",
+                                         "html":  "=={{ $json.htmlBody }}",
                                          "options":  {
-
+                                                         "ccEmail":  "=={{ $json.ccEmails }}"
                                                      }
                                      },
-                      "id":  "6acf6f2e-a1f3-437a-979b-939a90bcd703",
+                      "id":  "bab4f972-a40a-46f3-9a7a-4f2c900c1847",
                       "name":  "Send via SMTP",
                       "type":  "n8n-nodes-base.emailSend",
                       "typeVersion":  2.1,
                       "position":  [
-                                       448,
-                                       0
+                                       640,
+                                       80
                                    ],
-                      "webhookId":  "c4569b00-3012-4d84-8ed9-20a47d47c4d3",
+                      "webhookId":  "8c8455c8-b869-4f44-a61b-cdf507fcd7fa",
                       "credentials":  {
                                           "smtp":  {
                                                        "id":  "rbL5mC01kCLp42bA",
@@ -67,20 +112,53 @@
                   },
                   {
                       "parameters":  {
-                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\nif (input.error) {\n  const errMsg = \u0027SAGE SEND ERROR: \u0027 + input.message;\n  const msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: errMsg } });\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\n  await new Promise(function(r) { const req = http.request(opts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\n  return [{ json: { success: false, error: input.message } }];\n}\n\n// Log the send\nconst logPath = \u0027/data/Aidan_Outputs/Sage/\u0027 + (input.type === \u0027board\u0027 ? \u0027BOARD\u0027 : \u0027MARKET\u0027) + \u0027_SENT_\u0027 + new Date().toISOString().replace(/[:.]/g,\u0027-\u0027) + \u0027.log\u0027;\nconst logContent = \u0027Newsletter sent: \u0027 + new Date().toISOString() + \u0027\\n\u0027 +\n  \u0027Type: \u0027 + input.type + \u0027\\n\u0027 +\n  \u0027Subject: \u0027 + input.subject + \u0027\\n\u0027 +\n  \u0027Draft: \u0027 + input.draftPath + \u0027\\n\u0027 +\n  \u0027Recipients: \u0027 + (input.recipients || []).map(function(r) { return r.name + \u0027 \u003c\u0027 + r.email + \u0027\u003e\u0027; }).join(\u0027, \u0027) + \u0027\\n\u0027;\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Sage\u0027, { recursive: true });\nfs.writeFileSync(logPath, logContent, \u0027utf8\u0027);\n\n// WhatsApp confirmation\nconst recipientNames = (input.recipients || []).map(function(r) { return r.name; }).join(\u0027, \u0027);\nlet confirmMsg = \u0027SAGE EMAIL SENT\\n\\n\u0027;\nconfirmMsg += \u0027Type: \u0027 + (input.type === \u0027board\u0027 ? \u0027EAF Board Newsletter\u0027 : \u0027FP Market Newsletter\u0027) + \u0027\\n\u0027;\nconfirmMsg += \u0027Subject: \u0027 + input.subject + \u0027\\n\u0027;\nconfirmMsg += \u0027Sent to: \u0027 + recipientNames + \u0027\\n\u0027;\nconfirmMsg += \u0027From: kas@kevin-llc.com\\n\u0027;\nconfirmMsg += \u0027Log: \u0027 + logPath;\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: confirmMsg } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(function(r) { const req = http.request(opts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\n\nreturn [{ json: { success: true, type: input.type, subject: input.subject, recipientCount: input.recipientCount, logPath: logPath } }];"
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\nif (input.error) {\n  const errMsg = \u0027SAGE SEND ERROR: \u0027 + input.message;\n  const errBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: errMsg } });\n  const errOpts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(errBody) } };\n  await new Promise(function(r) { const req = http.request(errOpts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(errBody); req.end(); });\n  return [{ json: { success: false, error: input.message } }];\n}\n\nconst type = input.type || \u0027unknown\u0027;\nconst testMode = input.testMode || false;\nconst subject = input.subject || \u0027(no subject)\u0027;\nconst toEmail = input.toEmail || \u0027(no recipient)\u0027;\nconst ccEmails = input.ccEmails || \u0027\u0027;\nconst recipientDisplay = input.recipientDisplay || toEmail;\nconst draftPath = input.draftPath || \u0027\u0027;\n\nconst logPrefix = type === \u0027board\u0027 ? \u0027BOARD\u0027 : \u0027MARKET\u0027;\nconst testTag = testMode ? \u0027_TEST\u0027 : \u0027\u0027;\nconst logPath = \u0027/data/Aidan_Outputs/Sage/\u0027 + logPrefix + testTag + \u0027_SENT_\u0027 + new Date().toISOString().replace(/[:.]/g,\u0027-\u0027) + \u0027.log\u0027;\nconst logContent = \u0027Sent: \u0027 + new Date().toISOString() + \u0027\\nType: \u0027 + type + \u0027\\nTest: \u0027 + testMode + \u0027\\nSubject: \u0027 + subject + \u0027\\nTo: \u0027 + toEmail + \u0027\\nCC: \u0027 + ccEmails + \u0027\\nRecipients: \u0027 + recipientDisplay + \u0027\\nDraft: \u0027 + draftPath + \u0027\\n\u0027;\n\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Sage\u0027, { recursive: true });\nfs.writeFileSync(logPath, logContent, \u0027utf8\u0027);\n\nlet confirmMsg = (testMode ? \u0027SAGE TEST EMAIL SENT\u0027 : \u0027SAGE EMAIL SENT\u0027) + \u0027\\n\\n\u0027;\nconfirmMsg += \u0027Type: \u0027 + (type === \u0027board\u0027 ? \u0027EAF Board Newsletter\u0027 : \u0027FP Market Newsletter\u0027) + \u0027\\n\u0027;\nconfirmMsg += \u0027Subject: \u0027 + subject + \u0027\\n\u0027;\nconfirmMsg += \u0027To: \u0027 + recipientDisplay + \u0027\\n\u0027;\nconfirmMsg += \u0027Draft file: \u0027 + draftPath + \u0027\\n\u0027;\nif (testMode) {\n  confirmMsg += \u0027\\nTEST MODE ON\\nOnly kas42869@gmail.com notified.\\nTo send for real: set TEST_MODE=false in Load Draft + Build Email node.\u0027;\n}\n\nconst wa = \u002714432576836@s.whatsapp.net\u0027;\nconst msgBody = JSON.stringify({ number: wa, textMessage: { text: confirmMsg } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); });\n  req.on(\u0027error\u0027,r); req.write(msgBody); req.end();\n});\n\nreturn [{ json: { success: true, type: type, testMode: testMode, subject: subject, to: toEmail, logPath: logPath } }];\n"
                                      },
-                      "id":  "ebbd9432-cf20-4d78-a6f5-572e34be20b6",
+                      "id":  "464af85c-d50a-4f21-a893-900d04bda446",
                       "name":  "Log + WhatsApp Confirm",
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       672,
-                                       0
+                                       864,
+                                       80
                                    ]
                   }
               ],
     "connections":  {
-                        "Webhook Trigger":  {
+                        "Webhook Board":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Set Board Type",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Webhook Market":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Set Market Type",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Set Board Type":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Load Draft + Build Email",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Set Market Type":  {
                                                 "main":  [
                                                              [
                                                                  {
@@ -125,16 +203,16 @@
     "pinData":  {
 
                 },
-    "versionId":  "022c3a0f-2ff5-4f43-9438-54add58e23b8",
-    "activeVersionId":  null,
-    "versionCounter":  8,
-    "triggerCount":  1,
+    "versionId":  "b4b106ed-22af-4141-90a0-0f6fa44a5fac",
+    "activeVersionId":  "b4b106ed-22af-4141-90a0-0f6fa44a5fac",
+    "versionCounter":  55,
+    "triggerCount":  2,
     "shared":  [
                    {
-                       "updatedAt":  "2026-04-22T02:04:34.570Z",
-                       "createdAt":  "2026-04-22T02:04:34.570Z",
+                       "updatedAt":  "2026-04-22T03:04:02.840Z",
+                       "createdAt":  "2026-04-22T03:04:02.840Z",
                        "role":  "workflow:owner",
-                       "workflowId":  "u9sVd5EsjD1U1NMR",
+                       "workflowId":  "ICIFC9FQo2ctSScE",
                        "projectId":  "K3DGgPNFR6LzijgM",
                        "project":  {
                                        "updatedAt":  "2026-04-20T23:37:47.167Z",
@@ -174,5 +252,226 @@
                      "name":  "Email"
                  }
              ],
-    "activeVersion":  null
+    "activeVersion":  {
+                          "updatedAt":  "2026-05-01T14:56:14.000Z",
+                          "createdAt":  "2026-04-29T18:19:06.792Z",
+                          "versionId":  "b4b106ed-22af-4141-90a0-0f6fa44a5fac",
+                          "workflowId":  "ICIFC9FQo2ctSScE",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "sage-send-board",
+                                                               "responseMode":  "lastNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "2161d1af-951a-410c-9596-efaeb731733c",
+                                            "name":  "Webhook Board",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ],
+                                            "webhookId":  "kai-sage-send-board"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "sage-send-market",
+                                                               "responseMode":  "lastNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "979ff0dd-f858-48d1-952a-c072cce5b722",
+                                            "name":  "Webhook Market",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             160
+                                                         ],
+                                            "webhookId":  "kai-sage-send-market"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "return [{ json: { type: \u0027board\u0027 } }];"
+                                                           },
+                                            "id":  "52951332-c579-4690-967b-6f46fbf66d1b",
+                                            "name":  "Set Board Type",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             208,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "return [{ json: { type: \u0027market\u0027 } }];"
+                                                           },
+                                            "id":  "9077dc52-947b-4713-8ae7-b087074a7b72",
+                                            "name":  "Set Market Type",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             208,
+                                                             160
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\nconst type = input.type;\n\n// TEST MODE -- set false when ready for real sends\nconst TEST_MODE = true;\nconst TEST_EMAIL = \u0027kas42869@gmail.com\u0027;\n\nconst sageDir = \u0027/data/Aidan_Outputs/Sage/\u0027;\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027).replace(/^\\uFEFF/, \u0027\u0027)); } catch(e) { ctx = {}; }\n\nconst boardMembers = (ctx.eaf_board \u0026\u0026 ctx.eaf_board.members) ? ctx.eaf_board.members : [\n  { name: \u0027James L. Scott, Esq.\u0027, email: \u0027jlslaw@yahoo.com\u0027 },\n  { name: \u0027Keith Millard\u0027, email: \u0027keithrmillard@gmail.com\u0027 },\n  { name: \u0027Maurice Ellis\u0027, email: \u0027bjet.1234@yahoo.com\u0027 }\n];\n\nconst month = new Date().toLocaleDateString(\u0027en-US\u0027, { month: \u0027long\u0027, year: \u0027numeric\u0027, timeZone: \u0027America/New_York\u0027 });\n\nlet draftPath = null;\nlet draftContent = \u0027\u0027;\nlet subject = \u0027\u0027;\nlet toEmail = \u0027\u0027;\nlet ccEmails = \u0027\u0027;\nlet recipientDisplay = \u0027\u0027;\n\nif (type === \u0027board\u0027) {\n  let files = [];\n  try { files = fs.readdirSync(sageDir).filter(function(f) { return f.startsWith(\u0027Board_Newsletter\u0027) \u0026\u0026 f.endsWith(\u0027.txt\u0027); }).sort().reverse(); } catch(e) { files = []; }\n  if (files.length === 0) {\n    return [{ json: { error: true, message: \u0027No board newsletter draft found. Say Sage board to generate one first.\u0027 } }];\n  }\n  draftPath = sageDir + files[0];\n  draftContent = fs.readFileSync(draftPath, \u0027utf8\u0027);\n  subject = (TEST_MODE ? \u0027[TEST] \u0027 : \u0027\u0027) + \u0027EAF Board Newsletter -- \u0027 + month;\n  if (TEST_MODE) {\n    toEmail = TEST_EMAIL;\n    ccEmails = \u0027\u0027;\n    recipientDisplay = \u0027Kevin Smith TEST \u003c\u0027 + TEST_EMAIL + \u0027\u003e\u0027;\n  } else {\n    // Kevin always receives the same copy as the board\n    toEmail = \u0027kas@kevin-llc.com\u0027;\n    ccEmails = boardMembers.map(function(m) { return m.email; }).join(\u0027,\u0027);\n    recipientDisplay = \u0027Kevin Smith \u003ckas@kevin-llc.com\u003e, \u0027 + boardMembers.map(function(m) { return m.name + \u0027 \u003c\u0027 + m.email + \u0027\u003e\u0027; }).join(\u0027, \u0027);\n  }\n} else {\n  let files = [];\n  try { files = fs.readdirSync(sageDir).filter(function(f) { return f.startsWith(\u0027Market_Newsletter\u0027) \u0026\u0026 f.endsWith(\u0027.txt\u0027); }).sort().reverse(); } catch(e) { files = []; }\n  if (files.length === 0) {\n    return [{ json: { error: true, message: \u0027No market newsletter draft found. Say Sage market to generate one first.\u0027 } }];\n  }\n  draftPath = sageDir + files[0];\n  draftContent = fs.readFileSync(draftPath, \u0027utf8\u0027);\n  subject = (TEST_MODE ? \u0027[TEST] \u0027 : \u0027\u0027) + \u0027KAI-Netics Update -- \u0027 + month;\n  if (TEST_MODE) {\n    toEmail = TEST_EMAIL;\n    ccEmails = \u0027\u0027;\n    recipientDisplay = \u0027Kevin Smith TEST \u003c\u0027 + TEST_EMAIL + \u0027\u003e\u0027;\n  } else {\n    // Kevin always on market sends too\n    toEmail = \u0027kas@kevin-llc.com\u0027;\n    ccEmails = boardMembers.map(function(m) { return m.email; }).join(\u0027,\u0027);\n    recipientDisplay = \u0027Kevin Smith \u003ckas@kevin-llc.com\u003e, \u0027 + boardMembers.map(function(m) { return m.name + \u0027 \u003c\u0027 + m.email + \u0027\u003e\u0027; }).join(\u0027, \u0027);\n  }\n}\n\nconst safeContent = draftContent\n  .replace(/\u0026/g, \u0027\u0026amp;\u0027)\n  .replace(/\u003c/g, \u0027\u0026lt;\u0027)\n  .replace(/\u003e/g, \u0027\u0026gt;\u0027);\n\nconst headerColor = type === \u0027board\u0027 ? \u0027#1a1a2e\u0027 : \u0027#0a3d62\u0027;\nconst headerLabel = (TEST_MODE ? \u0027TEST -- \u0027 : \u0027\u0027) + (type === \u0027board\u0027 ? \u0027EAF Board Newsletter\u0027 : \u0027KAI-Netics Market Update\u0027);\nconst entityLine = type === \u0027board\u0027 ? \u0027KAI-Netics Equity \u0026amp; Autonomy Foundry, Inc. | EIN: 41-4820296\u0027 : \u0027Kevin Alexander International LLC dba KAI-Netics\u0027;\n\nconst htmlBody =\n  (TEST_MODE ? \u0027\u003cdiv style=\"background:#ff6600;padding:10px;text-align:center\"\u003e\u003cstrong style=\"color:#fff\"\u003eTEST MODE -- Board members NOT notified\u003c/strong\u003e\u003c/div\u003e\u0027 : \u0027\u0027) +\n  \u0027\u003cdiv style=\"font-family:Arial,sans-serif;max-width:700px;margin:0 auto\"\u003e\u0027 +\n  \u0027\u003cdiv style=\"background:\u0027 + headerColor + \u0027;padding:24px;border-radius:8px 8px 0 0\"\u003e\u0027 +\n  \u0027\u003ch1 style=\"color:#00d4ff;margin:0;font-size:20px\"\u003eKAI-Netics\u003c/h1\u003e\u0027 +\n  \u0027\u003cp style=\"color:#8888aa;margin:4px 0 0 0;font-size:13px\"\u003e\u0027 + headerLabel + \u0027 | \u0027 + month + \u0027\u003c/p\u003e\u0027 +\n  \u0027\u003c/div\u003e\u0027 +\n  \u0027\u003cdiv style=\"background:#ffffff;padding:28px;border:1px solid #e0e0e0\"\u003e\u0027 +\n  \u0027\u003cp style=\"color:#555;font-size:12px;margin:0 0 16px 0\"\u003e\u0027 + entityLine + \u0027\u003c/p\u003e\u0027 +\n  \u0027\u003cdiv style=\"white-space:pre-wrap;font-size:14px;line-height:1.7;color:#222\"\u003e\u0027 + safeContent + \u0027\u003c/div\u003e\u0027 +\n  \u0027\u003c/div\u003e\u0027 +\n  \u0027\u003cdiv style=\"background:\u0027 + headerColor + \u0027;padding:16px;border-radius:0 0 8px 8px;text-align:center\"\u003e\u0027 +\n  \u0027\u003cp style=\"color:#8888aa;margin:0;font-size:12px\"\u003eKevin Alexander Smith | KAI-Netics | kas@kevin-llc.com | 443.257.6836\u003c/p\u003e\u0027 +\n  \u0027\u003cp style=\"color:#8888aa;margin:4px 0 0 0;font-size:11px\"\u003eFAA Part 107 Certified | MWVOB\u003c/p\u003e\u0027 +\n  \u0027\u003c/div\u003e\u003c/div\u003e\u0027;\n\nreturn [{ json: {\n  type: type,\n  testMode: TEST_MODE,\n  subject: subject,\n  htmlBody: htmlBody,\n  toEmail: toEmail,\n  ccEmails: ccEmails,\n  recipientDisplay: recipientDisplay,\n  draftPath: draftPath,\n  month: month\n}}];\n"
+                                                           },
+                                            "id":  "35025b3c-c68a-4f79-bf59-b3d48e6b6e37",
+                                            "name":  "Load Draft + Build Email",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             432,
+                                                             80
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "fromEmail":  "kas@kevin-llc.com",
+                                                               "toEmail":  "=={{ $json.toEmail }}",
+                                                               "subject":  "=={{ $json.subject }}",
+                                                               "html":  "=={{ $json.htmlBody }}",
+                                                               "options":  {
+                                                                               "ccEmail":  "=={{ $json.ccEmails }}"
+                                                                           }
+                                                           },
+                                            "id":  "bab4f972-a40a-46f3-9a7a-4f2c900c1847",
+                                            "name":  "Send via SMTP",
+                                            "type":  "n8n-nodes-base.emailSend",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             640,
+                                                             80
+                                                         ],
+                                            "webhookId":  "8c8455c8-b869-4f44-a61b-cdf507fcd7fa",
+                                            "credentials":  {
+                                                                "smtp":  {
+                                                                             "id":  "rbL5mC01kCLp42bA",
+                                                                             "name":  "KAI-Netics SMTP"
+                                                                         }
+                                                            }
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027);\nconst http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\nif (input.error) {\n  const errMsg = \u0027SAGE SEND ERROR: \u0027 + input.message;\n  const errBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: errMsg } });\n  const errOpts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(errBody) } };\n  await new Promise(function(r) { const req = http.request(errOpts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(errBody); req.end(); });\n  return [{ json: { success: false, error: input.message } }];\n}\n\nconst type = input.type || \u0027unknown\u0027;\nconst testMode = input.testMode || false;\nconst subject = input.subject || \u0027(no subject)\u0027;\nconst toEmail = input.toEmail || \u0027(no recipient)\u0027;\nconst ccEmails = input.ccEmails || \u0027\u0027;\nconst recipientDisplay = input.recipientDisplay || toEmail;\nconst draftPath = input.draftPath || \u0027\u0027;\n\nconst logPrefix = type === \u0027board\u0027 ? \u0027BOARD\u0027 : \u0027MARKET\u0027;\nconst testTag = testMode ? \u0027_TEST\u0027 : \u0027\u0027;\nconst logPath = \u0027/data/Aidan_Outputs/Sage/\u0027 + logPrefix + testTag + \u0027_SENT_\u0027 + new Date().toISOString().replace(/[:.]/g,\u0027-\u0027) + \u0027.log\u0027;\nconst logContent = \u0027Sent: \u0027 + new Date().toISOString() + \u0027\\nType: \u0027 + type + \u0027\\nTest: \u0027 + testMode + \u0027\\nSubject: \u0027 + subject + \u0027\\nTo: \u0027 + toEmail + \u0027\\nCC: \u0027 + ccEmails + \u0027\\nRecipients: \u0027 + recipientDisplay + \u0027\\nDraft: \u0027 + draftPath + \u0027\\n\u0027;\n\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Sage\u0027, { recursive: true });\nfs.writeFileSync(logPath, logContent, \u0027utf8\u0027);\n\nlet confirmMsg = (testMode ? \u0027SAGE TEST EMAIL SENT\u0027 : \u0027SAGE EMAIL SENT\u0027) + \u0027\\n\\n\u0027;\nconfirmMsg += \u0027Type: \u0027 + (type === \u0027board\u0027 ? \u0027EAF Board Newsletter\u0027 : \u0027FP Market Newsletter\u0027) + \u0027\\n\u0027;\nconfirmMsg += \u0027Subject: \u0027 + subject + \u0027\\n\u0027;\nconfirmMsg += \u0027To: \u0027 + recipientDisplay + \u0027\\n\u0027;\nconfirmMsg += \u0027Draft file: \u0027 + draftPath + \u0027\\n\u0027;\nif (testMode) {\n  confirmMsg += \u0027\\nTEST MODE ON\\nOnly kas42869@gmail.com notified.\\nTo send for real: set TEST_MODE=false in Load Draft + Build Email node.\u0027;\n}\n\nconst wa = \u002714432576836@s.whatsapp.net\u0027;\nconst msgBody = JSON.stringify({ number: wa, textMessage: { text: confirmMsg } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); });\n  req.on(\u0027error\u0027,r); req.write(msgBody); req.end();\n});\n\nreturn [{ json: { success: true, type: type, testMode: testMode, subject: subject, to: toEmail, logPath: logPath } }];\n"
+                                                           },
+                                            "id":  "464af85c-d50a-4f21-a893-900d04bda446",
+                                            "name":  "Log + WhatsApp Confirm",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             864,
+                                                             80
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Webhook Board":  {
+                                                                    "main":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "Set Board Type",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                                },
+                                              "Webhook Market":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Set Market Type",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "Set Board Type":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Load Draft + Build Email",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "Set Market Type":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Load Draft + Build Email",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Load Draft + Build Email":  {
+                                                                               "main":  [
+                                                                                            [
+                                                                                                {
+                                                                                                    "node":  "Send via SMTP",
+                                                                                                    "type":  "main",
+                                                                                                    "index":  0
+                                                                                                }
+                                                                                            ]
+                                                                                        ]
+                                                                           },
+                                              "Send via SMTP":  {
+                                                                    "main":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "Log + WhatsApp Confirm",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                                }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version b4b106ed",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-04-29T18:19:28.433Z",
+                                                             "id":  397,
+                                                             "workflowId":  "ICIFC9FQo2ctSScE",
+                                                             "versionId":  "b4b106ed-22af-4141-90a0-0f6fa44a5fac",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-05-01T14:56:14.705Z",
+                                                             "id":  423,
+                                                             "workflowId":  "ICIFC9FQo2ctSScE",
+                                                             "versionId":  "b4b106ed-22af-4141-90a0-0f6fa44a5fac",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-04-29T18:21:59.824Z",
+                                                             "id":  398,
+                                                             "workflowId":  "ICIFC9FQo2ctSScE",
+                                                             "versionId":  "b4b106ed-22af-4141-90a0-0f6fa44a5fac",
+                                                             "event":  "deactivated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
 }
