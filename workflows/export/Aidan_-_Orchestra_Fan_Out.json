@@ -1,0 +1,269 @@
+﻿{
+    "updatedAt":  "2026-04-20T20:25:25.799Z",
+    "createdAt":  "2026-04-14T05:52:36.407Z",
+    "id":  "lRTWOdnwTl9S4uDz",
+    "name":  "Aidan - Orchestra Fan Out",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "aidan-orchestra",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "id":  "837ae22e-6966-4394-a985-e937e2f41151",
+                      "name":  "Orchestra Trigger",
+                      "webhookId":  "aidan-orchestra-trigger"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027), http = require(\u0027http\u0027);\nconst raw = $input.first().json;\nconst body = raw.body || raw;\n\n// If this is an agent callback, save it and exit — do NOT fan out\nif (body.agent \u0026\u0026 [\u0027Scout\u0027,\u0027Jordan\u0027,\u0027Iris\u0027,\u0027Atlas\u0027,\u0027Nova\u0027,\u0027Sage\u0027,\u0027Pulse\u0027].includes(body.agent)) {\n  fs.mkdirSync(\u0027/data/Aidan_Outputs/Callbacks\u0027, { recursive: true });\n  const ts = body.timestamp || new Date().toISOString();\n  fs.writeFileSync(`/data/Aidan_Outputs/Callbacks/${body.agent}_${ts.replace(/[:.]/g,\u0027-\u0027)}.json`, JSON.stringify(body, null, 2), \u0027utf8\u0027);\n  return [{ json: { _isCallback: true, agent: body.agent, saved: true } }];\n}\n\nconst masterQuery = String(body.query || body.command || \u0027Full platform status — compliance, BD targets, grant status, MEIA readiness.\u0027);\nconst sessionId = \u0027orch_\u0027 + Date.now();\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Orchestra\u0027, { recursive: true });\nfs.writeFileSync(`/data/Aidan_Outputs/Orchestra/session_${sessionId}.json`, JSON.stringify({ sessionId, masterQuery, startTime: new Date().toISOString(), agents: { Atlas: null, Scout: null, Jordan: null, Iris: null } }, null, 2), \u0027utf8\u0027);\n\nconst agentCalls = [\n  { path: \u0027/webhook/atlas-architect\u0027, payload: { command: \u0027Atlas status\u0027, detail: masterQuery, sessionId } },\n  { path: \u0027/webhook/scout-research\u0027, payload: { query: masterQuery + \u0027 — top 3 DMV contract opportunities\u0027, sessionId } },\n  { path: \u0027/webhook/grant-writer\u0027, payload: { trigger: \u0027orchestra\u0027, query: masterQuery, sessionId } },\n  { path: \u0027/webhook/iris-monitor\u0027, payload: { trigger: \u0027orchestra\u0027, sessionId } }\n];\n\nconst fireAgent = (agentPath, payload) =\u003e new Promise(resolve =\u003e {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: agentPath, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(bodyStr) } };\n  const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027, () =\u003e resolve({ path: agentPath, fired: true })); });\n  req.on(\u0027error\u0027, e =\u003e resolve({ path: agentPath, fired: false, error: e.message }));\n  req.write(bodyStr); req.end();\n});\n\nconst results = await Promise.all(agentCalls.map(a =\u003e fireAgent(a.path, a.payload)));\nconst agentNames = [\u0027Atlas\u0027,\u0027Scout\u0027,\u0027Jordan\u0027,\u0027Iris\u0027];\nconst launchMsg = `🎼 ORCHESTRA LAUNCHED\\n\\n${agentNames.map((a,i) =\u003e `${results[i].fired?\u0027✅\u0027:\u0027❌\u0027} ${a}`).join(\u0027\\n\u0027)}\\n\\nQuery: ${masterQuery.substring(0,80)}\\n\\nConsolidated brief incoming ~90 seconds.`;\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: launchMsg } });\nconst waOpts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(r =\u003e { const req = http.request(waOpts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\n\nreturn [{ json: { sessionId, masterQuery, results, launched: true } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       0
+                                   ],
+                      "id":  "b2c84fb9-3e82-4bb4-8416-c447dfd051ae",
+                      "name":  "Fan Out to All Agents"
+                  },
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "triggerAtHour":  9
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       0,
+                                       -144
+                                   ],
+                      "id":  "3902c331-5d96-4eed-a659-bed6c4745240",
+                      "name":  "Schedule Trigger"
+                  }
+              ],
+    "connections":  {
+                        "Orchestra Trigger":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Fan Out to All Agents",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Fan Out to All Agents":  {
+                                                      "main":  [
+                                                                   [
+
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Schedule Trigger":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Fan Out to All Agents",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  {
+                       "node:Schedule Trigger":  {
+                                                     "recurrenceRules":  [
+
+                                                                         ]
+                                                 }
+                   },
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "5d6955fc-7650-454b-8fbc-12bf9e8c1461",
+    "activeVersionId":  "5d6955fc-7650-454b-8fbc-12bf9e8c1461",
+    "versionCounter":  70,
+    "triggerCount":  2,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-14T05:52:36.412Z",
+                       "createdAt":  "2026-04-14T05:52:36.412Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "lRTWOdnwTl9S4uDz",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.295Z",
+                     "createdAt":  "2026-04-07T01:42:36.295Z",
+                     "id":  "B0QrEiqfwdS6WU2L",
+                     "name":  "Aidan"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T15:15:37.374Z",
+                     "createdAt":  "2026-04-09T15:15:37.374Z",
+                     "id":  "QTPeit0eR7gFbf1c",
+                     "name":  "Orchestrator"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-04-18T14:48:50.000Z",
+                          "createdAt":  "2026-04-17T16:43:22.113Z",
+                          "versionId":  "5d6955fc-7650-454b-8fbc-12bf9e8c1461",
+                          "workflowId":  "lRTWOdnwTl9S4uDz",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "aidan-orchestra",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ],
+                                            "id":  "837ae22e-6966-4394-a985-e937e2f41151",
+                                            "name":  "Orchestra Trigger",
+                                            "webhookId":  "aidan-orchestra-trigger"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027), http = require(\u0027http\u0027);\nconst raw = $input.first().json;\nconst body = raw.body || raw;\n\n// If this is an agent callback, save it and exit — do NOT fan out\nif (body.agent \u0026\u0026 [\u0027Scout\u0027,\u0027Jordan\u0027,\u0027Iris\u0027,\u0027Atlas\u0027,\u0027Nova\u0027,\u0027Sage\u0027,\u0027Pulse\u0027].includes(body.agent)) {\n  fs.mkdirSync(\u0027/data/Aidan_Outputs/Callbacks\u0027, { recursive: true });\n  const ts = body.timestamp || new Date().toISOString();\n  fs.writeFileSync(`/data/Aidan_Outputs/Callbacks/${body.agent}_${ts.replace(/[:.]/g,\u0027-\u0027)}.json`, JSON.stringify(body, null, 2), \u0027utf8\u0027);\n  return [{ json: { _isCallback: true, agent: body.agent, saved: true } }];\n}\n\nconst masterQuery = String(body.query || body.command || \u0027Full platform status — compliance, BD targets, grant status, MEIA readiness.\u0027);\nconst sessionId = \u0027orch_\u0027 + Date.now();\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Orchestra\u0027, { recursive: true });\nfs.writeFileSync(`/data/Aidan_Outputs/Orchestra/session_${sessionId}.json`, JSON.stringify({ sessionId, masterQuery, startTime: new Date().toISOString(), agents: { Atlas: null, Scout: null, Jordan: null, Iris: null } }, null, 2), \u0027utf8\u0027);\n\nconst agentCalls = [\n  { path: \u0027/webhook/atlas-architect\u0027, payload: { command: \u0027Atlas status\u0027, detail: masterQuery, sessionId } },\n  { path: \u0027/webhook/scout-research\u0027, payload: { query: masterQuery + \u0027 — top 3 DMV contract opportunities\u0027, sessionId } },\n  { path: \u0027/webhook/grant-writer\u0027, payload: { trigger: \u0027orchestra\u0027, query: masterQuery, sessionId } },\n  { path: \u0027/webhook/iris-monitor\u0027, payload: { trigger: \u0027orchestra\u0027, sessionId } }\n];\n\nconst fireAgent = (agentPath, payload) =\u003e new Promise(resolve =\u003e {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: agentPath, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(bodyStr) } };\n  const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027, () =\u003e resolve({ path: agentPath, fired: true })); });\n  req.on(\u0027error\u0027, e =\u003e resolve({ path: agentPath, fired: false, error: e.message }));\n  req.write(bodyStr); req.end();\n});\n\nconst results = await Promise.all(agentCalls.map(a =\u003e fireAgent(a.path, a.payload)));\nconst agentNames = [\u0027Atlas\u0027,\u0027Scout\u0027,\u0027Jordan\u0027,\u0027Iris\u0027];\nconst launchMsg = `🎼 ORCHESTRA LAUNCHED\\n\\n${agentNames.map((a,i) =\u003e `${results[i].fired?\u0027✅\u0027:\u0027❌\u0027} ${a}`).join(\u0027\\n\u0027)}\\n\\nQuery: ${masterQuery.substring(0,80)}\\n\\nConsolidated brief incoming ~90 seconds.`;\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: launchMsg } });\nconst waOpts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(r =\u003e { const req = http.request(waOpts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\n\nreturn [{ json: { sessionId, masterQuery, results, launched: true } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             224,
+                                                             0
+                                                         ],
+                                            "id":  "b2c84fb9-3e82-4bb4-8416-c447dfd051ae",
+                                            "name":  "Fan Out to All Agents"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "rule":  {
+                                                                            "interval":  [
+                                                                                             {
+                                                                                                 "triggerAtHour":  9
+                                                                                             }
+                                                                                         ]
+                                                                        }
+                                                           },
+                                            "type":  "n8n-nodes-base.scheduleTrigger",
+                                            "typeVersion":  1.3,
+                                            "position":  [
+                                                             0,
+                                                             -144
+                                                         ],
+                                            "id":  "3902c331-5d96-4eed-a659-bed6c4745240",
+                                            "name":  "Schedule Trigger"
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Orchestra Trigger":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "Fan Out to All Agents",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    },
+                                              "Fan Out to All Agents":  {
+                                                                            "main":  [
+                                                                                         [
+
+                                                                                         ]
+                                                                                     ]
+                                                                        },
+                                              "Schedule Trigger":  {
+                                                                       "main":  [
+                                                                                    [
+                                                                                        {
+                                                                                            "node":  "Fan Out to All Agents",
+                                                                                            "type":  "main",
+                                                                                            "index":  0
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                   }
+                                          },
+                          "authors":  "Kevin kas@kevin-llc.com",
+                          "name":  "Version 5d6955fc",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-04-17T16:43:40.592Z",
+                                                             "id":  277,
+                                                             "workflowId":  "lRTWOdnwTl9S4uDz",
+                                                             "versionId":  "5d6955fc-7650-454b-8fbc-12bf9e8c1461",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-04-18T14:48:50.234Z",
+                                                             "id":  281,
+                                                             "workflowId":  "lRTWOdnwTl9S4uDz",
+                                                             "versionId":  "5d6955fc-7650-454b-8fbc-12bf9e8c1461",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-04-18T14:48:17.027Z",
+                                                             "id":  280,
+                                                             "workflowId":  "lRTWOdnwTl9S4uDz",
+                                                             "versionId":  "5d6955fc-7650-454b-8fbc-12bf9e8c1461",
+                                                             "event":  "deactivated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

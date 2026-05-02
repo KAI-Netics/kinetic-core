@@ -1,0 +1,699 @@
+﻿{
+    "updatedAt":  "2026-04-21T22:23:46.664Z",
+    "createdAt":  "2026-04-21T22:19:07.852Z",
+    "id":  "jb9c1ETj3mBEOtTd",
+    "name":  "Aidan - Email Router",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "pollTimes":  {
+                                                           "item":  [
+                                                                        {
+                                                                            "mode":  "everyX",
+                                                                            "value":  5,
+                                                                            "unit":  "minutes"
+                                                                        }
+                                                                    ]
+                                                       },
+                                         "filters":  {
+                                                         "readStatus":  "unread"
+                                                     }
+                                     },
+                      "id":  "3a24259d-0b23-43f6-b55d-2a13be090d73",
+                      "name":  "Gmail Trigger",
+                      "type":  "n8n-nodes-base.gmailTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -656,
+                                       240
+                                   ],
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "wTzno2NwZnCb2wgw",
+                                                              "name":  "KAI-Netics Gmail"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const input = $input.first().json;\n\n// Extract email metadata\nconst fromHeader = input.from || input.payload \u0026\u0026 input.payload.headers \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027From\u0027; }) \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027From\u0027; }).value || \u0027\u0027;\nconst subject = input.subject || input.payload \u0026\u0026 input.payload.headers \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027Subject\u0027; }) \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027Subject\u0027; }).value || \u0027\u0027;\nconst body = input.snippet || input.body || \u0027\u0027;\nconst messageId = input.id || \u0027\u0027;\nconst fromLower = fromHeader.toLowerCase();\nconst subjectLower = subject.toLowerCase();\nconst bodyLower = body.toLowerCase();\n\n// Routing rules — order matters, first match wins\nlet route = \u0027GENERAL\u0027;\nlet agent = \u0027Aidan\u0027;\nlet priority = \u0027medium\u0027;\nlet reason = \u0027\u0027;\n\n// eMMA — Maryland state procurement\nif (fromLower.indexOf(\u0027emma\u0027) !== -1 || fromLower.indexOf(\u0027emma.maryland\u0027) !== -1 || subjectLower.indexOf(\u0027solicitation\u0027) !== -1 || subjectLower.indexOf(\u0027bpm id\u0027) !== -1 || subjectLower.indexOf(\u0027rfx\u0027) !== -1) {\n  route = \u0027NOVA\u0027;\n  agent = \u0027Nova\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027eMMA procurement notification\u0027;\n}\n// SAM.gov — federal procurement\nelse if (fromLower.indexOf(\u0027sam.gov\u0027) !== -1 || fromLower.indexOf(\u0027beta.sam.gov\u0027) !== -1 || subjectLower.indexOf(\u0027sam.gov\u0027) !== -1 || subjectLower.indexOf(\u0027uei\u0027) !== -1 || subjectLower.indexOf(\u0027cage code\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027SAM.gov registration update\u0027;\n}\n// IRS / Tax compliance\nelse if (fromLower.indexOf(\u0027irs.gov\u0027) !== -1 || fromLower.indexOf(\u0027treasury.gov\u0027) !== -1 || subjectLower.indexOf(\u0027form 1023\u0027) !== -1 || subjectLower.indexOf(\u0027990\u0027) !== -1 || subjectLower.indexOf(\u0027ein\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027IRS / tax compliance\u0027;\n}\n// Maryland state agencies — grants\nelse if (fromLower.indexOf(\u0027maryland.gov\u0027) !== -1 || fromLower.indexOf(\u0027dllr\u0027) !== -1 || fromLower.indexOf(\u0027tedco\u0027) !== -1 || subjectLower.indexOf(\u0027grant\u0027) !== -1 || subjectLower.indexOf(\u0027award\u0027) !== -1 || subjectLower.indexOf(\u0027lighthouse\u0027) !== -1 || subjectLower.indexOf(\u0027earn\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Maryland grant / state agency\u0027;\n}\n// Federal grants\nelse if (fromLower.indexOf(\u0027grants.gov\u0027) !== -1 || fromLower.indexOf(\u0027hrsa\u0027) !== -1 || fromLower.indexOf(\u0027sbir\u0027) !== -1 || subjectLower.indexOf(\u0027nofa\u0027) !== -1 || subjectLower.indexOf(\u0027notice of funding\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Federal grant notification\u0027;\n}\n// FAA / Drone regulatory\nelse if (fromLower.indexOf(\u0027faa.gov\u0027) !== -1 || subjectLower.indexOf(\u0027part 107\u0027) !== -1 || subjectLower.indexOf(\u0027part 108\u0027) !== -1 || subjectLower.indexOf(\u0027laanc\u0027) !== -1 || subjectLower.indexOf(\u0027remote id\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027FAA regulatory update\u0027;\n}\n// BD pipeline — known contacts\nelse if (fromLower.indexOf(\u0027mdot\u0027) !== -1 || fromLower.indexOf(\u0027sha.maryland\u0027) !== -1 || fromLower.indexOf(\u0027bge.com\u0027) !== -1 || fromLower.indexOf(\u0027medstar\u0027) !== -1 || fromLower.indexOf(\u0027umms\u0027) !== -1 || fromLower.indexOf(\u0027jhmi.edu\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027BD pipeline contact\u0027;\n}\n// Techstars / ecosystem\nelse if (fromLower.indexOf(\u0027techstars\u0027) !== -1 || fromLower.indexOf(\u0027tedco\u0027) !== -1 || fromLower.indexOf(\u0027meia\u0027) !== -1 || subjectLower.indexOf(\u0027accelerator\u0027) !== -1 || subjectLower.indexOf(\u0027cohort\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Ecosystem / accelerator\u0027;\n}\n\nreturn [{ json: {\n  route: route,\n  agent: agent,\n  priority: priority,\n  reason: reason,\n  from: fromHeader,\n  subject: subject,\n  body: body.substring(0, 2000),\n  messageId: messageId,\n  timestamp: new Date().toISOString()\n}}];"
+                                     },
+                      "id":  "a54a5af3-f339-468f-816e-3cb4a84131e6",
+                      "name":  "Route by Sender + Subject",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -448,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "route-nova",
+                                                                                   "leftValue":  "={{ $json.route }}",
+                                                                                   "rightValue":  "NOVA",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "e6706d31-5ece-4a7a-bef0-93cc261d6a85",
+                      "name":  "Is Nova (RFP)?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -224,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "route-jordan",
+                                                                                   "leftValue":  "={{ $json.route }}",
+                                                                                   "rightValue":  "JORDAN",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "775e9438-ba7b-4b07-9a98-ee5f331ed358",
+                      "name":  "Is Jordan (Grants/BD)?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -224,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "route-iris",
+                                                                                   "leftValue":  "={{ $json.route }}",
+                                                                                   "rightValue":  "IRIS",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "61361250-419c-4310-b575-f8129f27d0e0",
+                      "name":  "Is Iris (Compliance)?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -224,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\n// Fire Nova webhook with email content\nconst payload = JSON.stringify({\n  rfp_name: input.subject || \u0027Email RFP\u0027,\n  agency: input.from || \u0027Unknown\u0027,\n  rfp_text: input.body || \u0027\u0027,\n  source: \u0027gmail_router\u0027,\n  email_from: input.from,\n  email_subject: input.subject\n});\n\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/nova-rfp\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(payload) }\n};\n\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(payload); req.end();\n});\n\nreturn [{ json: { routed: true, to: \u0027Nova\u0027, from: input.from, subject: input.subject, reason: input.reason } }];"
+                                     },
+                      "id":  "cd7d5b3a-16f7-48f0-9c5f-b6d64b15cbf4",
+                      "name":  "Fire Nova",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\n// Send WhatsApp alert for Jordan-relevant email\nconst msgText = \u0027EMAIL ALERT -- \u0027 + (input.priority === \u0027critical\u0027 ? \u0027CRITICAL\u0027 : \u0027HIGH\u0027) + \u0027\\n\\nFrom: \u0027 + input.from + \u0027\\nSubject: \u0027 + input.subject + \u0027\\nReason: \u0027 + input.reason + \u0027\\n\\nReview in inbox: kas42869@gmail.com\u0027;\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: msgText } });\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\nreturn [{ json: { routed: true, to: \u0027Jordan/WhatsApp\u0027, from: input.from, subject: input.subject, reason: input.reason } }];"
+                                     },
+                      "id":  "c259d0a5-d146-4c37-a6c7-b9bdb59cae55",
+                      "name":  "Alert Jordan via WhatsApp",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\n// Fire Iris webhook for compliance-critical emails\nconst payload = JSON.stringify({\n  trigger: \u0027email_alert\u0027,\n  email_from: input.from,\n  email_subject: input.subject,\n  email_body: input.body,\n  reason: input.reason,\n  priority: input.priority\n});\n\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/iris-monitor\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(payload) }\n};\n\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(payload); req.end();\n});\n\n// Also send WhatsApp alert\nconst msgText = \u0027COMPLIANCE EMAIL -- CRITICAL\\n\\nFrom: \u0027 + input.from + \u0027\\nSubject: \u0027 + input.subject + \u0027\\nReason: \u0027 + input.reason + \u0027\\n\\nIris running compliance check now.\u0027;\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: msgText } });\nconst waOpts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(waOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\nreturn [{ json: { routed: true, to: \u0027Iris\u0027, from: input.from, subject: input.subject, reason: input.reason } }];"
+                                     },
+                      "id":  "9fcb5c33-1113-4c35-9a0b-9dbfd02c180a",
+                      "name":  "Fire Iris",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const input = $input.first().json;\n// General email — log silently, no agent action needed\nconsole.log(\u0027Email router: GENERAL route for \u0027 + input.from + \u0027 | \u0027 + input.subject);\nreturn [{ json: { routed: false, route: \u0027GENERAL\u0027, from: input.from, subject: input.subject } }];"
+                                     },
+                      "id":  "7352f1c8-1758-4063-9c26-c06d52db0500",
+                      "name":  "Log General (No Action)",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       560
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Gmail Trigger":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Route by Sender + Subject",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Route by Sender + Subject":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Is Nova (RFP)?",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           },
+                                                                           {
+                                                                               "node":  "Is Jordan (Grants/BD)?",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           },
+                                                                           {
+                                                                               "node":  "Is Iris (Compliance)?",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Is Nova (RFP)?":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Fire Nova",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ],
+                                                            [
+                                                                {
+                                                                    "node":  "Is Jordan (Grants/BD)?",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Is Jordan (Grants/BD)?":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Alert Jordan via WhatsApp",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ],
+                                                                    [
+                                                                        {
+                                                                            "node":  "Is Iris (Compliance)?",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Is Iris (Compliance)?":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Fire Iris",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ],
+                                                                   [
+                                                                       {
+                                                                           "node":  "Log General (No Action)",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  {
+                       "node:Gmail Trigger":  {
+                                                  "lastTimeChecked":  1777333714,
+                                                  "possibleDuplicates":  [
+                                                                             "19dd1583fe04e19e",
+                                                                             "19dd15558b6003e7",
+                                                                             "19dd1555826ba887",
+                                                                             "19dd15557b033c1e",
+                                                                             "19dd15556c22ded7",
+                                                                             "19dd15554ef4a8d3",
+                                                                             "19dd155549cc7df6"
+                                                                         ]
+                                              }
+                   },
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "pinData":  {
+                    "Gmail Trigger":  [
+                                          {
+                                              "json":  {
+                                                           "name":  "First item",
+                                                           "code":  1
+                                                       }
+                                          },
+                                          {
+                                              "json":  {
+                                                           "name":  "Second item",
+                                                           "code":  2
+                                                       }
+                                          }
+                                      ]
+                },
+    "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
+    "activeVersionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
+    "versionCounter":  427,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-21T22:19:07.857Z",
+                       "createdAt":  "2026-04-21T22:19:07.857Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "jb9c1ETj3mBEOtTd",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.295Z",
+                     "createdAt":  "2026-04-07T01:42:36.295Z",
+                     "id":  "B0QrEiqfwdS6WU2L",
+                     "name":  "Aidan"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T22:19:06.035Z",
+                     "createdAt":  "2026-04-21T22:19:06.035Z",
+                     "id":  "o5iUMThjSqVfU6yp",
+                     "name":  "Email"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T22:19:06.049Z",
+                     "createdAt":  "2026-04-21T22:19:06.049Z",
+                     "id":  "pvj3xtkVFP2vRVrN",
+                     "name":  "Router"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-04-22T03:06:34.000Z",
+                          "createdAt":  "2026-04-21T22:23:38.725Z",
+                          "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
+                          "workflowId":  "jb9c1ETj3mBEOtTd",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "pollTimes":  {
+                                                                                 "item":  [
+                                                                                              {
+                                                                                                  "mode":  "everyX",
+                                                                                                  "value":  5,
+                                                                                                  "unit":  "minutes"
+                                                                                              }
+                                                                                          ]
+                                                                             },
+                                                               "filters":  {
+                                                                               "readStatus":  "unread"
+                                                                           }
+                                                           },
+                                            "id":  "3a24259d-0b23-43f6-b55d-2a13be090d73",
+                                            "name":  "Gmail Trigger",
+                                            "type":  "n8n-nodes-base.gmailTrigger",
+                                            "typeVersion":  1,
+                                            "position":  [
+                                                             -656,
+                                                             240
+                                                         ],
+                                            "credentials":  {
+                                                                "gmailOAuth2":  {
+                                                                                    "id":  "wTzno2NwZnCb2wgw",
+                                                                                    "name":  "KAI-Netics Gmail"
+                                                                                }
+                                                            }
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const input = $input.first().json;\n\n// Extract email metadata\nconst fromHeader = input.from || input.payload \u0026\u0026 input.payload.headers \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027From\u0027; }) \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027From\u0027; }).value || \u0027\u0027;\nconst subject = input.subject || input.payload \u0026\u0026 input.payload.headers \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027Subject\u0027; }) \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027Subject\u0027; }).value || \u0027\u0027;\nconst body = input.snippet || input.body || \u0027\u0027;\nconst messageId = input.id || \u0027\u0027;\nconst fromLower = fromHeader.toLowerCase();\nconst subjectLower = subject.toLowerCase();\nconst bodyLower = body.toLowerCase();\n\n// Routing rules — order matters, first match wins\nlet route = \u0027GENERAL\u0027;\nlet agent = \u0027Aidan\u0027;\nlet priority = \u0027medium\u0027;\nlet reason = \u0027\u0027;\n\n// eMMA — Maryland state procurement\nif (fromLower.indexOf(\u0027emma\u0027) !== -1 || fromLower.indexOf(\u0027emma.maryland\u0027) !== -1 || subjectLower.indexOf(\u0027solicitation\u0027) !== -1 || subjectLower.indexOf(\u0027bpm id\u0027) !== -1 || subjectLower.indexOf(\u0027rfx\u0027) !== -1) {\n  route = \u0027NOVA\u0027;\n  agent = \u0027Nova\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027eMMA procurement notification\u0027;\n}\n// SAM.gov — federal procurement\nelse if (fromLower.indexOf(\u0027sam.gov\u0027) !== -1 || fromLower.indexOf(\u0027beta.sam.gov\u0027) !== -1 || subjectLower.indexOf(\u0027sam.gov\u0027) !== -1 || subjectLower.indexOf(\u0027uei\u0027) !== -1 || subjectLower.indexOf(\u0027cage code\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027SAM.gov registration update\u0027;\n}\n// IRS / Tax compliance\nelse if (fromLower.indexOf(\u0027irs.gov\u0027) !== -1 || fromLower.indexOf(\u0027treasury.gov\u0027) !== -1 || subjectLower.indexOf(\u0027form 1023\u0027) !== -1 || subjectLower.indexOf(\u0027990\u0027) !== -1 || subjectLower.indexOf(\u0027ein\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027IRS / tax compliance\u0027;\n}\n// Maryland state agencies — grants\nelse if (fromLower.indexOf(\u0027maryland.gov\u0027) !== -1 || fromLower.indexOf(\u0027dllr\u0027) !== -1 || fromLower.indexOf(\u0027tedco\u0027) !== -1 || subjectLower.indexOf(\u0027grant\u0027) !== -1 || subjectLower.indexOf(\u0027award\u0027) !== -1 || subjectLower.indexOf(\u0027lighthouse\u0027) !== -1 || subjectLower.indexOf(\u0027earn\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Maryland grant / state agency\u0027;\n}\n// Federal grants\nelse if (fromLower.indexOf(\u0027grants.gov\u0027) !== -1 || fromLower.indexOf(\u0027hrsa\u0027) !== -1 || fromLower.indexOf(\u0027sbir\u0027) !== -1 || subjectLower.indexOf(\u0027nofa\u0027) !== -1 || subjectLower.indexOf(\u0027notice of funding\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Federal grant notification\u0027;\n}\n// FAA / Drone regulatory\nelse if (fromLower.indexOf(\u0027faa.gov\u0027) !== -1 || subjectLower.indexOf(\u0027part 107\u0027) !== -1 || subjectLower.indexOf(\u0027part 108\u0027) !== -1 || subjectLower.indexOf(\u0027laanc\u0027) !== -1 || subjectLower.indexOf(\u0027remote id\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027FAA regulatory update\u0027;\n}\n// BD pipeline — known contacts\nelse if (fromLower.indexOf(\u0027mdot\u0027) !== -1 || fromLower.indexOf(\u0027sha.maryland\u0027) !== -1 || fromLower.indexOf(\u0027bge.com\u0027) !== -1 || fromLower.indexOf(\u0027medstar\u0027) !== -1 || fromLower.indexOf(\u0027umms\u0027) !== -1 || fromLower.indexOf(\u0027jhmi.edu\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027BD pipeline contact\u0027;\n}\n// Techstars / ecosystem\nelse if (fromLower.indexOf(\u0027techstars\u0027) !== -1 || fromLower.indexOf(\u0027tedco\u0027) !== -1 || fromLower.indexOf(\u0027meia\u0027) !== -1 || subjectLower.indexOf(\u0027accelerator\u0027) !== -1 || subjectLower.indexOf(\u0027cohort\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Ecosystem / accelerator\u0027;\n}\n\nreturn [{ json: {\n  route: route,\n  agent: agent,\n  priority: priority,\n  reason: reason,\n  from: fromHeader,\n  subject: subject,\n  body: body.substring(0, 2000),\n  messageId: messageId,\n  timestamp: new Date().toISOString()\n}}];"
+                                                           },
+                                            "id":  "a54a5af3-f339-468f-816e-3cb4a84131e6",
+                                            "name":  "Route by Sender + Subject",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             -448,
+                                                             240
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  false,
+                                                                                                  "typeValidation":  "strict"
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "route-nova",
+                                                                                                         "leftValue":  "={{ $json.route }}",
+                                                                                                         "rightValue":  "NOVA",
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "string",
+                                                                                                                          "operation":  "equals"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "e6706d31-5ece-4a7a-bef0-93cc261d6a85",
+                                            "name":  "Is Nova (RFP)?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             -224,
+                                                             80
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  false,
+                                                                                                  "typeValidation":  "strict"
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "route-jordan",
+                                                                                                         "leftValue":  "={{ $json.route }}",
+                                                                                                         "rightValue":  "JORDAN",
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "string",
+                                                                                                                          "operation":  "equals"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "775e9438-ba7b-4b07-9a98-ee5f331ed358",
+                                            "name":  "Is Jordan (Grants/BD)?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             -224,
+                                                             240
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  false,
+                                                                                                  "typeValidation":  "strict"
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "route-iris",
+                                                                                                         "leftValue":  "={{ $json.route }}",
+                                                                                                         "rightValue":  "IRIS",
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "string",
+                                                                                                                          "operation":  "equals"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "61361250-419c-4310-b575-f8129f27d0e0",
+                                            "name":  "Is Iris (Compliance)?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             -224,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\n// Fire Nova webhook with email content\nconst payload = JSON.stringify({\n  rfp_name: input.subject || \u0027Email RFP\u0027,\n  agency: input.from || \u0027Unknown\u0027,\n  rfp_text: input.body || \u0027\u0027,\n  source: \u0027gmail_router\u0027,\n  email_from: input.from,\n  email_subject: input.subject\n});\n\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/nova-rfp\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(payload) }\n};\n\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(payload); req.end();\n});\n\nreturn [{ json: { routed: true, to: \u0027Nova\u0027, from: input.from, subject: input.subject, reason: input.reason } }];"
+                                                           },
+                                            "id":  "cd7d5b3a-16f7-48f0-9c5f-b6d64b15cbf4",
+                                            "name":  "Fire Nova",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\n// Send WhatsApp alert for Jordan-relevant email\nconst msgText = \u0027EMAIL ALERT -- \u0027 + (input.priority === \u0027critical\u0027 ? \u0027CRITICAL\u0027 : \u0027HIGH\u0027) + \u0027\\n\\nFrom: \u0027 + input.from + \u0027\\nSubject: \u0027 + input.subject + \u0027\\nReason: \u0027 + input.reason + \u0027\\n\\nReview in inbox: kas42869@gmail.com\u0027;\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: msgText } });\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\nreturn [{ json: { routed: true, to: \u0027Jordan/WhatsApp\u0027, from: input.from, subject: input.subject, reason: input.reason } }];"
+                                                           },
+                                            "id":  "c259d0a5-d146-4c37-a6c7-b9bdb59cae55",
+                                            "name":  "Alert Jordan via WhatsApp",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             240
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\n// Fire Iris webhook for compliance-critical emails\nconst payload = JSON.stringify({\n  trigger: \u0027email_alert\u0027,\n  email_from: input.from,\n  email_subject: input.subject,\n  email_body: input.body,\n  reason: input.reason,\n  priority: input.priority\n});\n\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/iris-monitor\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(payload) }\n};\n\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(payload); req.end();\n});\n\n// Also send WhatsApp alert\nconst msgText = \u0027COMPLIANCE EMAIL -- CRITICAL\\n\\nFrom: \u0027 + input.from + \u0027\\nSubject: \u0027 + input.subject + \u0027\\nReason: \u0027 + input.reason + \u0027\\n\\nIris running compliance check now.\u0027;\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: msgText } });\nconst waOpts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(waOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\nreturn [{ json: { routed: true, to: \u0027Iris\u0027, from: input.from, subject: input.subject, reason: input.reason } }];"
+                                                           },
+                                            "id":  "9fcb5c33-1113-4c35-9a0b-9dbfd02c180a",
+                                            "name":  "Fire Iris",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const input = $input.first().json;\n// General email — log silently, no agent action needed\nconsole.log(\u0027Email router: GENERAL route for \u0027 + input.from + \u0027 | \u0027 + input.subject);\nreturn [{ json: { routed: false, route: \u0027GENERAL\u0027, from: input.from, subject: input.subject } }];"
+                                                           },
+                                            "id":  "7352f1c8-1758-4063-9c26-c06d52db0500",
+                                            "name":  "Log General (No Action)",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             560
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Gmail Trigger":  {
+                                                                    "main":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "Route by Sender + Subject",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                                },
+                                              "Route by Sender + Subject":  {
+                                                                                "main":  [
+                                                                                             [
+                                                                                                 {
+                                                                                                     "node":  "Is Nova (RFP)?",
+                                                                                                     "type":  "main",
+                                                                                                     "index":  0
+                                                                                                 },
+                                                                                                 {
+                                                                                                     "node":  "Is Jordan (Grants/BD)?",
+                                                                                                     "type":  "main",
+                                                                                                     "index":  0
+                                                                                                 },
+                                                                                                 {
+                                                                                                     "node":  "Is Iris (Compliance)?",
+                                                                                                     "type":  "main",
+                                                                                                     "index":  0
+                                                                                                 }
+                                                                                             ]
+                                                                                         ]
+                                                                            },
+                                              "Is Nova (RFP)?":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Fire Nova",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ],
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Is Jordan (Grants/BD)?",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "Is Jordan (Grants/BD)?":  {
+                                                                             "main":  [
+                                                                                          [
+                                                                                              {
+                                                                                                  "node":  "Alert Jordan via WhatsApp",
+                                                                                                  "type":  "main",
+                                                                                                  "index":  0
+                                                                                              }
+                                                                                          ],
+                                                                                          [
+                                                                                              {
+                                                                                                  "node":  "Is Iris (Compliance)?",
+                                                                                                  "type":  "main",
+                                                                                                  "index":  0
+                                                                                              }
+                                                                                          ]
+                                                                                      ]
+                                                                         },
+                                              "Is Iris (Compliance)?":  {
+                                                                            "main":  [
+                                                                                         [
+                                                                                             {
+                                                                                                 "node":  "Fire Iris",
+                                                                                                 "type":  "main",
+                                                                                                 "index":  0
+                                                                                             }
+                                                                                         ],
+                                                                                         [
+                                                                                             {
+                                                                                                 "node":  "Log General (No Action)",
+                                                                                                 "type":  "main",
+                                                                                                 "index":  0
+                                                                                             }
+                                                                                         ]
+                                                                                     ]
+                                                                        }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version 49f65c25",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-04-22T01:07:32.905Z",
+                                                             "id":  320,
+                                                             "workflowId":  "jb9c1ETj3mBEOtTd",
+                                                             "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-04-22T03:06:34.888Z",
+                                                             "id":  337,
+                                                             "workflowId":  "jb9c1ETj3mBEOtTd",
+                                                             "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-04-22T03:06:12.726Z",
+                                                             "id":  336,
+                                                             "workflowId":  "jb9c1ETj3mBEOtTd",
+                                                             "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
+                                                             "event":  "deactivated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

@@ -1,0 +1,605 @@
+﻿{
+    "updatedAt":  "2026-04-28T19:47:28.605Z",
+    "createdAt":  "2026-04-21T16:15:38.121Z",
+    "id":  "SyfpMRh1XmZC7qMD",
+    "name":  "Aidan - Network Watchdog",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "*/5 11-13 * * *"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "59f9eafe-306d-4957-bb5c-88eb3b646074",
+                      "name":  "Check Every 5 Min (7-9AM ET)",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -1104,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\n\n// Test connectivity to Brave Search API\nconst result = await new Promise((resolve) =\u003e {\n  const req = https.request({\n    hostname: \u0027api.search.brave.com\u0027,\n    port: 443,\n    path: \u0027/\u0027,\n    method: \u0027HEAD\u0027,\n    timeout: 5000\n  }, (res) =\u003e {\n    resolve({ online: true, statusCode: res.statusCode });\n  });\n  req.on(\u0027error\u0027, (e) =\u003e resolve({ online: false, reason: e.message }));\n  req.on(\u0027timeout\u0027, () =\u003e {\n    req.destroy();\n    resolve({ online: false, reason: \u0027timeout\u0027 });\n  });\n  req.end();\n});\n\nconst now = new Date();\nconst timeET = now.toLocaleString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027, hour: \u00272-digit\u0027, minute: \u00272-digit\u0027, hour12: false });\n\nreturn [{ json: { ...result, checkedAt: now.toISOString(), timeET } }];"
+                                     },
+                      "id":  "a5e8ded9-91b5-4dde-ba08-817c9dfe0916",
+                      "name":  "Test Network Connectivity",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -880,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "net-check",
+                                                                                   "leftValue":  "={{ $json.online }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "cb06b012-e720-4102-8ecb-36cc94a8c7e1",
+                      "name":  "Network Online?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -656,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\n\n// Check if Orchestra has already run today\nconst today = new Date().toLocaleDateString(\u0027en-CA\u0027, { timeZone: \u0027America/New_York\u0027 }); // YYYY-MM-DD\nconst flagDir = \u0027/data/Aidan_Outputs/Orchestra\u0027;\nconst flagPath = `${flagDir}/ran_${today}.flag`;\n\nfs.mkdirSync(flagDir, { recursive: true });\n\nconst alreadyRan = fs.existsSync(flagPath);\n\nreturn [{ json: { alreadyRan, today, flagPath } }];"
+                                     },
+                      "id":  "e7c2be46-0904-4bf4-bdd9-c605ac94c216",
+                      "name":  "Already Run Today?",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -448,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Network is down — log silently and stop\nconst { reason, checkedAt, timeET } = $input.first().json;\nconsole.log(`[Watchdog] Network offline at ${timeET} ET — ${reason || \u0027unknown\u0027}. Will retry in 5 min.`);\nreturn [{ json: { skipped: true, reason, checkedAt } }];"
+                                     },
+                      "id":  "ed3e7454-2f06-48a7-acb7-289811fe18f8",
+                      "name":  "Log Offline — Retry Next Tick",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -448,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "ran-check",
+                                                                                   "leftValue":  "={{ $json.alreadyRan }}",
+                                                                                   "rightValue":  false,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "false"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "0c3a9c96-7aee-44f0-9607-2c2c0e1615e7",
+                      "name":  "Not Run Yet Today?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -224,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst http = require(\u0027http\u0027);\nconst { flagPath, today } = $input.first().json;\n\n// Write flag file FIRST to prevent double-firing\nfs.writeFileSync(flagPath, `Orchestra fired at ${new Date().toISOString()}`, \u0027utf8\u0027);\n\n// Fire Orchestra\nconst body = JSON.stringify({\n  command: \u0027morning brief\u0027,\n  source: \u0027network-watchdog\u0027,\n  date: today\n});\n\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027,\n  port: 5678,\n  path: \u0027/webhook/aidan-orchestra\u0027,\n  method: \u0027POST\u0027,\n  headers: {\n    \u0027Content-Type\u0027: \u0027application/json\u0027,\n    \u0027Content-Length\u0027: Buffer.byteLength(body)\n  }\n};\n\nconst result = await new Promise((resolve) =\u003e {\n  const req = http.request(opts, (res) =\u003e {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, c =\u003e d += c);\n    res.on(\u0027end\u0027, () =\u003e resolve({ fired: true, status: res.statusCode, response: d }));\n  });\n  req.on(\u0027error\u0027, (e) =\u003e resolve({ fired: false, error: e.message }));\n  req.write(body);\n  req.end();\n});\n\nconst timeET = new Date().toLocaleString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027, hour: \u00272-digit\u0027, minute: \u00272-digit\u0027, hour12: true });\n\nreturn [{ json: { ...result, today, flagPath, firedAt: timeET } }];"
+                                     },
+                      "id":  "cc2a1950-437d-4ef6-920a-f4a4d43a9e87",
+                      "name":  "Fire Orchestra + Write Flag",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Already ran today — skip silently\nconst { today } = $input.first().json;\nconsole.log(`[Watchdog] Orchestra already ran today (${today}). Skipping.`);\nreturn [{ json: { skipped: true, reason: \u0027already_ran\u0027, today } }];"
+                                     },
+                      "id":  "2d5598a7-6999-4cb2-b2f0-cf79a6cbbd65",
+                      "name":  "Already Ran — Skip",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst { fired, firedAt, today, error } = $input.first().json;\n\nif (!fired) {\n  // Orchestra fire failed — send WhatsApp alert\n  const alertMsg = `⚠️ WATCHDOG ALERT\\nOrchestra failed to fire at ${firedAt} ET\\nError: ${error || \u0027unknown\u0027}\\nManual trigger: say Orchestra`;\n  const msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: alertMsg } });\n  const opts = {\n    hostname: \u0027host.docker.internal\u0027,\n    port: 8081,\n    path: \u0027/message/sendText/Aidan\u0027,\n    method: \u0027POST\u0027,\n    headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n  };\n  await new Promise(r =\u003e {\n    const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027, () =\u003e {}); res.on(\u0027end\u0027, r); });\n    req.on(\u0027error\u0027, r);\n    req.write(msgBody);\n    req.end();\n  });\n}\n\nreturn [{ json: { success: fired, firedAt, today } }];"
+                                     },
+                      "id":  "20ef8038-15ae-491d-91f8-407893435da0",
+                      "name":  "Alert on Failure",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       0
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Check Every 5 Min (7-9AM ET)":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Test Network Connectivity",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         },
+                        "Test Network Connectivity":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Network Online?",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Network Online?":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Already Run Today?",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "Log Offline — Retry Next Tick",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Already Run Today?":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Not Run Yet Today?",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Not Run Yet Today?":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Fire Orchestra + Write Flag",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ],
+                                                                [
+                                                                    {
+                                                                        "node":  "Already Ran — Skip",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Fire Orchestra + Write Flag":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "Alert on Failure",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  {
+                       "node:Check Every 5 Min (7-9AM ET)":  {
+                                                                 "recurrenceRules":  [
+
+                                                                                     ]
+                                                             }
+                   },
+    "meta":  null,
+    "pinData":  {
+                    "Check Every 5 Min (7-9AM ET)":  [
+                                                         {
+                                                             "json":  {
+                                                                          "timestamp":  "2026-04-28T14:19:43.029-04:00",
+                                                                          "Readable date":  "April 28th 2026, 2:19:43 pm",
+                                                                          "Readable time":  "2:19:43 pm",
+                                                                          "Day of week":  "Tuesday",
+                                                                          "Year":  "2026",
+                                                                          "Month":  "April",
+                                                                          "Day of month":  "28",
+                                                                          "Hour":  "14",
+                                                                          "Minute":  "19",
+                                                                          "Second":  "43",
+                                                                          "Timezone":  "America/New_York (UTC-04:00)"
+                                                                      }
+                                                         }
+                                                     ]
+                },
+    "versionId":  "8aa82d1c-1a8a-49c7-be31-6ba6a9d4b2b2",
+    "activeVersionId":  "8aa82d1c-1a8a-49c7-be31-6ba6a9d4b2b2",
+    "versionCounter":  30,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-21T16:15:38.131Z",
+                       "createdAt":  "2026-04-21T16:15:38.131Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "SyfpMRh1XmZC7qMD",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T16:15:36.392Z",
+                     "createdAt":  "2026-04-21T16:15:36.392Z",
+                     "id":  "7OG1npZpMsCCRNJd",
+                     "name":  "Infrastructure"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.295Z",
+                     "createdAt":  "2026-04-07T01:42:36.295Z",
+                     "id":  "B0QrEiqfwdS6WU2L",
+                     "name":  "Aidan"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T16:15:36.472Z",
+                     "createdAt":  "2026-04-21T16:15:36.472Z",
+                     "id":  "d3onD4qnskR0rNLA",
+                     "name":  "Watchdog"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-04-28T19:47:41.000Z",
+                          "createdAt":  "2026-04-28T19:47:17.030Z",
+                          "versionId":  "8aa82d1c-1a8a-49c7-be31-6ba6a9d4b2b2",
+                          "workflowId":  "SyfpMRh1XmZC7qMD",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "rule":  {
+                                                                            "interval":  [
+                                                                                             {
+                                                                                                 "field":  "cronExpression",
+                                                                                                 "expression":  "*/5 11-13 * * *"
+                                                                                             }
+                                                                                         ]
+                                                                        }
+                                                           },
+                                            "id":  "59f9eafe-306d-4957-bb5c-88eb3b646074",
+                                            "name":  "Check Every 5 Min (7-9AM ET)",
+                                            "type":  "n8n-nodes-base.scheduleTrigger",
+                                            "typeVersion":  1.2,
+                                            "position":  [
+                                                             -1104,
+                                                             160
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const https = require(\u0027https\u0027);\n\n// Test connectivity to Brave Search API\nconst result = await new Promise((resolve) =\u003e {\n  const req = https.request({\n    hostname: \u0027api.search.brave.com\u0027,\n    port: 443,\n    path: \u0027/\u0027,\n    method: \u0027HEAD\u0027,\n    timeout: 5000\n  }, (res) =\u003e {\n    resolve({ online: true, statusCode: res.statusCode });\n  });\n  req.on(\u0027error\u0027, (e) =\u003e resolve({ online: false, reason: e.message }));\n  req.on(\u0027timeout\u0027, () =\u003e {\n    req.destroy();\n    resolve({ online: false, reason: \u0027timeout\u0027 });\n  });\n  req.end();\n});\n\nconst now = new Date();\nconst timeET = now.toLocaleString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027, hour: \u00272-digit\u0027, minute: \u00272-digit\u0027, hour12: false });\n\nreturn [{ json: { ...result, checkedAt: now.toISOString(), timeET } }];"
+                                                           },
+                                            "id":  "a5e8ded9-91b5-4dde-ba08-817c9dfe0916",
+                                            "name":  "Test Network Connectivity",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             -880,
+                                                             160
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  false,
+                                                                                                  "typeValidation":  "strict"
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "net-check",
+                                                                                                         "leftValue":  "={{ $json.online }}",
+                                                                                                         "rightValue":  true,
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "boolean",
+                                                                                                                          "operation":  "true"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "cb06b012-e720-4102-8ecb-36cc94a8c7e1",
+                                            "name":  "Network Online?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             -656,
+                                                             160
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027);\n\n// Check if Orchestra has already run today\nconst today = new Date().toLocaleDateString(\u0027en-CA\u0027, { timeZone: \u0027America/New_York\u0027 }); // YYYY-MM-DD\nconst flagDir = \u0027/data/Aidan_Outputs/Orchestra\u0027;\nconst flagPath = `${flagDir}/ran_${today}.flag`;\n\nfs.mkdirSync(flagDir, { recursive: true });\n\nconst alreadyRan = fs.existsSync(flagPath);\n\nreturn [{ json: { alreadyRan, today, flagPath } }];"
+                                                           },
+                                            "id":  "e7c2be46-0904-4bf4-bdd9-c605ac94c216",
+                                            "name":  "Already Run Today?",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             -448,
+                                                             80
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Network is down — log silently and stop\nconst { reason, checkedAt, timeET } = $input.first().json;\nconsole.log(`[Watchdog] Network offline at ${timeET} ET — ${reason || \u0027unknown\u0027}. Will retry in 5 min.`);\nreturn [{ json: { skipped: true, reason, checkedAt } }];"
+                                                           },
+                                            "id":  "ed3e7454-2f06-48a7-acb7-289811fe18f8",
+                                            "name":  "Log Offline — Retry Next Tick",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             -448,
+                                                             240
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  false,
+                                                                                                  "typeValidation":  "strict"
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "ran-check",
+                                                                                                         "leftValue":  "={{ $json.alreadyRan }}",
+                                                                                                         "rightValue":  false,
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "boolean",
+                                                                                                                          "operation":  "false"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "0c3a9c96-7aee-44f0-9607-2c2c0e1615e7",
+                                            "name":  "Not Run Yet Today?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             -224,
+                                                             80
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027);\nconst http = require(\u0027http\u0027);\nconst { flagPath, today } = $input.first().json;\n\n// Write flag file FIRST to prevent double-firing\nfs.writeFileSync(flagPath, `Orchestra fired at ${new Date().toISOString()}`, \u0027utf8\u0027);\n\n// Fire Orchestra\nconst body = JSON.stringify({\n  command: \u0027morning brief\u0027,\n  source: \u0027network-watchdog\u0027,\n  date: today\n});\n\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027,\n  port: 5678,\n  path: \u0027/webhook/aidan-orchestra\u0027,\n  method: \u0027POST\u0027,\n  headers: {\n    \u0027Content-Type\u0027: \u0027application/json\u0027,\n    \u0027Content-Length\u0027: Buffer.byteLength(body)\n  }\n};\n\nconst result = await new Promise((resolve) =\u003e {\n  const req = http.request(opts, (res) =\u003e {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, c =\u003e d += c);\n    res.on(\u0027end\u0027, () =\u003e resolve({ fired: true, status: res.statusCode, response: d }));\n  });\n  req.on(\u0027error\u0027, (e) =\u003e resolve({ fired: false, error: e.message }));\n  req.write(body);\n  req.end();\n});\n\nconst timeET = new Date().toLocaleString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027, hour: \u00272-digit\u0027, minute: \u00272-digit\u0027, hour12: true });\n\nreturn [{ json: { ...result, today, flagPath, firedAt: timeET } }];"
+                                                           },
+                                            "id":  "cc2a1950-437d-4ef6-920a-f4a4d43a9e87",
+                                            "name":  "Fire Orchestra + Write Flag",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Already ran today — skip silently\nconst { today } = $input.first().json;\nconsole.log(`[Watchdog] Orchestra already ran today (${today}). Skipping.`);\nreturn [{ json: { skipped: true, reason: \u0027already_ran\u0027, today } }];"
+                                                           },
+                                            "id":  "2d5598a7-6999-4cb2-b2f0-cf79a6cbbd65",
+                                            "name":  "Already Ran — Skip",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             160
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const http = require(\u0027http\u0027);\nconst { fired, firedAt, today, error } = $input.first().json;\n\nif (!fired) {\n  // Orchestra fire failed — send WhatsApp alert\n  const alertMsg = `⚠️ WATCHDOG ALERT\\nOrchestra failed to fire at ${firedAt} ET\\nError: ${error || \u0027unknown\u0027}\\nManual trigger: say Orchestra`;\n  const msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: alertMsg } });\n  const opts = {\n    hostname: \u0027host.docker.internal\u0027,\n    port: 8081,\n    path: \u0027/message/sendText/Aidan\u0027,\n    method: \u0027POST\u0027,\n    headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n  };\n  await new Promise(r =\u003e {\n    const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027, () =\u003e {}); res.on(\u0027end\u0027, r); });\n    req.on(\u0027error\u0027, r);\n    req.write(msgBody);\n    req.end();\n  });\n}\n\nreturn [{ json: { success: fired, firedAt, today } }];"
+                                                           },
+                                            "id":  "20ef8038-15ae-491d-91f8-407893435da0",
+                                            "name":  "Alert on Failure",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             224,
+                                                             0
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Check Every 5 Min (7-9AM ET)":  {
+                                                                                   "main":  [
+                                                                                                [
+                                                                                                    {
+                                                                                                        "node":  "Test Network Connectivity",
+                                                                                                        "type":  "main",
+                                                                                                        "index":  0
+                                                                                                    }
+                                                                                                ]
+                                                                                            ]
+                                                                               },
+                                              "Test Network Connectivity":  {
+                                                                                "main":  [
+                                                                                             [
+                                                                                                 {
+                                                                                                     "node":  "Network Online?",
+                                                                                                     "type":  "main",
+                                                                                                     "index":  0
+                                                                                                 }
+                                                                                             ]
+                                                                                         ]
+                                                                            },
+                                              "Network Online?":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Already Run Today?",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ],
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Log Offline — Retry Next Tick",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Already Run Today?":  {
+                                                                         "main":  [
+                                                                                      [
+                                                                                          {
+                                                                                              "node":  "Not Run Yet Today?",
+                                                                                              "type":  "main",
+                                                                                              "index":  0
+                                                                                          }
+                                                                                      ]
+                                                                                  ]
+                                                                     },
+                                              "Not Run Yet Today?":  {
+                                                                         "main":  [
+                                                                                      [
+                                                                                          {
+                                                                                              "node":  "Fire Orchestra + Write Flag",
+                                                                                              "type":  "main",
+                                                                                              "index":  0
+                                                                                          }
+                                                                                      ],
+                                                                                      [
+                                                                                          {
+                                                                                              "node":  "Already Ran — Skip",
+                                                                                              "type":  "main",
+                                                                                              "index":  0
+                                                                                          }
+                                                                                      ]
+                                                                                  ]
+                                                                     },
+                                              "Fire Orchestra + Write Flag":  {
+                                                                                  "main":  [
+                                                                                               [
+                                                                                                   {
+                                                                                                       "node":  "Alert on Failure",
+                                                                                                       "type":  "main",
+                                                                                                       "index":  0
+                                                                                                   }
+                                                                                               ]
+                                                                                           ]
+                                                                              }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version 8aa82d1c",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-04-28T19:47:41.205Z",
+                                                             "id":  389,
+                                                             "workflowId":  "SyfpMRh1XmZC7qMD",
+                                                             "versionId":  "8aa82d1c-1a8a-49c7-be31-6ba6a9d4b2b2",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

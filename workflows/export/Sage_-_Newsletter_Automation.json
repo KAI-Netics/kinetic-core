@@ -1,0 +1,445 @@
+﻿{
+    "updatedAt":  "2026-04-21T22:28:00.713Z",
+    "createdAt":  "2026-04-21T22:28:00.713Z",
+    "id":  "Un0wx8dCSVcgvOv5",
+    "name":  "Sage - Newsletter Automation",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "sage-newsletter",
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "8bd75f16-bd6c-4577-b4b3-c8f6381b11f5",
+                      "name":  "Webhook Trigger",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       160
+                                   ],
+                      "webhookId":  "kai-sage-newsletter"
+                  },
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 0 13 25 * *"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "9704feea-7b86-48b8-b04f-d10316f58700",
+                      "name":  "Monthly 25th Trigger",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\nconst body = input.body || input;\n\n// Determine newsletter type\n// \u0027board\u0027 = EAF Board Newsletter (monthly)\n// \u0027market\u0027 = FP Market Newsletter (quarterly/milestone)\n// \u0027both\u0027 = generate both\nconst type = String(body.type || body.newsletter || \u0027board\u0027);\nconst milestone = String(body.milestone || \u0027\u0027);\nconst source = String(body.source || \u0027manual\u0027);\n\n// Load KAI_Context.json\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) { ctx = {}; }\n\nconst entities = ctx.entities || {};\nconst founder = ctx.founder || {};\nconst tech = ctx.technology || {};\nconst revenue = ctx.revenue_targets || {};\n\n// Load latest Iris compliance report\nlet irisReport = \u0027No recent Iris report found.\u0027;\ntry {\n  const irisDir = \u0027/data/Aidan_Outputs/Iris/\u0027;\n  const irisFiles = fs.readdirSync(irisDir).filter(function(f) { return f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n  if (irisFiles.length \u003e 0) {\n    irisReport = fs.readFileSync(irisDir + irisFiles[0], \u0027utf8\u0027).substring(0, 2000);\n  }\n} catch(e) { irisReport = \u0027Iris report unavailable.\u0027; }\n\n// Load latest Scout grant report\nlet scoutReport = \u0027No recent Scout grant report found.\u0027;\ntry {\n  const scoutDir = \u0027/data/Maryland_Grants/\u0027;\n  const scoutFiles = fs.readdirSync(scoutDir).filter(function(f) { return f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n  if (scoutFiles.length \u003e 0) {\n    scoutReport = fs.readFileSync(scoutDir + scoutFiles[0], \u0027utf8\u0027).substring(0, 2000);\n  }\n} catch(e) { scoutReport = \u0027Scout report unavailable.\u0027; }\n\n// Load latest Jordan grant analysis\nlet jordanReport = \u0027No recent Jordan report found.\u0027;\ntry {\n  const jordanDir = \u0027/data/Aidan_Outputs/Jordan/\u0027;\n  const jordanFiles = fs.readdirSync(jordanDir).filter(function(f) { return f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n  if (jordanFiles.length \u003e 0) {\n    jordanReport = fs.readFileSync(jordanDir + jordanFiles[0], \u0027utf8\u0027).substring(0, 2000);\n  }\n} catch(e) { jordanReport = \u0027Jordan report unavailable.\u0027; }\n\n// Get active deadlines\nconst activeDeadlines = (ctx.deadlines || []).filter(function(d) {\n  const st = (d.status || \u0027\u0027).toUpperCase();\n  return st !== \u0027FILED\u0027 \u0026\u0026 st !== \u0027COMPLETE\u0027 \u0026\u0026 st !== \u0027EXEMPT\u0027;\n});\n\nconst month = new Date().toLocaleDateString(\u0027en-US\u0027, { month: \u0027long\u0027, year: \u0027numeric\u0027, timeZone: \u0027America/New_York\u0027 });\n\nreturn [{ json: {\n  type: type,\n  milestone: milestone,\n  source: source,\n  month: month,\n  ctx: ctx,\n  entities: entities,\n  founder: founder,\n  tech: tech,\n  revenue: revenue,\n  irisReport: irisReport,\n  scoutReport: scoutReport,\n  jordanReport: jordanReport,\n  activeDeadlines: activeDeadlines,\n  timestamp: new Date().toISOString()\n}}];"
+                                     },
+                      "id":  "8169da42-b96c-41d8-9b2f-5a0d43beea9e",
+                      "name":  "Load Context + Reports",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\n\nif (input.type !== \u0027board\u0027 \u0026\u0026 input.type !== \u0027both\u0027) {\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.boardDraft = null;\n  out.boardSkipped = true;\n  return [{ json: out }];\n}\n\nconst founder = input.founder || {};\nconst entities = input.entities || {};\nconst activeDeadlines = input.activeDeadlines || [];\n\nconst deadlineList = activeDeadlines.slice(0, 10).map(function(d) {\n  const today = new Date();\n  const due = new Date(d.date);\n  const days = Math.ceil((due - today) / (1000 * 60 * 60 * 24));\n  return d.item + \u0027 | Due: \u0027 + d.date + \u0027 | \u0027 + (days \u003c 0 ? \u0027OVERDUE\u0027 : days + \u0027d\u0027) + \u0027 | \u0027 + (d.entity || \u0027\u0027) + \u0027 | Owner: \u0027 + (d.owner || \u0027Kevin\u0027);\n}).join(\u0027\\n\u0027);\n\nconst systemMessage = \u0027You are Sage, Strategic Narrative Agent for KAI-Netics. Draft the EAF Board Newsletter. Tone: formal, transparent, board-appropriate. No marketing language. Document facts, flag risks, surface decisions needed. Maximum 2 pages. This is a legal governance document.\u0027;\n\nconst userMessage = \u0027Draft the EAF Board Monthly Newsletter for \u0027 + input.month + \u0027.\\n\\n\u0027 +\n  \u0027ORGANIZATION: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.name ? entities.EAF.name : \u0027KAI-Netics EAF\u0027) + \u0027\\n\u0027 +\n  \u0027EIN: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.ein ? entities.EAF.ein : \u002741-4820296\u0027) + \u0027\\n\u0027 +\n  \u0027STATUS: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.status ? entities.EAF.status : \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027FOUNDER: \u0027 + (founder.name || \u0027Kevin Alexander Smith\u0027) + \u0027\\n\\n\u0027 +\n  \u0027ACTIVE COMPLIANCE DEADLINES:\\n\u0027 + deadlineList + \u0027\\n\\n\u0027 +\n  \u0027LATEST IRIS COMPLIANCE REPORT (excerpt):\\n\u0027 + input.irisReport + \u0027\\n\\n\u0027 +\n  \u0027LATEST GRANT INTELLIGENCE (Scout excerpt):\\n\u0027 + input.scoutReport + \u0027\\n\\n\u0027 +\n  \u0027LATEST GRANT ANALYSIS (Jordan excerpt):\\n\u0027 + input.jordanReport + \u0027\\n\\n\u0027 +\n  \u0027Use this EXACT template structure:\\n\\n\u0027 +\n  \u0027EAF BOARD NEWSLETTER\\n\u0027 +\n  \u0027KAI-Netics Equity \u0026 Autonomy Foundry, Inc. | \u0027 + input.month + \u0027\\n\u0027 +\n  \u0027Prepared by: Kevin Alexander Smith, Founder \u0026 Resident Agent\\n\u0027 +\n  \u0027Distribution: James L. Scott, Esq. | Keith Millard | Maurice Ellis\\n\\n\u0027 +\n  \u00271. MISSION PULSE\\n[What did EAF accomplish this month? Be concrete. If nothing, say so honestly.]\\n\\n\u0027 +\n  \u00272. CAKO PROGRAM STATUS\\n[Cohort 1 status, curriculum, recruitment, timeline]\\n\\n\u0027 +\n  \u00273. GRANT \u0026 COMPLIANCE STATUS\\n[IRS Form 1023 status, EARN Maryland, CDBG, compliance flags from Iris, any 21-day items]\\n\\n\u0027 +\n  \u00274. FINANCIAL SUMMARY\\n[Grants received, donations, operating expenses, cash position — use $0 if not yet active, document it]\\n\\n\u0027 +\n  \u00275. TALENT PIPELINE AGREEMENT STATUS\\n[EAF-to-FP interactions, funds transferred FP to EAF: None, funds transferred EAF to FP: None]\\n\\n\u0027 +\n  \u00276. UPCOMING 30-DAY ACTIONS\\n[What board should expect, any votes needed, signatures required]\\n\\n\u0027 +\n  \u00277. ECOSYSTEM INTELLIGENCE HIGHLIGHTS\\n[3 bullets from Scout/Jordan on grant opportunities or policy changes relevant to EAF]\\n\\n\u0027 +\n  \u0027Questions: kas@kevin-llc.com | 443.257.6836\\n\u0027 +\n  \u0027Next newsletter: 1st of next month\u0027;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-opus-4-6\u0027,\n  max_tokens: 3000,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request({\n    hostname: \u0027api.anthropic.com\u0027,\n    port: 443,\n    path: \u0027/v1/messages\u0027,\n    method: \u0027POST\u0027,\n    headers: {\n      \u0027Content-Type\u0027: \u0027application/json\u0027,\n      \u0027x-api-key\u0027: \u0027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\u0027,\n      \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n      \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n    }\n  }, function(res) {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, function(c) { d += c; });\n    res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet boardDraft = \u0027\u0027;\ntry { boardDraft = JSON.parse(result.body).content[0].text || \u0027Draft generation failed.\u0027; } catch(e) { boardDraft = result.body.substring(0, 500); }\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.boardDraft = boardDraft;\nout.boardSkipped = false;\nreturn [{ json: out }];"
+                                     },
+                      "id":  "1a4e9c38-fe6f-42da-bb9b-cec9b6fea7c3",
+                      "name":  "Draft Board Newsletter (Opus)",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\n\nif (input.type !== \u0027market\u0027 \u0026\u0026 input.type !== \u0027both\u0027) {\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.marketDraft = null;\n  out.marketSkipped = true;\n  return [{ json: out }];\n}\n\nconst founder = input.founder || {};\nconst revenue = input.revenue || {};\nconst milestone = input.milestone || \u0027\u0027;\n\nconst systemMessage = \u0027You are Sage, Strategic Narrative Agent for KAI-Netics. Draft the FP Market Newsletter. Tone: confident, momentum-forward, concise. External-facing — no internal financials, no EIN, no entity structure details. Think: what would make a procurement VP or investor feel good about this company? Maximum 1 page.\u0027;\n\nconst userMessage = \u0027Draft the KAI-Netics FP Market Newsletter for \u0027 + input.month + \u0027.\\n\\n\u0027 +\n  \u0027FOUNDER: \u0027 + (founder.name || \u0027Kevin Alexander Smith\u0027) + \u0027\\n\u0027 +\n  \u0027CREDENTIALS: \u0027 + (founder.credentials || []).join(\u0027, \u0027) + \u0027\\n\u0027 +\n  \u0027REVENUE TARGETS: Y1 \u0027 + (revenue.year1_total || \u0027\u0027) + \u0027 | Y2 \u0027 + (revenue.year2_total || \u0027\u0027) + \u0027 | Y3 \u0027 + (revenue.year3_total || \u0027\u0027) + \u0027\\n\u0027 +\n  (milestone ? \u0027MILESTONE TRIGGER: \u0027 + milestone + \u0027\\n\u0027 : \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027LATEST GRANT INTEL (Scout excerpt):\\n\u0027 + input.scoutReport + \u0027\\n\\n\u0027 +\n  \u0027Use this EXACT template structure:\\n\\n\u0027 +\n  \u0027KAI-NETICS UPDATE | \u0027 + input.month + \u0027\\n\u0027 +\n  \u0027Drone 3PL for Maryland\\\u0027s Medical \u0026 Community Supply Chain\\n\\n\u0027 +\n  \u0027WHAT WE DEPLOYED\\n[What did KAI-Netics fly, contract, or launch? If nothing yet: describe what was built this month]\\n\\n\u0027 +\n  \u0027THE CURN STORY\\n[1 paragraph on CURN/UROC progress, Baltimore endpoint, or corridor development]\\n\\n\u0027 +\n  \u0027GREEN COLLAR SPOTLIGHT\\n[EAF/CAKO update for external audience — community impact focus]\\n\\n\u0027 +\n  \u0027PARTNERSHIP HIGHLIGHTS\\n[New POC agreements, LOIs, ecosystem relationships — or pipeline conversations if none signed]\\n\\n\u0027 +\n  \u0027WHAT\\\u0027S NEXT\\n[Next milestone. One sentence.]\\n\\n\u0027 +\n  \u0027THE ASK\\n[One specific call to action — supply chain VP intro, 20-min meeting, etc.]\\n\\n\u0027 +\n  \u0027Kevin Alexander Smith | kas@kevin-llc.com | 443.257.6836 | kevin-llc.com\\n\u0027 +\n  \u0027FAA Part 107 Certified | MEIA Phase 2 Cohort | UMGC Student | MWVOB\u0027;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-opus-4-6\u0027,\n  max_tokens: 2000,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request({\n    hostname: \u0027api.anthropic.com\u0027,\n    port: 443,\n    path: \u0027/v1/messages\u0027,\n    method: \u0027POST\u0027,\n    headers: {\n      \u0027Content-Type\u0027: \u0027application/json\u0027,\n      \u0027x-api-key\u0027: \u0027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\u0027,\n      \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n      \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n    }\n  }, function(res) {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, function(c) { d += c; });\n    res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet marketDraft = \u0027\u0027;\ntry { marketDraft = JSON.parse(result.body).content[0].text || \u0027Draft generation failed.\u0027; } catch(e) { marketDraft = result.body.substring(0, 500); }\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.marketDraft = marketDraft;\nout.marketSkipped = false;\nreturn [{ json: out }];"
+                                     },
+                      "id":  "3c5710fc-4b12-4e05-8f1d-b5b708e1b732",
+                      "name":  "Draft Market Newsletter (Opus)",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\n\nconst timestamp = new Date().toISOString();\nconst safeTime = timestamp.split(\u0027:\u0027).join(\u0027-\u0027).split(\u0027.\u0027).join(\u0027-\u0027);\n\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Sage\u0027, { recursive: true });\n\nlet savedFiles = [];\nlet boardDraft = input.boardDraft || null;\nlet marketDraft = input.marketDraft || null;\n\nif (boardDraft) {\n  const boardPath = \u0027/data/Aidan_Outputs/Sage/Board_Newsletter_\u0027 + safeTime + \u0027.txt\u0027;\n  fs.writeFileSync(boardPath, boardDraft, \u0027utf8\u0027);\n  savedFiles.push({ type: \u0027board\u0027, path: boardPath });\n}\n\nif (marketDraft) {\n  const marketPath = \u0027/data/Aidan_Outputs/Sage/Market_Newsletter_\u0027 + safeTime + \u0027.txt\u0027;\n  fs.writeFileSync(marketPath, marketDraft, \u0027utf8\u0027);\n  savedFiles.push({ type: \u0027market\u0027, path: marketPath });\n}\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.savedFiles = savedFiles;\nout.timestamp = timestamp;\nreturn [{ json: out }];"
+                                     },
+                      "id":  "5b04bc48-7edd-4186-a643-1ffdac6fb1ae",
+                      "name":  "Save Drafts to Disk",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       672,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\nconst savedFiles = input.savedFiles || [];\nconst boardDraft = input.boardDraft;\nconst marketDraft = input.marketDraft;\n\nlet whatsappMsg = \u0027SAGE NEWSLETTER DRAFTS READY\\n\\n\u0027;\n\nif (boardDraft \u0026\u0026 !input.boardSkipped) {\n  whatsappMsg += \u0027EAF BOARD NEWSLETTER (\u0027 + input.month + \u0027)\\n\u0027;\n  whatsappMsg += \u0027Status: DRAFT READY for Kevin review\\n\u0027;\n  const boardFile = savedFiles.find(function(f) { return f.type === \u0027board\u0027; });\n  if (boardFile) { whatsappMsg += \u0027File: \u0027 + boardFile.path + \u0027\\n\u0027; }\n  whatsappMsg += \u0027\\nReply: SAGE SEND BOARD to approve and send\\n\\n\u0027;\n}\n\nif (marketDraft \u0026\u0026 !input.marketSkipped) {\n  whatsappMsg += \u0027FP MARKET NEWSLETTER (\u0027 + input.month + \u0027)\\n\u0027;\n  whatsappMsg += \u0027Status: DRAFT READY for Kevin review\\n\u0027;\n  const marketFile = savedFiles.find(function(f) { return f.type === \u0027market\u0027; });\n  if (marketFile) { whatsappMsg += \u0027File: \u0027 + marketFile.path + \u0027\\n\u0027; }\n  whatsappMsg += \u0027\\nReply: SAGE SEND MARKET to approve and send\u0027;\n}\n\nif (!boardDraft \u0026\u0026 !marketDraft) {\n  whatsappMsg += \u0027No drafts generated. Check type parameter.\u0027;\n}\n\n// Send WhatsApp alert\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: whatsappMsg } });\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\n// Send board draft preview (first 800 chars)\nif (boardDraft \u0026\u0026 !input.boardSkipped) {\n  await new Promise(function(r) { setTimeout(r, 1500); });\n  const preview = \u0027BOARD NEWSLETTER PREVIEW:\\n\\n\u0027 + boardDraft.substring(0, 800) + \u0027\\n\\n[Full draft saved to disk]\u0027;\n  const previewBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: preview } });\n  const previewOpts = {\n    hostname: \u0027host.docker.internal\u0027, port: 8081,\n    path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n    headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(previewBody) }\n  };\n  await new Promise(function(r) {\n    const req = http.request(previewOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n    req.on(\u0027error\u0027, r); req.write(previewBody); req.end();\n  });\n}\n\nreturn [{ json: {\n  success: true,\n  agent: \u0027Sage\u0027,\n  type: input.type,\n  boardDrafted: !!boardDraft,\n  marketDrafted: !!marketDraft,\n  savedFiles: savedFiles\n}}];"
+                                     },
+                      "id":  "7e39e006-dd7c-4a0f-9d23-50082d140f7f",
+                      "name":  "WhatsApp Alert + Preview",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       880,
+                                       160
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Load Context + Reports",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Monthly 25th Trigger":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Load Context + Reports",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Load Context + Reports":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Draft Board Newsletter (Opus)",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        },
+                                                                        {
+                                                                            "node":  "Draft Market Newsletter (Opus)",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Draft Board Newsletter (Opus)":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Save Drafts to Disk",
+                                                                                   "type":  "main",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                        "Draft Market Newsletter (Opus)":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Save Drafts to Disk",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "Save Drafts to Disk":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "WhatsApp Alert + Preview",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  {
+                       "node:Monthly 25th Trigger":  {
+                                                         "recurrenceRules":  [
+
+                                                                             ]
+                                                     }
+                   },
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "22776ed5-1d2d-48d2-b1eb-83f30d6bdef5",
+    "activeVersionId":  "22776ed5-1d2d-48d2-b1eb-83f30d6bdef5",
+    "versionCounter":  25,
+    "triggerCount":  2,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-21T22:28:00.719Z",
+                       "createdAt":  "2026-04-21T22:28:00.719Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "Un0wx8dCSVcgvOv5",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T22:27:59.049Z",
+                     "createdAt":  "2026-04-21T22:27:59.049Z",
+                     "id":  "PbNVmYlPv3RzM1c8",
+                     "name":  "Sage"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T22:27:59.062Z",
+                     "createdAt":  "2026-04-21T22:27:59.062Z",
+                     "id":  "Vrb4xIhwFMjqKJBw",
+                     "name":  "Newsletter"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-04-21T22:28:07.000Z",
+                          "createdAt":  "2026-04-21T22:28:00.722Z",
+                          "versionId":  "22776ed5-1d2d-48d2-b1eb-83f30d6bdef5",
+                          "workflowId":  "Un0wx8dCSVcgvOv5",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "sage-newsletter",
+                                                               "responseMode":  "lastNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "8bd75f16-bd6c-4577-b4b3-c8f6381b11f5",
+                                            "name":  "Webhook Trigger",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             160
+                                                         ],
+                                            "webhookId":  "kai-sage-newsletter"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "rule":  {
+                                                                            "interval":  [
+                                                                                             {
+                                                                                                 "field":  "cronExpression",
+                                                                                                 "expression":  "0 0 13 25 * *"
+                                                                                             }
+                                                                                         ]
+                                                                        }
+                                                           },
+                                            "id":  "9704feea-7b86-48b8-b04f-d10316f58700",
+                                            "name":  "Monthly 25th Trigger",
+                                            "type":  "n8n-nodes-base.scheduleTrigger",
+                                            "typeVersion":  1.2,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\nconst body = input.body || input;\n\n// Determine newsletter type\n// \u0027board\u0027 = EAF Board Newsletter (monthly)\n// \u0027market\u0027 = FP Market Newsletter (quarterly/milestone)\n// \u0027both\u0027 = generate both\nconst type = String(body.type || body.newsletter || \u0027board\u0027);\nconst milestone = String(body.milestone || \u0027\u0027);\nconst source = String(body.source || \u0027manual\u0027);\n\n// Load KAI_Context.json\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) { ctx = {}; }\n\nconst entities = ctx.entities || {};\nconst founder = ctx.founder || {};\nconst tech = ctx.technology || {};\nconst revenue = ctx.revenue_targets || {};\n\n// Load latest Iris compliance report\nlet irisReport = \u0027No recent Iris report found.\u0027;\ntry {\n  const irisDir = \u0027/data/Aidan_Outputs/Iris/\u0027;\n  const irisFiles = fs.readdirSync(irisDir).filter(function(f) { return f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n  if (irisFiles.length \u003e 0) {\n    irisReport = fs.readFileSync(irisDir + irisFiles[0], \u0027utf8\u0027).substring(0, 2000);\n  }\n} catch(e) { irisReport = \u0027Iris report unavailable.\u0027; }\n\n// Load latest Scout grant report\nlet scoutReport = \u0027No recent Scout grant report found.\u0027;\ntry {\n  const scoutDir = \u0027/data/Maryland_Grants/\u0027;\n  const scoutFiles = fs.readdirSync(scoutDir).filter(function(f) { return f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n  if (scoutFiles.length \u003e 0) {\n    scoutReport = fs.readFileSync(scoutDir + scoutFiles[0], \u0027utf8\u0027).substring(0, 2000);\n  }\n} catch(e) { scoutReport = \u0027Scout report unavailable.\u0027; }\n\n// Load latest Jordan grant analysis\nlet jordanReport = \u0027No recent Jordan report found.\u0027;\ntry {\n  const jordanDir = \u0027/data/Aidan_Outputs/Jordan/\u0027;\n  const jordanFiles = fs.readdirSync(jordanDir).filter(function(f) { return f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n  if (jordanFiles.length \u003e 0) {\n    jordanReport = fs.readFileSync(jordanDir + jordanFiles[0], \u0027utf8\u0027).substring(0, 2000);\n  }\n} catch(e) { jordanReport = \u0027Jordan report unavailable.\u0027; }\n\n// Get active deadlines\nconst activeDeadlines = (ctx.deadlines || []).filter(function(d) {\n  const st = (d.status || \u0027\u0027).toUpperCase();\n  return st !== \u0027FILED\u0027 \u0026\u0026 st !== \u0027COMPLETE\u0027 \u0026\u0026 st !== \u0027EXEMPT\u0027;\n});\n\nconst month = new Date().toLocaleDateString(\u0027en-US\u0027, { month: \u0027long\u0027, year: \u0027numeric\u0027, timeZone: \u0027America/New_York\u0027 });\n\nreturn [{ json: {\n  type: type,\n  milestone: milestone,\n  source: source,\n  month: month,\n  ctx: ctx,\n  entities: entities,\n  founder: founder,\n  tech: tech,\n  revenue: revenue,\n  irisReport: irisReport,\n  scoutReport: scoutReport,\n  jordanReport: jordanReport,\n  activeDeadlines: activeDeadlines,\n  timestamp: new Date().toISOString()\n}}];"
+                                                           },
+                                            "id":  "8169da42-b96c-41d8-9b2f-5a0d43beea9e",
+                                            "name":  "Load Context + Reports",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             224,
+                                                             160
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\n\nif (input.type !== \u0027board\u0027 \u0026\u0026 input.type !== \u0027both\u0027) {\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.boardDraft = null;\n  out.boardSkipped = true;\n  return [{ json: out }];\n}\n\nconst founder = input.founder || {};\nconst entities = input.entities || {};\nconst activeDeadlines = input.activeDeadlines || [];\n\nconst deadlineList = activeDeadlines.slice(0, 10).map(function(d) {\n  const today = new Date();\n  const due = new Date(d.date);\n  const days = Math.ceil((due - today) / (1000 * 60 * 60 * 24));\n  return d.item + \u0027 | Due: \u0027 + d.date + \u0027 | \u0027 + (days \u003c 0 ? \u0027OVERDUE\u0027 : days + \u0027d\u0027) + \u0027 | \u0027 + (d.entity || \u0027\u0027) + \u0027 | Owner: \u0027 + (d.owner || \u0027Kevin\u0027);\n}).join(\u0027\\n\u0027);\n\nconst systemMessage = \u0027You are Sage, Strategic Narrative Agent for KAI-Netics. Draft the EAF Board Newsletter. Tone: formal, transparent, board-appropriate. No marketing language. Document facts, flag risks, surface decisions needed. Maximum 2 pages. This is a legal governance document.\u0027;\n\nconst userMessage = \u0027Draft the EAF Board Monthly Newsletter for \u0027 + input.month + \u0027.\\n\\n\u0027 +\n  \u0027ORGANIZATION: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.name ? entities.EAF.name : \u0027KAI-Netics EAF\u0027) + \u0027\\n\u0027 +\n  \u0027EIN: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.ein ? entities.EAF.ein : \u002741-4820296\u0027) + \u0027\\n\u0027 +\n  \u0027STATUS: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.status ? entities.EAF.status : \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027FOUNDER: \u0027 + (founder.name || \u0027Kevin Alexander Smith\u0027) + \u0027\\n\\n\u0027 +\n  \u0027ACTIVE COMPLIANCE DEADLINES:\\n\u0027 + deadlineList + \u0027\\n\\n\u0027 +\n  \u0027LATEST IRIS COMPLIANCE REPORT (excerpt):\\n\u0027 + input.irisReport + \u0027\\n\\n\u0027 +\n  \u0027LATEST GRANT INTELLIGENCE (Scout excerpt):\\n\u0027 + input.scoutReport + \u0027\\n\\n\u0027 +\n  \u0027LATEST GRANT ANALYSIS (Jordan excerpt):\\n\u0027 + input.jordanReport + \u0027\\n\\n\u0027 +\n  \u0027Use this EXACT template structure:\\n\\n\u0027 +\n  \u0027EAF BOARD NEWSLETTER\\n\u0027 +\n  \u0027KAI-Netics Equity \u0026 Autonomy Foundry, Inc. | \u0027 + input.month + \u0027\\n\u0027 +\n  \u0027Prepared by: Kevin Alexander Smith, Founder \u0026 Resident Agent\\n\u0027 +\n  \u0027Distribution: James L. Scott, Esq. | Keith Millard | Maurice Ellis\\n\\n\u0027 +\n  \u00271. MISSION PULSE\\n[What did EAF accomplish this month? Be concrete. If nothing, say so honestly.]\\n\\n\u0027 +\n  \u00272. CAKO PROGRAM STATUS\\n[Cohort 1 status, curriculum, recruitment, timeline]\\n\\n\u0027 +\n  \u00273. GRANT \u0026 COMPLIANCE STATUS\\n[IRS Form 1023 status, EARN Maryland, CDBG, compliance flags from Iris, any 21-day items]\\n\\n\u0027 +\n  \u00274. FINANCIAL SUMMARY\\n[Grants received, donations, operating expenses, cash position — use $0 if not yet active, document it]\\n\\n\u0027 +\n  \u00275. TALENT PIPELINE AGREEMENT STATUS\\n[EAF-to-FP interactions, funds transferred FP to EAF: None, funds transferred EAF to FP: None]\\n\\n\u0027 +\n  \u00276. UPCOMING 30-DAY ACTIONS\\n[What board should expect, any votes needed, signatures required]\\n\\n\u0027 +\n  \u00277. ECOSYSTEM INTELLIGENCE HIGHLIGHTS\\n[3 bullets from Scout/Jordan on grant opportunities or policy changes relevant to EAF]\\n\\n\u0027 +\n  \u0027Questions: kas@kevin-llc.com | 443.257.6836\\n\u0027 +\n  \u0027Next newsletter: 1st of next month\u0027;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-opus-4-6\u0027,\n  max_tokens: 3000,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request({\n    hostname: \u0027api.anthropic.com\u0027,\n    port: 443,\n    path: \u0027/v1/messages\u0027,\n    method: \u0027POST\u0027,\n    headers: {\n      \u0027Content-Type\u0027: \u0027application/json\u0027,\n      \u0027x-api-key\u0027: \u0027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\u0027,\n      \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n      \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n    }\n  }, function(res) {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, function(c) { d += c; });\n    res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet boardDraft = \u0027\u0027;\ntry { boardDraft = JSON.parse(result.body).content[0].text || \u0027Draft generation failed.\u0027; } catch(e) { boardDraft = result.body.substring(0, 500); }\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.boardDraft = boardDraft;\nout.boardSkipped = false;\nreturn [{ json: out }];"
+                                                           },
+                                            "id":  "1a4e9c38-fe6f-42da-bb9b-cec9b6fea7c3",
+                                            "name":  "Draft Board Newsletter (Opus)",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             448,
+                                                             80
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\n\nif (input.type !== \u0027market\u0027 \u0026\u0026 input.type !== \u0027both\u0027) {\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.marketDraft = null;\n  out.marketSkipped = true;\n  return [{ json: out }];\n}\n\nconst founder = input.founder || {};\nconst revenue = input.revenue || {};\nconst milestone = input.milestone || \u0027\u0027;\n\nconst systemMessage = \u0027You are Sage, Strategic Narrative Agent for KAI-Netics. Draft the FP Market Newsletter. Tone: confident, momentum-forward, concise. External-facing — no internal financials, no EIN, no entity structure details. Think: what would make a procurement VP or investor feel good about this company? Maximum 1 page.\u0027;\n\nconst userMessage = \u0027Draft the KAI-Netics FP Market Newsletter for \u0027 + input.month + \u0027.\\n\\n\u0027 +\n  \u0027FOUNDER: \u0027 + (founder.name || \u0027Kevin Alexander Smith\u0027) + \u0027\\n\u0027 +\n  \u0027CREDENTIALS: \u0027 + (founder.credentials || []).join(\u0027, \u0027) + \u0027\\n\u0027 +\n  \u0027REVENUE TARGETS: Y1 \u0027 + (revenue.year1_total || \u0027\u0027) + \u0027 | Y2 \u0027 + (revenue.year2_total || \u0027\u0027) + \u0027 | Y3 \u0027 + (revenue.year3_total || \u0027\u0027) + \u0027\\n\u0027 +\n  (milestone ? \u0027MILESTONE TRIGGER: \u0027 + milestone + \u0027\\n\u0027 : \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027LATEST GRANT INTEL (Scout excerpt):\\n\u0027 + input.scoutReport + \u0027\\n\\n\u0027 +\n  \u0027Use this EXACT template structure:\\n\\n\u0027 +\n  \u0027KAI-NETICS UPDATE | \u0027 + input.month + \u0027\\n\u0027 +\n  \u0027Drone 3PL for Maryland\\\u0027s Medical \u0026 Community Supply Chain\\n\\n\u0027 +\n  \u0027WHAT WE DEPLOYED\\n[What did KAI-Netics fly, contract, or launch? If nothing yet: describe what was built this month]\\n\\n\u0027 +\n  \u0027THE CURN STORY\\n[1 paragraph on CURN/UROC progress, Baltimore endpoint, or corridor development]\\n\\n\u0027 +\n  \u0027GREEN COLLAR SPOTLIGHT\\n[EAF/CAKO update for external audience — community impact focus]\\n\\n\u0027 +\n  \u0027PARTNERSHIP HIGHLIGHTS\\n[New POC agreements, LOIs, ecosystem relationships — or pipeline conversations if none signed]\\n\\n\u0027 +\n  \u0027WHAT\\\u0027S NEXT\\n[Next milestone. One sentence.]\\n\\n\u0027 +\n  \u0027THE ASK\\n[One specific call to action — supply chain VP intro, 20-min meeting, etc.]\\n\\n\u0027 +\n  \u0027Kevin Alexander Smith | kas@kevin-llc.com | 443.257.6836 | kevin-llc.com\\n\u0027 +\n  \u0027FAA Part 107 Certified | MEIA Phase 2 Cohort | UMGC Student | MWVOB\u0027;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-opus-4-6\u0027,\n  max_tokens: 2000,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request({\n    hostname: \u0027api.anthropic.com\u0027,\n    port: 443,\n    path: \u0027/v1/messages\u0027,\n    method: \u0027POST\u0027,\n    headers: {\n      \u0027Content-Type\u0027: \u0027application/json\u0027,\n      \u0027x-api-key\u0027: \u0027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\u0027,\n      \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n      \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n    }\n  }, function(res) {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, function(c) { d += c; });\n    res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet marketDraft = \u0027\u0027;\ntry { marketDraft = JSON.parse(result.body).content[0].text || \u0027Draft generation failed.\u0027; } catch(e) { marketDraft = result.body.substring(0, 500); }\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.marketDraft = marketDraft;\nout.marketSkipped = false;\nreturn [{ json: out }];"
+                                                           },
+                                            "id":  "3c5710fc-4b12-4e05-8f1d-b5b708e1b732",
+                                            "name":  "Draft Market Newsletter (Opus)",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             448,
+                                                             240
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\n\nconst timestamp = new Date().toISOString();\nconst safeTime = timestamp.split(\u0027:\u0027).join(\u0027-\u0027).split(\u0027.\u0027).join(\u0027-\u0027);\n\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Sage\u0027, { recursive: true });\n\nlet savedFiles = [];\nlet boardDraft = input.boardDraft || null;\nlet marketDraft = input.marketDraft || null;\n\nif (boardDraft) {\n  const boardPath = \u0027/data/Aidan_Outputs/Sage/Board_Newsletter_\u0027 + safeTime + \u0027.txt\u0027;\n  fs.writeFileSync(boardPath, boardDraft, \u0027utf8\u0027);\n  savedFiles.push({ type: \u0027board\u0027, path: boardPath });\n}\n\nif (marketDraft) {\n  const marketPath = \u0027/data/Aidan_Outputs/Sage/Market_Newsletter_\u0027 + safeTime + \u0027.txt\u0027;\n  fs.writeFileSync(marketPath, marketDraft, \u0027utf8\u0027);\n  savedFiles.push({ type: \u0027market\u0027, path: marketPath });\n}\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.savedFiles = savedFiles;\nout.timestamp = timestamp;\nreturn [{ json: out }];"
+                                                           },
+                                            "id":  "5b04bc48-7edd-4186-a643-1ffdac6fb1ae",
+                                            "name":  "Save Drafts to Disk",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             672,
+                                                             160
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\nconst savedFiles = input.savedFiles || [];\nconst boardDraft = input.boardDraft;\nconst marketDraft = input.marketDraft;\n\nlet whatsappMsg = \u0027SAGE NEWSLETTER DRAFTS READY\\n\\n\u0027;\n\nif (boardDraft \u0026\u0026 !input.boardSkipped) {\n  whatsappMsg += \u0027EAF BOARD NEWSLETTER (\u0027 + input.month + \u0027)\\n\u0027;\n  whatsappMsg += \u0027Status: DRAFT READY for Kevin review\\n\u0027;\n  const boardFile = savedFiles.find(function(f) { return f.type === \u0027board\u0027; });\n  if (boardFile) { whatsappMsg += \u0027File: \u0027 + boardFile.path + \u0027\\n\u0027; }\n  whatsappMsg += \u0027\\nReply: SAGE SEND BOARD to approve and send\\n\\n\u0027;\n}\n\nif (marketDraft \u0026\u0026 !input.marketSkipped) {\n  whatsappMsg += \u0027FP MARKET NEWSLETTER (\u0027 + input.month + \u0027)\\n\u0027;\n  whatsappMsg += \u0027Status: DRAFT READY for Kevin review\\n\u0027;\n  const marketFile = savedFiles.find(function(f) { return f.type === \u0027market\u0027; });\n  if (marketFile) { whatsappMsg += \u0027File: \u0027 + marketFile.path + \u0027\\n\u0027; }\n  whatsappMsg += \u0027\\nReply: SAGE SEND MARKET to approve and send\u0027;\n}\n\nif (!boardDraft \u0026\u0026 !marketDraft) {\n  whatsappMsg += \u0027No drafts generated. Check type parameter.\u0027;\n}\n\n// Send WhatsApp alert\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: whatsappMsg } });\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\n// Send board draft preview (first 800 chars)\nif (boardDraft \u0026\u0026 !input.boardSkipped) {\n  await new Promise(function(r) { setTimeout(r, 1500); });\n  const preview = \u0027BOARD NEWSLETTER PREVIEW:\\n\\n\u0027 + boardDraft.substring(0, 800) + \u0027\\n\\n[Full draft saved to disk]\u0027;\n  const previewBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: preview } });\n  const previewOpts = {\n    hostname: \u0027host.docker.internal\u0027, port: 8081,\n    path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n    headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(previewBody) }\n  };\n  await new Promise(function(r) {\n    const req = http.request(previewOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n    req.on(\u0027error\u0027, r); req.write(previewBody); req.end();\n  });\n}\n\nreturn [{ json: {\n  success: true,\n  agent: \u0027Sage\u0027,\n  type: input.type,\n  boardDrafted: !!boardDraft,\n  marketDrafted: !!marketDraft,\n  savedFiles: savedFiles\n}}];"
+                                                           },
+                                            "id":  "7e39e006-dd7c-4a0f-9d23-50082d140f7f",
+                                            "name":  "WhatsApp Alert + Preview",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             880,
+                                                             160
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Webhook Trigger":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Load Context + Reports",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Monthly 25th Trigger":  {
+                                                                           "main":  [
+                                                                                        [
+                                                                                            {
+                                                                                                "node":  "Load Context + Reports",
+                                                                                                "type":  "main",
+                                                                                                "index":  0
+                                                                                            }
+                                                                                        ]
+                                                                                    ]
+                                                                       },
+                                              "Load Context + Reports":  {
+                                                                             "main":  [
+                                                                                          [
+                                                                                              {
+                                                                                                  "node":  "Draft Board Newsletter (Opus)",
+                                                                                                  "type":  "main",
+                                                                                                  "index":  0
+                                                                                              },
+                                                                                              {
+                                                                                                  "node":  "Draft Market Newsletter (Opus)",
+                                                                                                  "type":  "main",
+                                                                                                  "index":  0
+                                                                                              }
+                                                                                          ]
+                                                                                      ]
+                                                                         },
+                                              "Draft Board Newsletter (Opus)":  {
+                                                                                    "main":  [
+                                                                                                 [
+                                                                                                     {
+                                                                                                         "node":  "Save Drafts to Disk",
+                                                                                                         "type":  "main",
+                                                                                                         "index":  0
+                                                                                                     }
+                                                                                                 ]
+                                                                                             ]
+                                                                                },
+                                              "Draft Market Newsletter (Opus)":  {
+                                                                                     "main":  [
+                                                                                                  [
+                                                                                                      {
+                                                                                                          "node":  "Save Drafts to Disk",
+                                                                                                          "type":  "main",
+                                                                                                          "index":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                                              ]
+                                                                                 },
+                                              "Save Drafts to Disk":  {
+                                                                          "main":  [
+                                                                                       [
+                                                                                           {
+                                                                                               "node":  "WhatsApp Alert + Preview",
+                                                                                               "type":  "main",
+                                                                                               "index":  0
+                                                                                           }
+                                                                                       ]
+                                                                                   ]
+                                                                      }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version 22776ed5",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-04-21T22:28:07.133Z",
+                                                             "id":  317,
+                                                             "workflowId":  "Un0wx8dCSVcgvOv5",
+                                                             "versionId":  "22776ed5-1d2d-48d2-b1eb-83f30d6bdef5",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

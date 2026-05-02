@@ -1,0 +1,305 @@
+﻿{
+    "updatedAt":  "2026-05-01T20:36:48.000Z",
+    "createdAt":  "2026-05-01T20:32:54.465Z",
+    "id":  "kmYNayzueYhKcPR8",
+    "name":  "Jordan - Grant Writer v3",
+    "description":  null,
+    "active":  false,
+    "isArchived":  true,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 0 12 * * 1-5"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "104d5f82-d534-4e26-a0fc-ecbbb15ed3b1",
+                      "name":  "Daily Trigger 8AM",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "grant-writer",
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "7e32f19e-0aaf-47d6-9e45-6967e50a38f8",
+                      "name":  "Webhook Trigger",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       208
+                                   ],
+                      "webhookId":  "kai-grant-writer"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) { ctx = {}; }\nconst entities = ctx.entities || {};\nconst founder = ctx.founder || {};\nconst tech = ctx.technology || {};\nconst revenue = ctx.revenue_targets || {};\nconst activeDeadlines = (ctx.deadlines || []).filter(function(d) {\n  const st = (d.status || \u0027\u0027).toUpperCase();\n  return st !== \u0027FILED\u0027 \u0026\u0026 st !== \u0027COMPLETE\u0027 \u0026\u0026 st !== \u0027EXEMPT\u0027;\n});\nconst eafProfile = \u0027ORGANIZATION: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.name ? entities.EAF.name : \u0027KAI-Netics Equity \u0026 Autonomy Foundry\u0027) + \u0027\\nEIN: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.ein ? entities.EAF.ein : \u002741-4820296\u0027) + \u0027\\nTYPE: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.type ? entities.EAF.type : \u0027Maryland Nonstock Corp 501c3 pending\u0027) + \u0027\\nSTATUS: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.status ? entities.EAF.status : \u0027\u0027) + \u0027\\nROLE: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.role ? entities.EAF.role : \u0027\u0027) + \u0027\\nFOUNDER: \u0027 + (founder.name || \u0027\u0027) + \u0027 -- \u0027 + (founder.credentials || []).join(\u0027, \u0027) + \u0027\\nPROGRAMS: CAKO | MONK | Talent Pipeline Agreement\u0027 + \u0027\\nSERVICE AREA: Maryland, DC Metro, Northern Virginia\u0027 + \u0027\\nREVENUE IMPACT: Y1 \u0027 + (revenue.year1_total || \u0027\u0027) + \u0027 Y2 \u0027 + (revenue.year2_total || \u0027\u0027) + \u0027 Y3 \u0027 + (revenue.year3_total || \u0027\u0027) + \u0027\\nACTIVE DEADLINES: \u0027 + activeDeadlines.map(function(d) { return d.item + \u0027 | \u0027 + d.date; }).join(\u0027 | \u0027) + \u0027\\nCOMPLIANCE: NO funds flow FP to EAF. Talent Pipeline Agreement is only structural link.\u0027;\nconst dirPath = \u0027/data/Maryland_Grants/\u0027;\nlet grantFiles = [];\ntry { grantFiles = fs.readdirSync(dirPath).filter(function(f) { return f.endsWith(\u0027.txt\u0027) || f.endsWith(\u0027.md\u0027); }); } catch(e) { grantFiles = []; }\nif (grantFiles.length === 0) {\n  return [{ json: { fileName: \u0027No grant files\u0027, content: \u0027No files in /data/Maryland_Grants/\u0027, eafProfile: eafProfile, noFiles: true } }];\n}\nreturn grantFiles.map(function(file) {\n  let content = \u0027\u0027;\n  try { content = fs.readFileSync(dirPath + file, \u0027utf8\u0027); } catch(e) { content = \u0027Could not read: \u0027 + e.message; }\n  return { json: { fileName: file, content: content, eafProfile: eafProfile, noFiles: false } };\n});"
+                                     },
+                      "id":  "b1673055-af7d-46da-ac72-8615f2f22d9a",
+                      "name":  "Load Context + Grant Files",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       128
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const input = $input.first().json;\nconst fileName = input.fileName;\nconst content = input.content;\nconst eafProfile = input.eafProfile;\nconst systemMessage = \u0027You are Jordan, Grant Writer for KAI-Netics EAF. Expert in Maryland workforce development grants, federal SBIR, nonprofit funding. Analyze grants and draft winning applications. Concise, professional, outcome-focused.\u0027;\nconst userMessage = \u0027GRANT: \u0027 + fileName + \u0027\\nCONTENT:\\n\u0027 + content + \u0027\\nEAF PROFILE:\\n\u0027 + eafProfile + \u0027\\n\\nAnalyze:\\n1. FUNDER\\n2. DEADLINE\\n3. AWARD RANGE\\n4. ELIGIBILITY (flag risks)\\n5. FIT SCORE 0-100% with rationale\\n6. TOP 3 ALIGNMENT POINTS\\n7. TOP 2 RISKS\\n8. RECOMMENDED ACTION: Apply/Pass/Watch\\n\\nIf fit 60%+, also draft:\\n9. LETTER OF INTENT (250-350 words)\u0027;\nreturn [{ json: { systemMessage: systemMessage, userMessage: userMessage, fileName: fileName } }];"
+                                     },
+                      "id":  "82dd7af7-a4bc-4303-b37e-1e67983e8ec6",
+                      "name":  "Build Grant Prompt",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       128
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\nconst systemMessage = input.systemMessage;\nconst userMessage = input.userMessage;\nconst fileName = input.fileName;\nconst requestBody = JSON.stringify({\n  model: \u0027claude-sonnet-4-6\u0027,\n  max_tokens: 4096,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\nconst options = {\n  hostname: \u0027api.anthropic.com\u0027,\n  port: 443,\n  path: \u0027/v1/messages\u0027,\n  method: \u0027POST\u0027,\n  headers: {\n    \u0027Content-Type\u0027: \u0027application/json\u0027,\n    \u0027x-api-key\u0027: $env.ANTHROPIC_API_KEY,\n    \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n    \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n  }\n};\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request(options, function(res) {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, function(c) { d += c; });\n    res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\nlet aiOutput = \u0027\u0027;\ntry { aiOutput = JSON.parse(result.body).content[0].text || \u0027No response.\u0027; } catch(e) { aiOutput = result.body.substring(0, 500); }\nreturn [{ json: { aiOutput: aiOutput, fileName: fileName, status: result.status } }];"
+                                     },
+                      "id":  "5190b746-1f41-4278-bf82-8c2501feb522",
+                      "name":  "Call Claude",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       672,
+                                       128
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst crypto = require(\u0027crypto\u0027);\nconst input = $input.first().json;\nconst aiOutput = input.aiOutput;\nconst fileName = input.fileName;\nconst timestamp = new Date().toISOString();\nlet safeName = \u0027\u0027;\nfor (let i = 0; i \u003c fileName.length; i++) {\n  const code = fileName.charCodeAt(i);\n  if ((code \u003e= 65 \u0026\u0026 code \u003c= 90) || (code \u003e= 97 \u0026\u0026 code \u003c= 122) || (code \u003e= 48 \u0026\u0026 code \u003c= 57)) {\n    safeName = safeName + fileName[i];\n  } else {\n    safeName = safeName + \u0027_\u0027;\n  }\n}\nconst safeTime = timestamp.split(\u0027:\u0027).join(\u0027-\u0027).split(\u0027.\u0027).join(\u0027-\u0027);\nconst outputPath = \u0027/data/Aidan_Outputs/Jordan/Grant_Report_\u0027 + safeTime + \u0027_\u0027 + safeName + \u0027.txt\u0027;\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Jordan\u0027, { recursive: true });\nfs.writeFileSync(outputPath, \u0027JORDAN GRANT REPORT v3 -- EAF\\nFile: \u0027 + fileName + \u0027\\nGenerated: \u0027 + timestamp + \u0027\\n\\n\u0027 + aiOutput, \u0027utf8\u0027);\nlet fitScore = null;\nconst fitLines = aiOutput.split(\u0027\\n\u0027);\nfor (let i = 0; i \u003c fitLines.length; i++) {\n  const line = fitLines[i];\n  if (line.toUpperCase().indexOf(\u0027FIT SCORE\u0027) !== -1) {\n    const nums = line.match(/\\d+/);\n    if (nums) { fitScore = parseInt(nums[0]); break; }\n  }\n}\nconst fitScoreDisplay = fitScore !== null ? fitScore + \u0027%\u0027 : \u0027See report\u0027;\nlet funder = \u0027See report\u0027;\nfor (let i = 0; i \u003c fitLines.length; i++) {\n  const line = fitLines[i];\n  if (line.toUpperCase().indexOf(\u0027FUNDER\u0027) !== -1 \u0026\u0026 line.indexOf(\u0027:\u0027) !== -1) {\n    funder = line.split(\u0027:\u0027).slice(1).join(\u0027:\u0027).trim().replace(/\\*/g, \u0027\u0027).substring(0, 60);\n    break;\n  }\n}\nlet action = \u0027Review report\u0027;\nfor (let i = 0; i \u003c fitLines.length; i++) {\n  const line = fitLines[i];\n  if (line.toUpperCase().indexOf(\u0027RECOMMENDED ACTION\u0027) !== -1 \u0026\u0026 line.indexOf(\u0027:\u0027) !== -1) {\n    action = line.split(\u0027:\u0027).slice(1).join(\u0027:\u0027).trim().replace(/\\*/g, \u0027\u0027);\n    break;\n  }\n}\nlet deadline = null;\nfor (let i = 0; i \u003c fitLines.length; i++) {\n  const line = fitLines[i];\n  if (line.toUpperCase().indexOf(\u0027DEADLINE\u0027) !== -1 \u0026\u0026 line.indexOf(\u0027:\u0027) !== -1) {\n    deadline = line.split(\u0027:\u0027).slice(1).join(\u0027:\u0027).trim().replace(/\\*/g, \u0027\u0027).substring(0, 50);\n    break;\n  }\n}\nconst loiDrafted = aiOutput.toLowerCase().indexOf(\u0027letter of intent\u0027) !== -1;\nconst summary = \u0027JORDAN GRANT ANALYSIS COMPLETE\\nFile: \u0027 + fileName + \u0027\\nFunder: \u0027 + funder + \u0027\\nFit: \u0027 + fitScoreDisplay + \u0027\\nAction: \u0027 + action + \u0027\\nSaved: \u0027 + outputPath;\nconst contentHash = crypto.createHash(\u0027md5\u0027).update(fileName + new Date().toISOString().slice(0, 10)).digest(\u0027hex\u0027);\nreturn [{ json: {\n  summary: summary,\n  outputPath: outputPath,\n  fileName: fileName,\n  fitScore: fitScore,\n  fitScoreDisplay: fitScoreDisplay,\n  funder: funder,\n  action: action,\n  deadline: deadline,\n  loiDrafted: loiDrafted,\n  aiOutput: aiOutput,\n  timestamp: timestamp,\n  contentHash: contentHash\n} }];"
+                                     },
+                      "id":  "efd81eaa-61dd-4fc2-8efa-d75e1923d4ed",
+                      "name":  "Format + Save Report",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       880,
+                                       128
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "fromEmail":  "kas@kevin-llc.com",
+                                         "toEmail":  "kas@kevin-llc.com",
+                                         "subject":  "=Jordan Grant Report - {{ $json.fileName }} - {{ $json.fitScoreDisplay }} Fit",
+                                         "html":  "=\u003cdiv style=\"font-family:Arial,sans-serif;max-width:600px;margin:0 auto\"\u003e\u003cdiv style=\"background:#1a1a2e;padding:20px;border-radius:8px 8px 0 0\"\u003e\u003ch1 style=\"color:#00d4ff;margin:0;font-size:20px\"\u003eKAI-Netics\u003c/h1\u003e\u003cp style=\"color:#8888aa;margin:5px 0 0 0;font-size:12px\"\u003eJordan Grant Intelligence Agent\u003c/p\u003e\u003c/div\u003e\u003cdiv style=\"background:#f8f9fa;padding:24px;border:1px solid #e0e0e0\"\u003e\u003ch2 style=\"color:#1a1a2e;margin-top:0\"\u003eGrant Analysis Complete\u003c/h2\u003e\u003ctable style=\"width:100%;border-collapse:collapse;margin-bottom:20px\"\u003e\u003ctr style=\"background:#fff;border-bottom:1px solid #eee\"\u003e\u003ctd style=\"padding:10px;font-weight:bold;color:#555;width:35%\"\u003eGrant File\u003c/td\u003e\u003ctd style=\"padding:10px\"\u003e{{ $json.fileName }}\u003c/td\u003e\u003c/tr\u003e\u003ctr style=\"background:#f8f9fa;border-bottom:1px solid #eee\"\u003e\u003ctd style=\"padding:10px;font-weight:bold;color:#555\"\u003eFunder\u003c/td\u003e\u003ctd style=\"padding:10px\"\u003e{{ $json.funder }}\u003c/td\u003e\u003c/tr\u003e\u003ctr style=\"background:#fff;border-bottom:1px solid #eee\"\u003e\u003ctd style=\"padding:10px;font-weight:bold;color:#555\"\u003eFit Score\u003c/td\u003e\u003ctd style=\"padding:10px;font-weight:bold;color:#00aa44\"\u003e{{ $json.fitScoreDisplay }}\u003c/td\u003e\u003c/tr\u003e\u003ctr style=\"background:#f8f9fa;border-bottom:1px solid #eee\"\u003e\u003ctd style=\"padding:10px;font-weight:bold;color:#555\"\u003eDeadline\u003c/td\u003e\u003ctd style=\"padding:10px\"\u003e{{ $json.deadline }}\u003c/td\u003e\u003c/tr\u003e\u003ctr style=\"background:#fff\"\u003e\u003ctd style=\"padding:10px;font-weight:bold;color:#555\"\u003eAction\u003c/td\u003e\u003ctd style=\"padding:10px;font-weight:bold\"\u003e{{ $json.action }}\u003c/td\u003e\u003c/tr\u003e\u003c/table\u003e\u003cp style=\"color:#666;font-size:13px\"\u003eFull report: {{ $json.outputPath }}\u003c/p\u003e\u003c/div\u003e\u003cdiv style=\"background:#1a1a2e;padding:16px;border-radius:0 0 8px 8px;text-align:center\"\u003e\u003cp style=\"color:#8888aa;margin:0;font-size:12px\"\u003eKevin Alexander Smith | KAI-Netics | kas@kevin-llc.com | 443.257.6836\u003c/p\u003e\u003c/div\u003e\u003c/div\u003e",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "109bacc6-a70d-4604-9cd3-05afd913b767",
+                      "name":  "Send Email Report",
+                      "type":  "n8n-nodes-base.emailSend",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1104,
+                                       48
+                                   ],
+                      "webhookId":  "7f9697c2-4cdd-4e70-a5cd-5ad1df20afd6",
+                      "credentials":  {
+                                          "smtp":  {
+                                                       "id":  "rbL5mC01kCLp42bA",
+                                                       "name":  "KAI-Netics SMTP"
+                                                   }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\nconst SUPABASE_URL = $env.SUPABASE_URL || \u0027\u0027;\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_KEY || \u0027\u0027;\nconst hostname = SUPABASE_URL.replace(\u0027https://\u0027, \u0027\u0027).replace(\u0027http://\u0027, \u0027\u0027);\nlet actionCode = null;\nif (input.action) {\n  const a = input.action.toUpperCase();\n  if (a.indexOf(\u0027APPLY\u0027) !== -1) { actionCode = \u0027APPLY\u0027; }\n  else if (a.indexOf(\u0027PASS\u0027) !== -1) { actionCode = \u0027PASS\u0027; }\n  else if (a.indexOf(\u0027WATCH\u0027) !== -1) { actionCode = \u0027WATCH\u0027; }\n}\nconst record = {\n  grant_file: input.fileName,\n  funder: input.funder !== \u0027See report\u0027 ? input.funder : null,\n  fit_score: input.fitScore || null,\n  recommended_action: actionCode,\n  loi_drafted: input.loiDrafted || false,\n  jordan_report_path: input.outputPath,\n  application_status: \u0027analyzing\u0027,\n  entity: \u0027EAF\u0027\n};\ntry {\n  const body = JSON.stringify(record);\n  const result = await new Promise(function(resolve, reject) {\n    const req = https.request({\n      hostname: hostname,\n      port: 443,\n      path: \u0027/rest/v1/grant_applications\u0027,\n      method: \u0027POST\u0027,\n      headers: {\n        \u0027Content-Type\u0027: \u0027application/json\u0027,\n        \u0027apikey\u0027: SUPABASE_KEY,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n        \u0027Prefer\u0027: \u0027resolution=merge-duplicates\u0027,\n        \u0027Content-Length\u0027: Buffer.byteLength(body)\n      }\n    }, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n    });\n    req.on(\u0027error\u0027, reject);\n    req.write(body);\n    req.end();\n  });\n  const logged = result.status === 201 || result.status === 200;\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.supabaseLogged = logged;\n  out.supabaseStatus = result.status;\n  return [{ json: out }];\n} catch(e) {\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.supabaseLogged = false;\n  out.supabaseError = e.message;\n  return [{ json: out }];\n}"
+                                     },
+                      "id":  "b8baef1b-1071-4bde-971e-fae5289f02a1",
+                      "name":  "Log to Supabase",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1104,
+                                       208
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\nconst summary = input.summary || \u0027Jordan complete.\u0027;\nconst fitScoreDisplay = input.fitScoreDisplay || \u0027See report\u0027;\nconst supabaseLogged = input.supabaseLogged || false;\nconst dbStatus = supabaseLogged ? \u0027Logged to Supabase\u0027 : \u0027Supabase log failed\u0027;\nconst msgText = \u0027JORDAN v3 COMPLETE\\n\u0027 + summary + \u0027\\n\\n\u0027 + dbStatus;\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: msgText } });\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\nconst cbBody = JSON.stringify({ agent: \u0027Jordan\u0027, summary: summary, fitScore: fitScoreDisplay, fileName: input.fileName, supabaseLogged: supabaseLogged, timestamp: new Date().toISOString() });\nconst cbOpts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) }\n};\nconst cbReq = http.request(cbOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, function(){}); });\ncbReq.on(\u0027error\u0027, function(){});\ncbReq.write(cbBody);\ncbReq.end();\nreturn [{ json: { success: true, agent: \u0027Jordan\u0027, version: \u0027v3\u0027, summary: summary, supabaseLogged: supabaseLogged } }];"
+                                     },
+                      "id":  "817073de-e3d7-4109-9bc5-dc95883b5392",
+                      "name":  "Aidan Callback",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1328,
+                                       128
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Daily Trigger 8AM":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Load Context + Grant Files",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Load Context + Grant Files",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Load Context + Grant Files":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Build Grant Prompt",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Build Grant Prompt":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Call Claude",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Call Claude":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Format + Save Report",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Format + Save Report":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Send Email Report",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Send Email Report":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Aidan Callback",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Log to Supabase":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Aidan Callback",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "pinData":  {
+
+                },
+    "versionId":  "781fcfbf-3efb-425e-aa64-ebc2b5aae9af",
+    "activeVersionId":  null,
+    "versionCounter":  3,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-01T20:32:54.469Z",
+                       "createdAt":  "2026-05-01T20:32:54.469Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "kmYNayzueYhKcPR8",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T19:14:31.224Z",
+                     "createdAt":  "2026-04-21T19:14:31.224Z",
+                     "id":  "TjxfhhlH70HyB4sp",
+                     "name":  "Supabase"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T15:13:13.538Z",
+                     "createdAt":  "2026-04-09T15:13:13.538Z",
+                     "id":  "YqR9uqqugHNuyxjk",
+                     "name":  "Jordan"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.386Z",
+                     "createdAt":  "2026-04-07T01:42:36.386Z",
+                     "id":  "fOXzlv2oWtmBB9Cx",
+                     "name":  "EAF"
+                 }
+             ],
+    "activeVersion":  null
+}

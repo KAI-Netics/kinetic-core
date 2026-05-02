@@ -1,0 +1,187 @@
+﻿{
+    "updatedAt":  "2026-05-01T22:17:57.382Z",
+    "createdAt":  "2026-04-14T05:53:11.042Z",
+    "id":  "fWCfTlmkQNtTINFB",
+    "name":  "Aidan - Callback Consolidator",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "aidan-callback",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "id":  "493de951-baee-41a0-8633-6e648139d6bf",
+                      "name":  "Agent Callback Receiver",
+                      "webhookId":  "aidan-callback-receiver"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027), http = require(\u0027http\u0027), https = require(\u0027https\u0027);\nconst raw = $input.first().json;\nconst body = raw.body || raw;\n\nconst agentName = body.agent || \u0027Unknown\u0027;\nconst sessionId = body.sessionId || null;\nconst timestamp = body.timestamp || new Date().toISOString();\n\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Callbacks\u0027, { recursive: true });\nconst cbFile = `/data/Aidan_Outputs/Callbacks/${agentName}_${timestamp.replace(/[:.]/g,\u0027-\u0027)}.json`;\nfs.writeFileSync(cbFile, JSON.stringify(body, null, 2), \u0027utf8\u0027);\n\nconst orchDir = \u0027/data/Aidan_Outputs/Orchestra/\u0027;\nfs.mkdirSync(orchDir, { recursive: true });\n\nlet activeSessionId = null;\n\ntry {\n  const sessionFiles = fs.readdirSync(orchDir)\n    .filter(f =\u003e f.startsWith(\u0027session_\u0027) \u0026\u0026 f.endsWith(\u0027.json\u0027))\n    .map(f =\u003e ({ name: f, mtime: fs.statSync(orchDir + f).mtimeMs }))\n    .sort((a, b) =\u003e b.mtime - a.mtime);\n\n  if (sessionFiles.length \u003e 0) {\n    const latestSession = JSON.parse(fs.readFileSync(orchDir + sessionFiles[0].name, \u0027utf8\u0027));\n    activeSessionId = latestSession.sessionId;\n  }\n} catch(e) {}\n\nconst useSessionMatching = false;\nconst fallbackCutoff = Date.now() - (10 * 60 * 1000);\n\nconst cbDir = \u0027/data/Aidan_Outputs/Callbacks/\u0027;\nconst allFiles = fs.readdirSync(cbDir).filter(f =\u003e f.endsWith(\u0027.json\u0027));\nconst matchedCallbacks = {};\n\nallFiles.forEach(f =\u003e {\n  try {\n    const stat = fs.statSync(cbDir + f);\n    const data = JSON.parse(fs.readFileSync(cbDir + f, \u0027utf8\u0027));\n    if (!data.agent) return;\n\n    let isMatch = false;\n    if (useSessionMatching) {\n      isMatch = data.sessionId === activeSessionId;\n    } else {\n      isMatch = stat.mtimeMs \u003e fallbackCutoff;\n    }\n\n    if (isMatch) {\n      if (!matchedCallbacks[data.agent] || stat.mtimeMs \u003e matchedCallbacks[data.agent]._mtime) {\n        matchedCallbacks[data.agent] = { ...data, _mtime: stat.mtimeMs };\n      }\n    }\n  } catch(e) {}\n});\n\nconst required = [\u0027Atlas\u0027, \u0027Scout\u0027, \u0027Jordan\u0027, \u0027Iris\u0027];\nconst allFour = required.every(a =\u003e Object.keys(matchedCallbacks).includes(a));\n\nif (!allFour) {\n  const received = Object.keys(matchedCallbacks).filter(k =\u003e !k.startsWith(\u0027_\u0027));\n  const waiting = required.filter(a =\u003e !received.includes(a));\n  return [{ json: {\n    received: agentName,\n    waiting: true,\n    receivedSoFar: received,\n    waitingFor: waiting,\n    sessionId: activeSessionId,\n    matchMode: \u0027time_window\u0027,\n    allFour: false\n  }}];\n}\n\nconst atlas  = matchedCallbacks[\u0027Atlas\u0027]  || {};\nconst scout  = matchedCallbacks[\u0027Scout\u0027]  || {};\nconst jordan = matchedCallbacks[\u0027Jordan\u0027] || {};\nconst iris   = matchedCallbacks[\u0027Iris\u0027]   || {};\n\nconst systemMessage = `You are Aidan, Chief of Staff to Kevin Alexander Smith, CEO of KAI-Netics. Synthesize four agent reports into a single executive briefing for Kevin to READ and DECIDE -- not act on autonomously.\n\nCRITICAL RULE: You are an intelligence and recommendation system only. You NEVER take outward action, send anything, file anything, submit anything, or contact anyone on Kevin\u0027s behalf. Every action item is a RECOMMENDATION for Kevin to approve. Never say \"Aidan will file\", \"Aidan will send\", \"Aidan will submit\", or any language implying autonomous outward action. Instead say \"RECOMMENDED: Kevin to file\", \"RECOMMENDED: Kevin to send\", \"Pending Kevin approval\".\n\nSTAFF CONTEXT:\n- Atlas: Chief Architect -- platform intelligence, architecture, cost tracking\n- Scout: BD Manager -- pipeline, targets, market intelligence\n- Jordan: Grant Writer -- federal and state funding, LOIs, eligibility\n- Iris: Compliance Officer -- deadlines, regulatory calendar, risk flags\n- Kevin is the CEO. All recommendations go to him for approval.\n\nFormat: BLUF first. Entity-tagged action items. Decisive, concise. Priority: EAF compliance \u003e FP revenue \u003e MONK IP.\n\nEnd every brief with an APPROVAL QUEUE listing any recommended outward actions that require Kevin explicit WhatsApp approval before anyone proceeds.`;\n\nconst userMessage = `Synthesize these four agent reports:\\n\\nATLAS:\\n${atlas.summary||\u0027No report\u0027}\\n\\nSCOUT:\\n${scout.summary||\u0027No report\u0027}\\nFit: ${scout.fitScore||\u0027N/A\u0027}\\n\\nJORDAN:\\n${jordan.summary||\u0027No report\u0027}\\nFit: ${jordan.fitScore||\u0027N/A\u0027}\\n\\nIRIS:\\n${iris.summary||\u0027No report\u0027}\\nCritical: ${iris.criticalCount||0} | Urgent: ${iris.urgentCount||0}\\n\\nFormat:\\n1. BLUF (3 sentences max)\\n2. CRITICAL ACTIONS -- Kevin today\\n3. RECOMMENDED ACTIONS -- Pending Kevin approval\\n4. INTEL SUMMARY (key findings per agent)\\n5. FLAGS \u0026 RISKS\\n6. APPROVAL QUEUE (list anything needing Kevin WhatsApp approval to execute)`;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-opus-4-6\u0027,\n  max_tokens: 2048,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst apiOptions = {\n  hostname: \u0027api.anthropic.com\u0027,\n  port: 443,\n  path: \u0027/v1/messages\u0027,\n  method: \u0027POST\u0027,\n  headers: {\n    \u0027Content-Type\u0027: \u0027application/json\u0027,\n    \u0027x-api-key\u0027: $env.ANTHROPIC_API_KEY,\n    \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n    \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n  }\n};\n\nconst result = await new Promise((resolve, reject) =\u003e {\n  const req = https.request(apiOptions, (res) =\u003e {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, c =\u003e d += c);\n    res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: d }));\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet brief = \u0027\u0027;\ntry {\n  brief = JSON.parse(result.body).content?.[0]?.text || \u0027Consolidation failed.\u0027;\n} catch(e) {\n  brief = \u0027Parse error: \u0027 + result.body.substring(0, 500);\n}\n\nconst briefPath = `/data/Aidan_Outputs/Orchestra/Brief_${new Date().toISOString().replace(/[:.]/g,\u0027-\u0027)}.txt`;\nfs.writeFileSync(briefPath, `SESSION: ${activeSessionId}\\n\\n${brief}`, \u0027utf8\u0027);\n\nif (activeSessionId) {\n  try {\n    const sessionFiles = fs.readdirSync(orchDir).filter(f =\u003e f.startsWith(\u0027session_\u0027) \u0026\u0026 f.endsWith(\u0027.json\u0027));\n    if (sessionFiles.length \u003e 0) {\n      const sessionFile = orchDir + sessionFiles.sort((a,b) =\u003e fs.statSync(orchDir+b).mtimeMs - fs.statSync(orchDir+a).mtimeMs)[0];\n      const sessionData = JSON.parse(fs.readFileSync(sessionFile, \u0027utf8\u0027));\n      sessionData.completed = true;\n      sessionData.completedAt = new Date().toISOString();\n      sessionData.briefPath = briefPath;\n      fs.writeFileSync(sessionFile, JSON.stringify(sessionData, null, 2), \u0027utf8\u0027);\n    }\n  } catch(e) {}\n}\n\nconst fullMsg = `AIDAN CONSOLIDATED BRIEF\\n${new Date().toLocaleString(\u0027en-US\u0027,{timeZone:\u0027America/New_York\u0027})} EST\\nSession: ${activeSessionId}\\n\\n${brief}`;\nconst chunks = [];\nfor (let i = 0; i \u003c fullMsg.length; i += 3800) chunks.push(fullMsg.substring(i, i + 3800));\nfor (const chunk of chunks) {\n  const mb = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: chunk } });\n  const wo = {\n    hostname: \u0027host.docker.internal\u0027, port: 8081,\n    path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n    headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(mb) }\n  };\n  await new Promise(r =\u003e {\n    const req = http.request(wo, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); });\n    req.on(\u0027error\u0027,r); req.write(mb); req.end();\n  });\n  await new Promise(r =\u003e setTimeout(r, 1000));\n}\n\nreturn [{ json: { success: true, allFour: true, sessionId: activeSessionId, matchMode: \u0027time_window\u0027, briefPath } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       0
+                                   ],
+                      "id":  "d399707e-20da-49a1-a548-0e86eb3f57ce",
+                      "name":  "Collect + Consolidate"
+                  }
+              ],
+    "connections":  {
+                        "Agent Callback Receiver":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Collect + Consolidate",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Collect + Consolidate":  {
+                                                      "main":  [
+                                                                   [
+
+                                                                   ]
+                                                               ]
+                                                  }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "b7148c0a-47ba-4aa2-a328-ad06ed74b1e9",
+    "activeVersionId":  "b7148c0a-47ba-4aa2-a328-ad06ed74b1e9",
+    "versionCounter":  101,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-14T05:53:11.045Z",
+                       "createdAt":  "2026-04-14T05:53:11.045Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "fWCfTlmkQNtTINFB",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.295Z",
+                     "createdAt":  "2026-04-07T01:42:36.295Z",
+                     "id":  "B0QrEiqfwdS6WU2L",
+                     "name":  "Aidan"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T15:15:37.374Z",
+                     "createdAt":  "2026-04-09T15:15:37.374Z",
+                     "id":  "QTPeit0eR7gFbf1c",
+                     "name":  "Orchestrator"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-05-01T22:17:59.000Z",
+                          "createdAt":  "2026-05-01T22:17:40.780Z",
+                          "versionId":  "b7148c0a-47ba-4aa2-a328-ad06ed74b1e9",
+                          "workflowId":  "fWCfTlmkQNtTINFB",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "aidan-callback",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ],
+                                            "id":  "493de951-baee-41a0-8633-6e648139d6bf",
+                                            "name":  "Agent Callback Receiver",
+                                            "webhookId":  "aidan-callback-receiver"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027), http = require(\u0027http\u0027), https = require(\u0027https\u0027);\nconst raw = $input.first().json;\nconst body = raw.body || raw;\n\nconst agentName = body.agent || \u0027Unknown\u0027;\nconst sessionId = body.sessionId || null;\nconst timestamp = body.timestamp || new Date().toISOString();\n\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Callbacks\u0027, { recursive: true });\nconst cbFile = `/data/Aidan_Outputs/Callbacks/${agentName}_${timestamp.replace(/[:.]/g,\u0027-\u0027)}.json`;\nfs.writeFileSync(cbFile, JSON.stringify(body, null, 2), \u0027utf8\u0027);\n\nconst orchDir = \u0027/data/Aidan_Outputs/Orchestra/\u0027;\nfs.mkdirSync(orchDir, { recursive: true });\n\nlet activeSessionId = null;\n\ntry {\n  const sessionFiles = fs.readdirSync(orchDir)\n    .filter(f =\u003e f.startsWith(\u0027session_\u0027) \u0026\u0026 f.endsWith(\u0027.json\u0027))\n    .map(f =\u003e ({ name: f, mtime: fs.statSync(orchDir + f).mtimeMs }))\n    .sort((a, b) =\u003e b.mtime - a.mtime);\n\n  if (sessionFiles.length \u003e 0) {\n    const latestSession = JSON.parse(fs.readFileSync(orchDir + sessionFiles[0].name, \u0027utf8\u0027));\n    activeSessionId = latestSession.sessionId;\n  }\n} catch(e) {}\n\nconst useSessionMatching = false;\nconst fallbackCutoff = Date.now() - (10 * 60 * 1000);\n\nconst cbDir = \u0027/data/Aidan_Outputs/Callbacks/\u0027;\nconst allFiles = fs.readdirSync(cbDir).filter(f =\u003e f.endsWith(\u0027.json\u0027));\nconst matchedCallbacks = {};\n\nallFiles.forEach(f =\u003e {\n  try {\n    const stat = fs.statSync(cbDir + f);\n    const data = JSON.parse(fs.readFileSync(cbDir + f, \u0027utf8\u0027));\n    if (!data.agent) return;\n\n    let isMatch = false;\n    if (useSessionMatching) {\n      isMatch = data.sessionId === activeSessionId;\n    } else {\n      isMatch = stat.mtimeMs \u003e fallbackCutoff;\n    }\n\n    if (isMatch) {\n      if (!matchedCallbacks[data.agent] || stat.mtimeMs \u003e matchedCallbacks[data.agent]._mtime) {\n        matchedCallbacks[data.agent] = { ...data, _mtime: stat.mtimeMs };\n      }\n    }\n  } catch(e) {}\n});\n\nconst required = [\u0027Atlas\u0027, \u0027Scout\u0027, \u0027Jordan\u0027, \u0027Iris\u0027];\nconst allFour = required.every(a =\u003e Object.keys(matchedCallbacks).includes(a));\n\nif (!allFour) {\n  const received = Object.keys(matchedCallbacks).filter(k =\u003e !k.startsWith(\u0027_\u0027));\n  const waiting = required.filter(a =\u003e !received.includes(a));\n  return [{ json: {\n    received: agentName,\n    waiting: true,\n    receivedSoFar: received,\n    waitingFor: waiting,\n    sessionId: activeSessionId,\n    matchMode: \u0027time_window\u0027,\n    allFour: false\n  }}];\n}\n\nconst atlas  = matchedCallbacks[\u0027Atlas\u0027]  || {};\nconst scout  = matchedCallbacks[\u0027Scout\u0027]  || {};\nconst jordan = matchedCallbacks[\u0027Jordan\u0027] || {};\nconst iris   = matchedCallbacks[\u0027Iris\u0027]   || {};\n\nconst systemMessage = `You are Aidan, Chief of Staff to Kevin Alexander Smith, CEO of KAI-Netics. Synthesize four agent reports into a single executive briefing for Kevin to READ and DECIDE -- not act on autonomously.\n\nCRITICAL RULE: You are an intelligence and recommendation system only. You NEVER take outward action, send anything, file anything, submit anything, or contact anyone on Kevin\u0027s behalf. Every action item is a RECOMMENDATION for Kevin to approve. Never say \"Aidan will file\", \"Aidan will send\", \"Aidan will submit\", or any language implying autonomous outward action. Instead say \"RECOMMENDED: Kevin to file\", \"RECOMMENDED: Kevin to send\", \"Pending Kevin approval\".\n\nSTAFF CONTEXT:\n- Atlas: Chief Architect -- platform intelligence, architecture, cost tracking\n- Scout: BD Manager -- pipeline, targets, market intelligence\n- Jordan: Grant Writer -- federal and state funding, LOIs, eligibility\n- Iris: Compliance Officer -- deadlines, regulatory calendar, risk flags\n- Kevin is the CEO. All recommendations go to him for approval.\n\nFormat: BLUF first. Entity-tagged action items. Decisive, concise. Priority: EAF compliance \u003e FP revenue \u003e MONK IP.\n\nEnd every brief with an APPROVAL QUEUE listing any recommended outward actions that require Kevin explicit WhatsApp approval before anyone proceeds.`;\n\nconst userMessage = `Synthesize these four agent reports:\\n\\nATLAS:\\n${atlas.summary||\u0027No report\u0027}\\n\\nSCOUT:\\n${scout.summary||\u0027No report\u0027}\\nFit: ${scout.fitScore||\u0027N/A\u0027}\\n\\nJORDAN:\\n${jordan.summary||\u0027No report\u0027}\\nFit: ${jordan.fitScore||\u0027N/A\u0027}\\n\\nIRIS:\\n${iris.summary||\u0027No report\u0027}\\nCritical: ${iris.criticalCount||0} | Urgent: ${iris.urgentCount||0}\\n\\nFormat:\\n1. BLUF (3 sentences max)\\n2. CRITICAL ACTIONS -- Kevin today\\n3. RECOMMENDED ACTIONS -- Pending Kevin approval\\n4. INTEL SUMMARY (key findings per agent)\\n5. FLAGS \u0026 RISKS\\n6. APPROVAL QUEUE (list anything needing Kevin WhatsApp approval to execute)`;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-opus-4-6\u0027,\n  max_tokens: 2048,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst apiOptions = {\n  hostname: \u0027api.anthropic.com\u0027,\n  port: 443,\n  path: \u0027/v1/messages\u0027,\n  method: \u0027POST\u0027,\n  headers: {\n    \u0027Content-Type\u0027: \u0027application/json\u0027,\n    \u0027x-api-key\u0027: $env.ANTHROPIC_API_KEY,\n    \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n    \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n  }\n};\n\nconst result = await new Promise((resolve, reject) =\u003e {\n  const req = https.request(apiOptions, (res) =\u003e {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, c =\u003e d += c);\n    res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: d }));\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet brief = \u0027\u0027;\ntry {\n  brief = JSON.parse(result.body).content?.[0]?.text || \u0027Consolidation failed.\u0027;\n} catch(e) {\n  brief = \u0027Parse error: \u0027 + result.body.substring(0, 500);\n}\n\nconst briefPath = `/data/Aidan_Outputs/Orchestra/Brief_${new Date().toISOString().replace(/[:.]/g,\u0027-\u0027)}.txt`;\nfs.writeFileSync(briefPath, `SESSION: ${activeSessionId}\\n\\n${brief}`, \u0027utf8\u0027);\n\nif (activeSessionId) {\n  try {\n    const sessionFiles = fs.readdirSync(orchDir).filter(f =\u003e f.startsWith(\u0027session_\u0027) \u0026\u0026 f.endsWith(\u0027.json\u0027));\n    if (sessionFiles.length \u003e 0) {\n      const sessionFile = orchDir + sessionFiles.sort((a,b) =\u003e fs.statSync(orchDir+b).mtimeMs - fs.statSync(orchDir+a).mtimeMs)[0];\n      const sessionData = JSON.parse(fs.readFileSync(sessionFile, \u0027utf8\u0027));\n      sessionData.completed = true;\n      sessionData.completedAt = new Date().toISOString();\n      sessionData.briefPath = briefPath;\n      fs.writeFileSync(sessionFile, JSON.stringify(sessionData, null, 2), \u0027utf8\u0027);\n    }\n  } catch(e) {}\n}\n\nconst fullMsg = `AIDAN CONSOLIDATED BRIEF\\n${new Date().toLocaleString(\u0027en-US\u0027,{timeZone:\u0027America/New_York\u0027})} EST\\nSession: ${activeSessionId}\\n\\n${brief}`;\nconst chunks = [];\nfor (let i = 0; i \u003c fullMsg.length; i += 3800) chunks.push(fullMsg.substring(i, i + 3800));\nfor (const chunk of chunks) {\n  const mb = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: chunk } });\n  const wo = {\n    hostname: \u0027host.docker.internal\u0027, port: 8081,\n    path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n    headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(mb) }\n  };\n  await new Promise(r =\u003e {\n    const req = http.request(wo, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); });\n    req.on(\u0027error\u0027,r); req.write(mb); req.end();\n  });\n  await new Promise(r =\u003e setTimeout(r, 1000));\n}\n\nreturn [{ json: { success: true, allFour: true, sessionId: activeSessionId, matchMode: \u0027time_window\u0027, briefPath } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             224,
+                                                             0
+                                                         ],
+                                            "id":  "d399707e-20da-49a1-a548-0e86eb3f57ce",
+                                            "name":  "Collect + Consolidate"
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Agent Callback Receiver":  {
+                                                                              "main":  [
+                                                                                           [
+                                                                                               {
+                                                                                                   "node":  "Collect + Consolidate",
+                                                                                                   "type":  "main",
+                                                                                                   "index":  0
+                                                                                               }
+                                                                                           ]
+                                                                                       ]
+                                                                          },
+                                              "Collect + Consolidate":  {
+                                                                            "main":  [
+                                                                                         [
+
+                                                                                         ]
+                                                                                     ]
+                                                                        }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version b7148c0a",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-05-01T22:17:59.777Z",
+                                                             "id":  461,
+                                                             "workflowId":  "fWCfTlmkQNtTINFB",
+                                                             "versionId":  "b7148c0a-47ba-4aa2-a328-ad06ed74b1e9",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

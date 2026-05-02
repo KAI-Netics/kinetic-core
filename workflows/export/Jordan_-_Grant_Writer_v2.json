@@ -1,0 +1,326 @@
+﻿{
+    "updatedAt":  "2026-04-22T01:54:05.000Z",
+    "createdAt":  "2026-04-12T16:00:01.695Z",
+    "id":  "iN3WePB1EBZ2N3I7",
+    "name":  "Jordan - Grant Writer v2",
+    "description":  null,
+    "active":  false,
+    "isArchived":  true,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 0 7 * * 1-5"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "99214f61-5a3c-422d-89ea-4020904c96e3",
+                      "name":  "Daily Trigger 7AM",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -64,
+                                       32
+                                   ],
+                      "disabled":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "grant-writer",
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "ba4b317b-32a0-41a6-92ba-d1c135394845",
+                      "name":  "Webhook Trigger",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -64,
+                                       240
+                                   ],
+                      "webhookId":  "kai-grant-writer"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) { ctx = {}; }\nconst entities = ctx.entities || {}, founder = ctx.founder || {}, tech = ctx.technology || {}, dates = ctx.key_dates || {}, revenue = ctx.revenue_targets || {};\nconst eafProfile = \u0027EAF: \u0027 + (entities.EAF?.name || \u0027KAI-Netics EAF\u0027) + \u0027 | EIN: \u0027 + (entities.EAF?.ein || \u002741-4820296\u0027);\nconst dirPath = \u0027/data/Maryland_Grants/\u0027;\nlet grantFiles = [];\ntry { grantFiles = fs.readdirSync(dirPath).filter(f =\u003e f.endsWith(\u0027.txt\u0027) || f.endsWith(\u0027.pdf\u0027) || f.endsWith(\u0027.md\u0027)); } catch(e) { grantFiles = []; }\nif (grantFiles.length === 0) return [{ json: { fileName: \u0027No grant files\u0027, content: \u0027No files found\u0027, eafProfile, noFiles: true } }];\nreturn grantFiles.map(fileName =\u003e {\n  let content = \u0027\u0027;\n  try { content = fs.readFileSync(dirPath + fileName, \u0027utf8\u0027); } catch(e) { content = \u0027Could not read: \u0027 + e.message; }\n  return { json: { fileName, content, eafProfile, noFiles: false } };\n});"
+                                     },
+                      "id":  "a3b2ac8a-9088-4c4d-b261-bea2b7d3d14f",
+                      "name":  "Load Context + Grant Files",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       160,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const { fileName, content, eafProfile } = $input.item.json;\nconst systemMessage = `You are Jordan, Grant Writer for KAI-Netics EAF. Expert in Maryland workforce development grants, federal SBIR, nonprofit funding. Analyze grants and draft winning applications. Concise, professional, outcome-focused.`;\nconst userMessage = `GRANT: ${fileName}\\nCONTENT:\\n${content}\\nEAF PROFILE:\\n${eafProfile}\\n\\nAnalyze:\\n1. FUNDER\\n2. DEADLINE\\n3. AWARD RANGE\\n4. ELIGIBILITY (flag risks)\\n5. FIT SCORE 0-100% with rationale\\n6. TOP 3 ALIGNMENT POINTS\\n7. TOP 2 RISKS\\n8. RECOMMENDED ACTION: Apply/Pass/Watch\\n\\nIf fit 60%+, also draft:\\n9. LETTER OF INTENT (250-350 words)`;\nreturn [{ json: { systemMessage, userMessage, fileName } }];"
+                                     },
+                      "id":  "74a680cd-a5c6-4e40-ad55-354f353f8694",
+                      "name":  "Build Grant Prompt",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       384,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst { systemMessage, userMessage, fileName } = $input.first().json;\nconst requestBody = JSON.stringify({ model: \u0027claude-sonnet-4-6\u0027, max_tokens: 4096, system: systemMessage, messages: [{ role: \u0027user\u0027, content: userMessage }] });\nconst options = { hostname: \u0027api.anthropic.com\u0027, port: 443, path: \u0027/v1/messages\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027x-api-key\u0027: \u0027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\u0027, \u0027anthropic-version\u0027: \u00272023-06-01\u0027, \u0027Content-Length\u0027: Buffer.byteLength(requestBody) } };\nconst result = await new Promise((resolve, reject) =\u003e {\n  const req = https.request(options, (res) =\u003e { let d = \u0027\u0027; res.on(\u0027data\u0027, c =\u003e d += c); res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: d })); });\n  req.on(\u0027error\u0027, reject); req.write(requestBody); req.end();\n});\nlet aiOutput = \u0027\u0027;\ntry { aiOutput = JSON.parse(result.body).content?.[0]?.text || \u0027No response.\u0027; } catch(e) { aiOutput = result.body.substring(0,500); }\nreturn [{ json: { aiOutput, fileName, status: result.status } }];"
+                                     },
+                      "id":  "d2bd1487-7cc0-4aa1-9c3f-90f7f86e18ba",
+                      "name":  "Call Claude",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       608,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst { aiOutput, fileName } = $input.first().json;\nconst timestamp = new Date().toISOString();\nconst outputPath = `/data/Aidan_Outputs/Jordan/Grant_Report_${timestamp.replace(/[:.]/g,\u0027-\u0027)}_${fileName.replace(/[^a-z0-9]/gi,\u0027_\u0027)}.txt`;\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Jordan\u0027, { recursive: true });\nfs.writeFileSync(outputPath, `JORDAN GRANT REPORT — EAF\\nFile: ${fileName}\\nGenerated: ${timestamp}\\n\\n${aiOutput}`, \u0027utf8\u0027);\n\n// Mark file as processed\nconst logPath = \u0027/data/Aidan_Outputs/Jordan/processed_files.json\u0027;\nlet processed = {};\ntry { processed = JSON.parse(fs.readFileSync(logPath, \u0027utf8\u0027)); } catch(e) { processed = {}; }\nprocessed[fileName] = timestamp;\nfs.writeFileSync(logPath, JSON.stringify(processed, null, 2), \u0027utf8\u0027);\n\nconst fitMatch = aiOutput.match(/FIT SCORE[*:\\s]+(\\d+)[/%]/i);\nconst fitScore = fitMatch ? fitMatch[1] + \u0027%\u0027 : \u0027See report\u0027;\nconst funderMatch = aiOutput.match(/FUNDER[*:\\s|]+([^\\n|]+)/i);\nconst funder = funderMatch ? funderMatch[1].trim().replace(/\\*/g,\u0027\u0027).substring(0,40) : \u0027See report\u0027;\nconst actionMatch = aiOutput.match(/RECOMMENDED ACTION[*:\\s|]+([^\\n|]+)/i);\nconst action = actionMatch ? actionMatch[1].trim().replace(/\\*/g,\u0027\u0027) : \u0027Review report\u0027;\nconst summary = `JORDAN GRANT ANALYSIS COMPLETE\\nFile: ${fileName}\\nFunder: ${funder}\\nFit: ${fitScore}\\nAction: ${action}\\nSaved: /data/Aidan_Outputs/Jordan/`;\nreturn [{ json: { summary, outputPath, fileName, fitScore, timestamp } }];"
+                                     },
+                      "id":  "0f7c74ef-b695-4cfe-b7ed-d36869367194",
+                      "name":  "Format + Save Report",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       816,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst { summary = \u0027Jordan complete.\u0027, fitScore, fileName } = $input.first().json;\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: \u0027Bot reply: \u0027 + summary } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(r =\u003e { const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\nconst cbBody = JSON.stringify({ agent: \u0027Jordan\u0027, summary, fitScore, fileName, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,()=\u003e{}); }); cbReq.on(\u0027error\u0027,()=\u003e{}); cbReq.write(cbBody); cbReq.end();\nreturn [{ json: { success: true, agent: \u0027Jordan\u0027, summary } }];"
+                                     },
+                      "id":  "dc7d2135-fecd-4af3-af20-9007e34fccae",
+                      "name":  "Aidan Callback",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1040,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       1248,
+                                       160
+                                   ],
+                      "id":  "46dd9d7b-525c-4a98-a58e-6fdb6850411d",
+                      "name":  "Sticky Note"
+                  },
+                  {
+                      "parameters":  {
+                                         "fromEmail":  "kas@kevin-llc.com",
+                                         "toEmail":  "kas@kevin-llc.com",
+                                         "subject":  "Jordan Grant Report — {{ $json.fileName }}",
+                                         "emailFormat":  "text",
+                                         "text":  "=Jordan Grant Report — {{ $json.fileName }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.emailSend",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1040,
+                                       -16
+                                   ],
+                      "id":  "c3ef0aa4-a97e-4cb4-b725-6365c8b5ca1c",
+                      "name":  "Send an Outlook Email",
+                      "webhookId":  "7084dbee-d0ce-4e0e-90c2-4b064255b8f4",
+                      "credentials":  {
+                                          "smtp":  {
+                                                       "id":  "rbL5mC01kCLp42bA",
+                                                       "name":  "SMTP account"
+                                                   }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "getAll",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.microsoftOutlook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       144,
+                                       -160
+                                   ],
+                      "id":  "30c510ed-af2e-49a9-b8bb-44f547dc92f2",
+                      "name":  "Get many messages",
+                      "webhookId":  "d9ab1bb2-91c2-433c-98d0-64ae78db475d",
+                      "credentials":  {
+                                          "microsoftOutlookOAuth2Api":  {
+                                                                            "id":  "0eGeW5BDdiFxq6iI",
+                                                                            "name":  "Microsoft Outlook account"
+                                                                        }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "Daily Trigger 7AM":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Load Context + Grant Files",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Load Context + Grant Files",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Load Context + Grant Files":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Build Grant Prompt",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Build Grant Prompt":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Call Claude",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Call Claude":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Format + Save Report",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Format + Save Report":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Aidan Callback",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      },
+                                                                      {
+                                                                          "node":  "Send an Outlook Email",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  {
+                       "node:Daily Trigger 7AM":  {
+                                                      "recurrenceRules":  [
+
+                                                                          ]
+                                                  }
+                   },
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "pinData":  {
+                    "Send an Outlook Email":  [
+                                                  {
+                                                      "json":  {
+                                                                   "name":  "First item",
+                                                                   "code":  1
+                                                               }
+                                                  },
+                                                  {
+                                                      "json":  {
+                                                                   "name":  "Second item",
+                                                                   "code":  2
+                                                               }
+                                                  }
+                                              ]
+                },
+    "versionId":  "edcb81ca-a354-4412-b09a-67cf8309b9c3",
+    "activeVersionId":  null,
+    "versionCounter":  127,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-12T16:00:01.700Z",
+                       "createdAt":  "2026-04-12T16:00:01.700Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "iN3WePB1EBZ2N3I7",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T15:13:13.538Z",
+                     "createdAt":  "2026-04-09T15:13:13.538Z",
+                     "id":  "YqR9uqqugHNuyxjk",
+                     "name":  "Jordan"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.386Z",
+                     "createdAt":  "2026-04-07T01:42:36.386Z",
+                     "id":  "fOXzlv2oWtmBB9Cx",
+                     "name":  "EAF"
+                 }
+             ],
+    "activeVersion":  null
+}

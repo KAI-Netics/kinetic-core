@@ -1,0 +1,279 @@
+﻿{
+    "updatedAt":  "2026-04-29T23:32:18.296Z",
+    "createdAt":  "2026-04-22T02:07:15.541Z",
+    "id":  "7JfD9oI2ZFMHAhlS",
+    "name":  "Aidan - WhatsApp Bridge v2",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "whatsapp-inbound",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "id":  "dcb6efa0-78b0-4455-88bd-5f243f111620",
+                      "name":  "Webhook Trigger",
+                      "webhookId":  "58cf22c1-34c6-4dbe-b076-445b2c77b7bf"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const raw = $input.first().json;\nconst event = raw.event || raw.body?.event || \u0027no-event\u0027;\nconst data = raw.data || raw.body?.data || {};\nconst msgText = data.message?.conversation || data.message?.extendedTextMessage?.text || \u0027\u0027;\nconst t = msgText.toLowerCase().trim();\nif (event !== \u0027messages.upsert\u0027) return [{ json: { reply: \u0027skip\u0027, phoneNumber: \u002714432576836@s.whatsapp.net\u0027, skip: true } }];\nif (t.includes(\u0027bot reply:\u0027)) return [{ json: { reply: \u0027skip\u0027, phoneNumber: \u002714432576836@s.whatsapp.net\u0027, skip: true } }];\nconst agents = [\u0027aidan\u0027,\u0027jordan\u0027,\u0027scout\u0027,\u0027iris\u0027,\u0027atlas\u0027,\u0027nova\u0027,\u0027sage\u0027,\u0027pulse\u0027,\u0027orchestra\u0027];\nif (!t || !agents.some(function(a) { return t.startsWith(a); })) return [{ json: { reply: \u0027skip\u0027, phoneNumber: \u002714432576836@s.whatsapp.net\u0027, skip: true } }];\nconst from = data.key?.remoteJid || data.remoteJid || \u002714432576836@s.whatsapp.net\u0027;\nlet reply = \u0027\u0027;\nconst http = require(\u0027http\u0027);\nconst fs = require(\u0027fs\u0027);\n\nconst fireWebhook = async function(path, payload) {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: path, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(bodyStr) } };\n  await new Promise(function(r) { const req = http.request(opts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(bodyStr); req.end(); });\n};\n\nconst sendWhatsApp = async function(text, number) {\n  const chunks = [];\n  for (let i = 0; i \u003c text.length; i += 3800) chunks.push(text.substring(i, i + 3800));\n  for (let i = 0; i \u003c chunks.length; i++) {\n    const mb = JSON.stringify({ number: number, textMessage: { text: chunks[i] } });\n    const wo = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(mb) } };\n    await new Promise(function(r) { const req = http.request(wo, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(mb); req.end(); });\n    if (chunks.length \u003e 1) await new Promise(function(r) { setTimeout(r, 1000); });\n  }\n};\n\nif (t.startsWith(\u0027orchestra\u0027)) {\n  const query = t.replace(/^orchestra[,\\s]*/i,\u0027\u0027).trim() || \u0027Full platform status -- compliance, BD targets, grants, income opportunities\u0027;\n  await fireWebhook(\u0027/webhook/aidan-orchestra\u0027, { query: query, from: from });\n  reply = \u0027Bot reply: ORCHESTRA INITIATED\\nFiring: Atlas + Scout + Jordan + Iris\\nQuery: \u0027 + query.substring(0,80) + \u0027\\n\\nConsolidated brief incoming ~90 seconds.\u0027;\n\n} else if (t.startsWith(\u0027aidan\u0027)) {\n  const cmd = t.replace(/^aidan[,\\s]*/i,\u0027\u0027).trim();\n  if (cmd === \u0027help\u0027 || cmd === \u0027?\u0027) {\n    reply = \u0027Bot reply: AIDAN v2 Commands\\n\\nAgents:\\n* Atlas SBIR/MEIA/MONK/BVLOS/V1-V7/Kott prep\\n* Scout [target]\\n* Jordan grant\\n* Iris deadlines\\n* Nova [rfp text]\\n* Sage board | Sage market\\n* Pulse\\n\\nOrchestration:\\n* Orchestra [query] -- fires ALL agents\\n\\nNewsletter Approval:\\n* Sage send board -- sends EAF board newsletter\\n* Sage send market -- sends FP market newsletter\\n\\nBriefings:\\n* Aidan summary | Aidan status | Aidan help\u0027;\n  } else if (cmd === \u0027summary\u0027) {\n    try {\n      const orchDir = \u0027/data/Aidan_Outputs/Orchestra/\u0027;\n      const files = fs.readdirSync(orchDir).filter(function(f) { return f.startsWith(\u0027Brief_\u0027) \u0026\u0026 f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n      if (files.length === 0) {\n        reply = \u0027Bot reply: No consolidated brief found yet. Say Orchestra to generate one.\u0027;\n      } else {\n        const content = fs.readFileSync(orchDir + files[0], \u0027utf8\u0027);\n        const ts = files[0].replace(\u0027Brief_\u0027,\u0027\u0027).replace(\u0027.txt\u0027,\u0027\u0027).replace(/T/,\u0027 \u0027).substring(0,16);\n        const fullMsg = \u0027Bot reply: AIDAN SUMMARY\\nBrief: \u0027 + ts + \u0027 UTC\\n\\n\u0027 + content;\n        await sendWhatsApp(fullMsg, from);\n        return [{ json: { reply: \u0027skip\u0027, phoneNumber: from, skip: true } }];\n      }\n    } catch(e) {\n      reply = \u0027Bot reply: Error reading summary: \u0027 + e.message;\n    }\n  } else if (cmd.includes(\u0027brief\u0027) || cmd.includes(\u0027status\u0027) || cmd.includes(\u0027morning\u0027)) {\n    reply = \u0027Bot reply: \u0027 + new Date().toLocaleString(\u0027en-US\u0027,{timeZone:\u0027America/New_York\u0027}) + \u0027 EST\\nAidan v2 online.\\nAgents: Atlas + Scout + Jordan + Iris + Nova + Sage + Pulse\\nSay Orchestra to fire all. Say Aidan help for menu.\u0027;\n  } else {\n    reply = \u0027Bot reply: Aidan received: \u0027 + cmd + \u0027\\nSay Aidan help for full command menu.\u0027;\n  }\n\n} else if (t.startsWith(\u0027jordan\u0027)) {\n  const cmd = t.replace(/^jordan[,\\s]*/i,\u0027\u0027).trim();\n  if (cmd.includes(\u0027grant detail\u0027) || cmd.includes(\u0027grant report\u0027)) {\n    try {\n      const files = fs.readdirSync(\u0027/data/Aidan_Outputs/Jordan/\u0027).filter(function(f) { return f.startsWith(\u0027Grant_Report\u0027); }).sort().reverse();\n      if (files.length \u003e 0) {\n        const rpt = fs.readFileSync(\u0027/data/Aidan_Outputs/Jordan/\u0027 + files[0], \u0027utf8\u0027);\n        reply = \u0027Bot reply: \u0027 + rpt.substring(0,3500) + \u0027\\n(full report in Aidan_Outputs/Jordan)\u0027;\n      } else reply = \u0027Bot reply: No grant reports found. Say Jordan grant to run analysis.\u0027;\n    } catch(e) { reply = \u0027Bot reply: Error reading reports: \u0027 + e.message; }\n  } else {\n    await fireWebhook(\u0027/webhook/grant-writer\u0027, { trigger: \u0027whatsapp\u0027, from: from });\n    reply = \u0027Bot reply: Jordan Grant Writer running. Report ready ~45 seconds.\u0027;\n  }\n\n} else if (t.startsWith(\u0027scout\u0027)) {\n  const cmd = t.replace(/^scout[,\\s]*/i,\u0027\u0027).trim() || \u0027Maryland drone infrastructure inspection contracts 2026\u0027;\n  await fireWebhook(\u0027/webhook/scout-research\u0027, { query: cmd });\n  reply = \u0027Bot reply: Scout running BD research: \u0027 + cmd.substring(0,60) + \u0027\\nReport ready ~60 seconds.\u0027;\n\n} else if (t.startsWith(\u0027iris\u0027)) {\n  await fireWebhook(\u0027/webhook/iris-monitor\u0027, { trigger: \u0027whatsapp\u0027, from: from });\n  reply = \u0027Bot reply: Iris compliance check running... ~15 seconds.\u0027;\n\n} else if (t.startsWith(\u0027atlas\u0027)) {\n  const cmd = t.replace(/^atlas[,\\s]*/i,\u0027\u0027).trim();\n  const validCmds = [\u0027sbir\u0027,\u0027meia\u0027,\u0027monk\u0027,\u0027bvlos\u0027,\u0027kott prep\u0027,\u0027status\u0027,\u0027v1\u0027,\u0027v2\u0027,\u0027v3\u0027,\u0027v4\u0027,\u0027v5\u0027,\u0027v6\u0027,\u0027v7\u0027];\n  const matched = validCmds.find(function(c) { return cmd.toLowerCase().startsWith(c); });\n  const atlasCmd = \u0027Atlas \u0027 + (matched ? matched.toUpperCase() : cmd || \u0027status\u0027);\n  const detail = matched ? cmd.replace(new RegExp(matched,\u0027i\u0027),\u0027\u0027).trim() : cmd;\n  await fireWebhook(\u0027/webhook/atlas-architect\u0027, { command: atlasCmd, detail: detail || \u0027\u0027 });\n  reply = \u0027Bot reply: Atlas running: \u0027 + atlasCmd + \u0027\\nReport ready ~45 seconds.\u0027;\n\n} else if (t.startsWith(\u0027nova\u0027)) {\n  const cmd = t.replace(/^nova[,\\s]*/i,\u0027\u0027).trim();\n  if (cmd === \u0027send\u0027) {\n    try {\n      const files = fs.readdirSync(\u0027/data/Aidan_Outputs/Nova/\u0027).filter(function(f) { return f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n      if (files.length \u003e 0) {\n        const latest = fs.readFileSync(\u0027/data/Aidan_Outputs/Nova/\u0027 + files[0], \u0027utf8\u0027);\n        const subjectMatch = latest.match(/SUBJECT:([^\\n]+)/i);\n        const subject = subjectMatch ? subjectMatch[1].trim() : \u0027KAI-Netics Vendor Introduction\u0027;\n        reply = \u0027Bot reply: NOVA SEND acknowledged.\\nFile: \u0027 + files[0] + \u0027\\nSubject: \u0027 + subject + \u0027\\n\\nForward draft manually from kas@kevin-llc.com to procurement contact.\u0027;\n      } else {\n        reply = \u0027Bot reply: No Nova RFP reports found to send.\u0027;\n      }\n    } catch(e) { reply = \u0027Bot reply: Nova send error: \u0027 + e.message; }\n  } else if (cmd === \u0027skip\u0027) {\n    reply = \u0027Bot reply: NOVA SKIP recorded. RFP passed -- no action taken.\u0027;\n  } else if (cmd.length \u003e 10) {\n    await fireWebhook(\u0027/webhook/nova-rfp\u0027, { rfp_name: \u0027WhatsApp Manual RFP\u0027, agency: \u0027Unknown\u0027, rfp_text: cmd, source: \u0027whatsapp\u0027 });\n    reply = \u0027Bot reply: Nova RFP analysis running...\\nReport ready ~60 seconds.\u0027;\n  } else {\n    reply = \u0027Bot reply: Nova commands:\\n* Nova [rfp text] -- analyze RFP\\n* Nova send -- approve awareness draft\\n* Nova skip -- pass on latest RFP\u0027;\n  }\n\n} else if (t.startsWith(\u0027sage\u0027)) {\n  const cmd = t.replace(/^sage[,\\s]*/i,\u0027\u0027).trim();\n\n  if (cmd === \u0027send board\u0027 || cmd === \u0027sendboard\u0027) {\n    await fireWebhook(\u0027/webhook/sage-send-board\u0027, { type: \u0027board\u0027 });\n    reply = \u0027Bot reply: SAGE SEND BOARD fired.\\nEmailing board now:\\n* James L. Scott, Esq.\\n* Keith Millard\\n* Maurice Ellis\\n\\nConfirmation incoming ~15 seconds.\u0027;\n\n  } else if (cmd === \u0027send market\u0027 || cmd === \u0027sendmarket\u0027) {\n    await fireWebhook(\u0027/webhook/sage-send-market\u0027, { type: \u0027market\u0027 });\n    reply = \u0027Bot reply: SAGE SEND MARKET fired.\\nEmailing market list now.\\n\\nConfirmation incoming ~15 seconds.\u0027;\n\n  } else if (cmd === \u0027board\u0027 || cmd.includes(\u0027board newsletter\u0027)) {\n    await fireWebhook(\u0027/webhook/sage-newsletter\u0027, { type: \u0027board\u0027, source: \u0027whatsapp\u0027 });\n    reply = \u0027Bot reply: Sage drafting EAF Board Newsletter (Opus)...\\nPreview ready ~90 seconds.\\nReply SAGE SEND BOARD to approve and send.\u0027;\n\n  } else if (cmd === \u0027market\u0027 || cmd.includes(\u0027market newsletter\u0027)) {\n    await fireWebhook(\u0027/webhook/sage-newsletter\u0027, { type: \u0027market\u0027, source: \u0027whatsapp\u0027 });\n    reply = \u0027Bot reply: Sage drafting FP Market Newsletter (Opus)...\\nPreview ready ~90 seconds.\\nReply SAGE SEND MARKET to approve and send.\u0027;\n\n  } else if (cmd === \u0027both\u0027) {\n    await fireWebhook(\u0027/webhook/sage-newsletter\u0027, { type: \u0027both\u0027, source: \u0027whatsapp\u0027 });\n    reply = \u0027Bot reply: Sage drafting both newsletters (Opus)...\\nPreviews ready ~2 minutes.\u0027;\n\n  } else {\n    reply = \u0027Bot reply: Sage commands:\\n* Sage board -- draft EAF board newsletter\\n* Sage market -- draft FP market newsletter\\n* Sage both -- draft both\\n* Sage send board -- approve + email board\\n* Sage send market -- approve + email market list\u0027;\n  }\n\n} else if (t.startsWith(\u0027pulse\u0027)) {\n  await fireWebhook(\u0027/webhook/pulse-metrics\u0027, { trigger: \u0027whatsapp\u0027, from: from });\n  reply = \u0027Bot reply: Pulse running platform metrics...\\nDashboard ready ~20 seconds.\u0027;\n\n} else {\n  reply = \u0027Bot reply: Command not recognized. Say Aidan help for the full menu.\u0027;\n}\n\nreturn [{ json: { reply: reply, phoneNumber: from, skip: false } }];\n"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       0
+                                   ],
+                      "id":  "e4a96c74-cc71-4eb2-afd4-5751832d01bf",
+                      "name":  "Intent Router v2"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const input = $input.first().json;\nif (input.skip || !input.reply || input.reply === \u0027skip\u0027) return [{ json: { success: true, skipped: true } }];\nconst number = (input.phoneNumber || \u002714432576836@s.whatsapp.net\u0027).includes(\u0027@lid\u0027) ? \u002714432576836@s.whatsapp.net\u0027 : (input.phoneNumber || \u002714432576836@s.whatsapp.net\u0027);\nconst body = JSON.stringify({ number: number, textMessage: { text: input.reply } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(body) } };\nconst result = await new Promise(function(resolve, reject) {\n  const http = require(\u0027http\u0027);\n  const req = http.request(opts, function(res) { let d = \u0027\u0027; res.on(\u0027data\u0027, function(c) { d += c; }); res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode }); }); });\n  req.on(\u0027error\u0027, reject); req.write(body); req.end();\n});\nreturn [{ json: { success: true, result: result } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       0
+                                   ],
+                      "id":  "32d793f1-dffb-4a01-bfc5-d831c5538585",
+                      "name":  "WhatsApp Sender"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "text",
+                                         "responseBody":  "OK",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       672,
+                                       0
+                                   ],
+                      "id":  "3b07a3c0-cf7b-4afd-b11b-dec83103be0f",
+                      "name":  "Respond"
+                  }
+              ],
+    "connections":  {
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Intent Router v2",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Intent Router v2":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "WhatsApp Sender",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "WhatsApp Sender":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Respond",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "8ae85ce8-1f94-4982-8652-f478c4fdec9c",
+    "activeVersionId":  "8ae85ce8-1f94-4982-8652-f478c4fdec9c",
+    "versionCounter":  66,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-22T02:07:15.544Z",
+                       "createdAt":  "2026-04-22T02:07:15.544Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "7JfD9oI2ZFMHAhlS",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-09T15:18:19.773Z",
+                     "createdAt":  "2026-04-09T15:18:19.773Z",
+                     "id":  "0pAij6xUXjEjeLDr",
+                     "name":  "WhatsApp"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.295Z",
+                     "createdAt":  "2026-04-07T01:42:36.295Z",
+                     "id":  "B0QrEiqfwdS6WU2L",
+                     "name":  "Aidan"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-04-29T23:32:21.000Z",
+                          "createdAt":  "2026-04-29T23:32:01.838Z",
+                          "versionId":  "8ae85ce8-1f94-4982-8652-f478c4fdec9c",
+                          "workflowId":  "7JfD9oI2ZFMHAhlS",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "whatsapp-inbound",
+                                                               "responseMode":  "responseNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ],
+                                            "id":  "dcb6efa0-78b0-4455-88bd-5f243f111620",
+                                            "name":  "Webhook Trigger",
+                                            "webhookId":  "58cf22c1-34c6-4dbe-b076-445b2c77b7bf"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const raw = $input.first().json;\nconst event = raw.event || raw.body?.event || \u0027no-event\u0027;\nconst data = raw.data || raw.body?.data || {};\nconst msgText = data.message?.conversation || data.message?.extendedTextMessage?.text || \u0027\u0027;\nconst t = msgText.toLowerCase().trim();\nif (event !== \u0027messages.upsert\u0027) return [{ json: { reply: \u0027skip\u0027, phoneNumber: \u002714432576836@s.whatsapp.net\u0027, skip: true } }];\nif (t.includes(\u0027bot reply:\u0027)) return [{ json: { reply: \u0027skip\u0027, phoneNumber: \u002714432576836@s.whatsapp.net\u0027, skip: true } }];\nconst agents = [\u0027aidan\u0027,\u0027jordan\u0027,\u0027scout\u0027,\u0027iris\u0027,\u0027atlas\u0027,\u0027nova\u0027,\u0027sage\u0027,\u0027pulse\u0027,\u0027orchestra\u0027];\nif (!t || !agents.some(function(a) { return t.startsWith(a); })) return [{ json: { reply: \u0027skip\u0027, phoneNumber: \u002714432576836@s.whatsapp.net\u0027, skip: true } }];\nconst from = data.key?.remoteJid || data.remoteJid || \u002714432576836@s.whatsapp.net\u0027;\nlet reply = \u0027\u0027;\nconst http = require(\u0027http\u0027);\nconst fs = require(\u0027fs\u0027);\n\nconst fireWebhook = async function(path, payload) {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: path, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(bodyStr) } };\n  await new Promise(function(r) { const req = http.request(opts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(bodyStr); req.end(); });\n};\n\nconst sendWhatsApp = async function(text, number) {\n  const chunks = [];\n  for (let i = 0; i \u003c text.length; i += 3800) chunks.push(text.substring(i, i + 3800));\n  for (let i = 0; i \u003c chunks.length; i++) {\n    const mb = JSON.stringify({ number: number, textMessage: { text: chunks[i] } });\n    const wo = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(mb) } };\n    await new Promise(function(r) { const req = http.request(wo, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(mb); req.end(); });\n    if (chunks.length \u003e 1) await new Promise(function(r) { setTimeout(r, 1000); });\n  }\n};\n\nif (t.startsWith(\u0027orchestra\u0027)) {\n  const query = t.replace(/^orchestra[,\\s]*/i,\u0027\u0027).trim() || \u0027Full platform status -- compliance, BD targets, grants, income opportunities\u0027;\n  await fireWebhook(\u0027/webhook/aidan-orchestra\u0027, { query: query, from: from });\n  reply = \u0027Bot reply: ORCHESTRA INITIATED\\nFiring: Atlas + Scout + Jordan + Iris\\nQuery: \u0027 + query.substring(0,80) + \u0027\\n\\nConsolidated brief incoming ~90 seconds.\u0027;\n\n} else if (t.startsWith(\u0027aidan\u0027)) {\n  const cmd = t.replace(/^aidan[,\\s]*/i,\u0027\u0027).trim();\n  if (cmd === \u0027help\u0027 || cmd === \u0027?\u0027) {\n    reply = \u0027Bot reply: AIDAN v2 Commands\\n\\nAgents:\\n* Atlas SBIR/MEIA/MONK/BVLOS/V1-V7/Kott prep\\n* Scout [target]\\n* Jordan grant\\n* Iris deadlines\\n* Nova [rfp text]\\n* Sage board | Sage market\\n* Pulse\\n\\nOrchestration:\\n* Orchestra [query] -- fires ALL agents\\n\\nNewsletter Approval:\\n* Sage send board -- sends EAF board newsletter\\n* Sage send market -- sends FP market newsletter\\n\\nBriefings:\\n* Aidan summary | Aidan status | Aidan help\u0027;\n  } else if (cmd === \u0027summary\u0027) {\n    try {\n      const orchDir = \u0027/data/Aidan_Outputs/Orchestra/\u0027;\n      const files = fs.readdirSync(orchDir).filter(function(f) { return f.startsWith(\u0027Brief_\u0027) \u0026\u0026 f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n      if (files.length === 0) {\n        reply = \u0027Bot reply: No consolidated brief found yet. Say Orchestra to generate one.\u0027;\n      } else {\n        const content = fs.readFileSync(orchDir + files[0], \u0027utf8\u0027);\n        const ts = files[0].replace(\u0027Brief_\u0027,\u0027\u0027).replace(\u0027.txt\u0027,\u0027\u0027).replace(/T/,\u0027 \u0027).substring(0,16);\n        const fullMsg = \u0027Bot reply: AIDAN SUMMARY\\nBrief: \u0027 + ts + \u0027 UTC\\n\\n\u0027 + content;\n        await sendWhatsApp(fullMsg, from);\n        return [{ json: { reply: \u0027skip\u0027, phoneNumber: from, skip: true } }];\n      }\n    } catch(e) {\n      reply = \u0027Bot reply: Error reading summary: \u0027 + e.message;\n    }\n  } else if (cmd.includes(\u0027brief\u0027) || cmd.includes(\u0027status\u0027) || cmd.includes(\u0027morning\u0027)) {\n    reply = \u0027Bot reply: \u0027 + new Date().toLocaleString(\u0027en-US\u0027,{timeZone:\u0027America/New_York\u0027}) + \u0027 EST\\nAidan v2 online.\\nAgents: Atlas + Scout + Jordan + Iris + Nova + Sage + Pulse\\nSay Orchestra to fire all. Say Aidan help for menu.\u0027;\n  } else {\n    reply = \u0027Bot reply: Aidan received: \u0027 + cmd + \u0027\\nSay Aidan help for full command menu.\u0027;\n  }\n\n} else if (t.startsWith(\u0027jordan\u0027)) {\n  const cmd = t.replace(/^jordan[,\\s]*/i,\u0027\u0027).trim();\n  if (cmd.includes(\u0027grant detail\u0027) || cmd.includes(\u0027grant report\u0027)) {\n    try {\n      const files = fs.readdirSync(\u0027/data/Aidan_Outputs/Jordan/\u0027).filter(function(f) { return f.startsWith(\u0027Grant_Report\u0027); }).sort().reverse();\n      if (files.length \u003e 0) {\n        const rpt = fs.readFileSync(\u0027/data/Aidan_Outputs/Jordan/\u0027 + files[0], \u0027utf8\u0027);\n        reply = \u0027Bot reply: \u0027 + rpt.substring(0,3500) + \u0027\\n(full report in Aidan_Outputs/Jordan)\u0027;\n      } else reply = \u0027Bot reply: No grant reports found. Say Jordan grant to run analysis.\u0027;\n    } catch(e) { reply = \u0027Bot reply: Error reading reports: \u0027 + e.message; }\n  } else {\n    await fireWebhook(\u0027/webhook/grant-writer\u0027, { trigger: \u0027whatsapp\u0027, from: from });\n    reply = \u0027Bot reply: Jordan Grant Writer running. Report ready ~45 seconds.\u0027;\n  }\n\n} else if (t.startsWith(\u0027scout\u0027)) {\n  const cmd = t.replace(/^scout[,\\s]*/i,\u0027\u0027).trim() || \u0027Maryland drone infrastructure inspection contracts 2026\u0027;\n  await fireWebhook(\u0027/webhook/scout-research\u0027, { query: cmd });\n  reply = \u0027Bot reply: Scout running BD research: \u0027 + cmd.substring(0,60) + \u0027\\nReport ready ~60 seconds.\u0027;\n\n} else if (t.startsWith(\u0027iris\u0027)) {\n  await fireWebhook(\u0027/webhook/iris-monitor\u0027, { trigger: \u0027whatsapp\u0027, from: from });\n  reply = \u0027Bot reply: Iris compliance check running... ~15 seconds.\u0027;\n\n} else if (t.startsWith(\u0027atlas\u0027)) {\n  const cmd = t.replace(/^atlas[,\\s]*/i,\u0027\u0027).trim();\n  const validCmds = [\u0027sbir\u0027,\u0027meia\u0027,\u0027monk\u0027,\u0027bvlos\u0027,\u0027kott prep\u0027,\u0027status\u0027,\u0027v1\u0027,\u0027v2\u0027,\u0027v3\u0027,\u0027v4\u0027,\u0027v5\u0027,\u0027v6\u0027,\u0027v7\u0027];\n  const matched = validCmds.find(function(c) { return cmd.toLowerCase().startsWith(c); });\n  const atlasCmd = \u0027Atlas \u0027 + (matched ? matched.toUpperCase() : cmd || \u0027status\u0027);\n  const detail = matched ? cmd.replace(new RegExp(matched,\u0027i\u0027),\u0027\u0027).trim() : cmd;\n  await fireWebhook(\u0027/webhook/atlas-architect\u0027, { command: atlasCmd, detail: detail || \u0027\u0027 });\n  reply = \u0027Bot reply: Atlas running: \u0027 + atlasCmd + \u0027\\nReport ready ~45 seconds.\u0027;\n\n} else if (t.startsWith(\u0027nova\u0027)) {\n  const cmd = t.replace(/^nova[,\\s]*/i,\u0027\u0027).trim();\n  if (cmd === \u0027send\u0027) {\n    try {\n      const files = fs.readdirSync(\u0027/data/Aidan_Outputs/Nova/\u0027).filter(function(f) { return f.endsWith(\u0027.txt\u0027); }).sort().reverse();\n      if (files.length \u003e 0) {\n        const latest = fs.readFileSync(\u0027/data/Aidan_Outputs/Nova/\u0027 + files[0], \u0027utf8\u0027);\n        const subjectMatch = latest.match(/SUBJECT:([^\\n]+)/i);\n        const subject = subjectMatch ? subjectMatch[1].trim() : \u0027KAI-Netics Vendor Introduction\u0027;\n        reply = \u0027Bot reply: NOVA SEND acknowledged.\\nFile: \u0027 + files[0] + \u0027\\nSubject: \u0027 + subject + \u0027\\n\\nForward draft manually from kas@kevin-llc.com to procurement contact.\u0027;\n      } else {\n        reply = \u0027Bot reply: No Nova RFP reports found to send.\u0027;\n      }\n    } catch(e) { reply = \u0027Bot reply: Nova send error: \u0027 + e.message; }\n  } else if (cmd === \u0027skip\u0027) {\n    reply = \u0027Bot reply: NOVA SKIP recorded. RFP passed -- no action taken.\u0027;\n  } else if (cmd.length \u003e 10) {\n    await fireWebhook(\u0027/webhook/nova-rfp\u0027, { rfp_name: \u0027WhatsApp Manual RFP\u0027, agency: \u0027Unknown\u0027, rfp_text: cmd, source: \u0027whatsapp\u0027 });\n    reply = \u0027Bot reply: Nova RFP analysis running...\\nReport ready ~60 seconds.\u0027;\n  } else {\n    reply = \u0027Bot reply: Nova commands:\\n* Nova [rfp text] -- analyze RFP\\n* Nova send -- approve awareness draft\\n* Nova skip -- pass on latest RFP\u0027;\n  }\n\n} else if (t.startsWith(\u0027sage\u0027)) {\n  const cmd = t.replace(/^sage[,\\s]*/i,\u0027\u0027).trim();\n\n  if (cmd === \u0027send board\u0027 || cmd === \u0027sendboard\u0027) {\n    await fireWebhook(\u0027/webhook/sage-send-board\u0027, { type: \u0027board\u0027 });\n    reply = \u0027Bot reply: SAGE SEND BOARD fired.\\nEmailing board now:\\n* James L. Scott, Esq.\\n* Keith Millard\\n* Maurice Ellis\\n\\nConfirmation incoming ~15 seconds.\u0027;\n\n  } else if (cmd === \u0027send market\u0027 || cmd === \u0027sendmarket\u0027) {\n    await fireWebhook(\u0027/webhook/sage-send-market\u0027, { type: \u0027market\u0027 });\n    reply = \u0027Bot reply: SAGE SEND MARKET fired.\\nEmailing market list now.\\n\\nConfirmation incoming ~15 seconds.\u0027;\n\n  } else if (cmd === \u0027board\u0027 || cmd.includes(\u0027board newsletter\u0027)) {\n    await fireWebhook(\u0027/webhook/sage-newsletter\u0027, { type: \u0027board\u0027, source: \u0027whatsapp\u0027 });\n    reply = \u0027Bot reply: Sage drafting EAF Board Newsletter (Opus)...\\nPreview ready ~90 seconds.\\nReply SAGE SEND BOARD to approve and send.\u0027;\n\n  } else if (cmd === \u0027market\u0027 || cmd.includes(\u0027market newsletter\u0027)) {\n    await fireWebhook(\u0027/webhook/sage-newsletter\u0027, { type: \u0027market\u0027, source: \u0027whatsapp\u0027 });\n    reply = \u0027Bot reply: Sage drafting FP Market Newsletter (Opus)...\\nPreview ready ~90 seconds.\\nReply SAGE SEND MARKET to approve and send.\u0027;\n\n  } else if (cmd === \u0027both\u0027) {\n    await fireWebhook(\u0027/webhook/sage-newsletter\u0027, { type: \u0027both\u0027, source: \u0027whatsapp\u0027 });\n    reply = \u0027Bot reply: Sage drafting both newsletters (Opus)...\\nPreviews ready ~2 minutes.\u0027;\n\n  } else {\n    reply = \u0027Bot reply: Sage commands:\\n* Sage board -- draft EAF board newsletter\\n* Sage market -- draft FP market newsletter\\n* Sage both -- draft both\\n* Sage send board -- approve + email board\\n* Sage send market -- approve + email market list\u0027;\n  }\n\n} else if (t.startsWith(\u0027pulse\u0027)) {\n  await fireWebhook(\u0027/webhook/pulse-metrics\u0027, { trigger: \u0027whatsapp\u0027, from: from });\n  reply = \u0027Bot reply: Pulse running platform metrics...\\nDashboard ready ~20 seconds.\u0027;\n\n} else {\n  reply = \u0027Bot reply: Command not recognized. Say Aidan help for the full menu.\u0027;\n}\n\nreturn [{ json: { reply: reply, phoneNumber: from, skip: false } }];\n"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             224,
+                                                             0
+                                                         ],
+                                            "id":  "e4a96c74-cc71-4eb2-afd4-5751832d01bf",
+                                            "name":  "Intent Router v2"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const input = $input.first().json;\nif (input.skip || !input.reply || input.reply === \u0027skip\u0027) return [{ json: { success: true, skipped: true } }];\nconst number = (input.phoneNumber || \u002714432576836@s.whatsapp.net\u0027).includes(\u0027@lid\u0027) ? \u002714432576836@s.whatsapp.net\u0027 : (input.phoneNumber || \u002714432576836@s.whatsapp.net\u0027);\nconst body = JSON.stringify({ number: number, textMessage: { text: input.reply } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(body) } };\nconst result = await new Promise(function(resolve, reject) {\n  const http = require(\u0027http\u0027);\n  const req = http.request(opts, function(res) { let d = \u0027\u0027; res.on(\u0027data\u0027, function(c) { d += c; }); res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode }); }); });\n  req.on(\u0027error\u0027, reject); req.write(body); req.end();\n});\nreturn [{ json: { success: true, result: result } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             448,
+                                                             0
+                                                         ],
+                                            "id":  "32d793f1-dffb-4a01-bfc5-d831c5538585",
+                                            "name":  "WhatsApp Sender"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "respondWith":  "text",
+                                                               "responseBody":  "OK",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.respondToWebhook",
+                                            "typeVersion":  1.5,
+                                            "position":  [
+                                                             672,
+                                                             0
+                                                         ],
+                                            "id":  "3b07a3c0-cf7b-4afd-b11b-dec83103be0f",
+                                            "name":  "Respond"
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Webhook Trigger":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Intent Router v2",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Intent Router v2":  {
+                                                                       "main":  [
+                                                                                    [
+                                                                                        {
+                                                                                            "node":  "WhatsApp Sender",
+                                                                                            "type":  "main",
+                                                                                            "index":  0
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                   },
+                                              "WhatsApp Sender":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Respond",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version 8ae85ce8",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-04-29T23:32:21.192Z",
+                                                             "id":  408,
+                                                             "workflowId":  "7JfD9oI2ZFMHAhlS",
+                                                             "versionId":  "8ae85ce8-1f94-4982-8652-f478c4fdec9c",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

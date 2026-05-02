@@ -1,0 +1,421 @@
+﻿{
+    "updatedAt":  "2026-05-02T11:58:57.603Z",
+    "createdAt":  "2026-04-21T22:13:32.014Z",
+    "id":  "SVzmB2AzqiyGtsJF",
+    "name":  "Nova - RFP Intelligence Agent",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "nova-rfp",
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "034b082a-e66c-4f0b-b6c1-c07cf945b082",
+                      "name":  "Webhook Trigger",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "webhookId":  "kai-nova-rfp"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const input = $input.first().json;\nconst body = input.body || input;\nconst rfpText = String(body.rfp_text || body.text || body.email_body || \u0027\u0027);\nconst rfpName = String(body.rfp_name || body.subject || body.rfx_name || \u0027Manual RFP\u0027);\nconst agency = String(body.agency || body.from || \u0027Unknown Agency\u0027);\nconst bpmId = String(body.bpm_id || body.rfx_id || \u0027\u0027);\nconst deadline = String(body.deadline || body.end_date || \u0027\u0027);\nconst commodity = String(body.commodity || body.main_commodity || \u0027\u0027);\nconst source = String(body.source || \u0027manual\u0027);\nif (!rfpText || rfpText.length \u003c 10) {\n  return [{ json: {\n    error: true,\n    message: \u0027No RFP content provided. Send rfp_text in the request body.\u0027,\n    rfpName: rfpName\n  }}];\n}\nconst crypto = require(\u0027crypto\u0027);\nconst contentHash = crypto.createHash(\u0027md5\u0027).update(rfpText.substring(0, 500) + agency).digest(\u0027hex\u0027);\nconst https_exec = require(\u0027https\u0027);\nconst supabase_url_exec = $env.SUPABASE_URL || \u0027\u0027;\nconst supabase_key_exec = $env.SUPABASE_SERVICE_KEY || \u0027\u0027;\nconst hostname_exec = supabase_url_exec.replace(\u0027https://\u0027, \u0027\u0027).replace(\u0027http://\u0027, \u0027\u0027);\nlet executionId = null;\ntry {\n  const execRecord = JSON.stringify({\n    agent: \u0027Nova\u0027,\n    trigger_type: \u0027webhook\u0027,\n    status: \u0027success\u0027,\n    workflow_version: \u0027v1\u0027,\n    notes: \u0027rfp:\u0027 + rfpName.substring(0, 80) + \u0027 | agency:\u0027 + agency.substring(0, 50)\n  });\n  const execResult = await new Promise(function(resolve, reject) {\n    const req = https_exec.request({\n      hostname: hostname_exec, port: 443,\n      path: \u0027/rest/v1/agent_executions\u0027,\n      method: \u0027POST\u0027,\n      headers: {\n        \u0027Content-Type\u0027: \u0027application/json\u0027,\n        \u0027apikey\u0027: supabase_key_exec,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + supabase_key_exec,\n        \u0027Prefer\u0027: \u0027return=representation\u0027,\n        \u0027Content-Length\u0027: Buffer.byteLength(execRecord)\n      }\n    }, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n    });\n    req.on(\u0027error\u0027, reject);\n    req.write(execRecord);\n    req.end();\n  });\n  if (execResult.status === 201) {\n    const rows = JSON.parse(execResult.body);\n    executionId = rows \u0026\u0026 rows[0] ? rows[0].id : null;\n  }\n} catch(e) {}\nreturn [{ json: {\n  rfpText: rfpText,\n  rfpName: rfpName,\n  agency: agency,\n  bpmId: bpmId,\n  deadline: deadline,\n  commodity: commodity,\n  source: source,\n  contentHash: contentHash,\n  executionId: executionId,\n  timestamp: new Date().toISOString()\n}}];"
+                                     },
+                      "id":  "49ef01db-1a91-41dc-8043-45474006c6a5",
+                      "name":  "Parse RFP Input",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\n\nif (input.error) {\n  return [{ json: input }];\n}\n\nconst SUPABASE_URL = \u0027raxpmeltyxmtiihxoxpa.supabase.co\u0027;\nconst SUPABASE_KEY = \u0027sb_secret_Jz8T31FHgqpfOrqijr1qtQ_HcbbZ8Nu\u0027;\n\n// Check if we already processed this RFP\ntry {\n  const result = await new Promise(function(resolve, reject) {\n    const path = \u0027/rest/v1/rfp_responses?content_hash=eq.\u0027 + input.contentHash + \u0027\u0026select=id,rfp_name,fit_score,kevin_decision\u0027;\n    const req = https.request({\n      hostname: SUPABASE_URL,\n      port: 443,\n      path: path,\n      method: \u0027GET\u0027,\n      headers: {\n        \u0027apikey\u0027: SUPABASE_KEY,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n        \u0027Content-Type\u0027: \u0027application/json\u0027\n      }\n    }, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n    });\n    req.on(\u0027error\u0027, reject);\n    req.end();\n  });\n\n  if (result.status === 200) {\n    const existing = JSON.parse(result.body);\n    if (existing \u0026\u0026 existing.length \u003e 0) {\n      const out = {};\n      const keys = Object.keys(input);\n      for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n      out.duplicate = true;\n      out.existingRecord = existing[0];\n      return [{ json: out }];\n    }\n  }\n} catch(e) {\n  // if dedup check fails, proceed anyway\n}\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.duplicate = false;\nreturn [{ json: out }];"
+                                     },
+                      "id":  "7c67b12f-6795-4e29-b929-9418660ba1f4",
+                      "name":  "Deduplicate Check",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\n\nif (input.error || input.duplicate) {\n  return [{ json: input }];\n}\n\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) { ctx = {}; }\n\nconst founder = ctx.founder || {};\nconst entities = ctx.entities || {};\nconst naics = ctx.naics || {};\n\nconst AGENCY_WATCHLIST = [\n  \u0027mdsha\u0027, \u0027sha.maryland\u0027, \u0027state highway\u0027,\n  \u0027mta\u0027, \u0027transit\u0027, \u0027wmata\u0027,\n  \u0027baltimore city\u0027, \u0027baltimorecity\u0027,\n  \u0027bge\u0027, \u0027pepco\u0027, \u0027smeco\u0027, \u0027utility\u0027,\n  \u0027mdot\u0027, \u0027department of transportation\u0027,\n  \u0027mema\u0027, \u0027emergency management\u0027,\n  \u0027anne arundel\u0027, \u0027howard county\u0027, \u0027prince george\u0027,\n  \u0027nih\u0027, \u0027hhs\u0027, \u0027hrsa\u0027, \u0027cms\u0027,\n  \u0027fema\u0027, \u0027dhs\u0027, \u0027cisa\u0027,\n  \u0027umms\u0027, \u0027university of maryland\u0027, \u0027johns hopkins\u0027, \u0027medstar\u0027,\n  \u0027usda\u0027, \u0027rural development\u0027,\n  \u0027emma\u0027, \u0027maryland.gov\u0027\n];\n\nconst agencyLower = input.agency.toLowerCase();\nconst rfpLower = input.rfpText.toLowerCase();\nconst onWatchlist = AGENCY_WATCHLIST.some(function(w) {\n  return agencyLower.indexOf(w) !== -1 || rfpLower.indexOf(w) !== -1;\n});\n\nconst naicsList = (naics.registered || []).map(function(n) { return n.code + \u0027 \u0027 + n.description; }).join(\u0027, \u0027);\n\nconst systemMessage = \u0027You are Nova, RFP Intelligence Agent for KAI-Netics. Analyze procurement opportunities and score them for fit. Be precise and decisive. Never fabricate contacts or requirements.\u0027;\n\nconst userMessage = \u0027Analyze this RFP/RFI for KAI-Netics.\\n\\n\u0027 +\n  \u0027RFP NAME: \u0027 + input.rfpName + \u0027\\n\u0027 +\n  \u0027AGENCY: \u0027 + input.agency + \u0027\\n\u0027 +\n  \u0027COMMODITY: \u0027 + input.commodity + \u0027\\n\u0027 +\n  \u0027DEADLINE: \u0027 + input.deadline + \u0027\\n\\n\u0027 +\n  \u0027RFP CONTENT:\\n\u0027 + input.rfpText.substring(0, 3000) + \u0027\\n\\n\u0027 +\n  \u0027KAI-NETICS PROFILE:\\n\u0027 +\n  \u0027Founder: \u0027 + founder.name + \u0027 | \u0027 + (founder.credentials || []).join(\u0027, \u0027) + \u0027\\n\u0027 +\n  \u0027Entity FP: \u0027 + (entities.FP \u0026\u0026 entities.FP.name ? entities.FP.name : \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027Entity EAF: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.name ? entities.EAF.name : \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027NAICS Registered: \u0027 + naicsList + \u0027\\n\u0027 +\n  \u0027Capabilities: Commercial drone operations (FAA Part 107), infrastructure inspection, cybersecurity consulting (CISSP), workforce development (EAF/CAKO), MONK hardware trust layer\\n\\n\u0027 +\n  \u0027Produce this EXACT format:\\n\\n\u0027 +\n  \u0027OPPORTUNITY SUMMARY:\\n[Agency, value if stated, type RFI/RFP/RFQ, deadline]\\n\\n\u0027 +\n  \u0027NAICS ALIGNMENT:\\n[Does it match 541519, 488190, or 541690? Yes/No with reason]\\n\\n\u0027 +\n  \u0027FIT SCORE: [0-100]\\n\\n\u0027 +\n  \u0027GO/NO-GO: [GO / NO-GO / AWARENESS]\\n\u0027 +\n  \u0027GO = score 70+ and direct capability match\\n\u0027 +\n  \u0027AWARENESS = score 30-69 OR agency on watchlist but low fit\\n\u0027 +\n  \u0027NO-GO = score below 30 and agency not on watchlist\\n\\n\u0027 +\n  \u0027RATIONALE:\\n[2-3 sentences explaining score]\\n\\n\u0027 +\n  \u0027COMPLIANCE FLAGS:\\n[SAM.gov UEI required? Bonding? Insurance minimums? NDAA?]\\n\\n\u0027 +\n  \u0027TEAMING RECOMMENDATION:\\n[Prime or sub? Suggested partners from: RK\u0026K, JMT, Mobley \u0026 Brown]\\n\\n\u0027 +\n  \u0027WIN THEMES:\\n1.\\n2.\\n3.\\n\\n\u0027 +\n  \u0027IMMEDIATE NEXT ACTIONS:\\n1. [action | owner | deadline]\\n2. [action | owner | deadline]\\n3. [action | owner | deadline]\u0027;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-sonnet-4-6\u0027,\n  max_tokens: 2048,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request({\n    hostname: \u0027api.anthropic.com\u0027,\n    port: 443,\n    path: \u0027/v1/messages\u0027,\n    method: \u0027POST\u0027,\n    headers: {\n      \u0027Content-Type\u0027: \u0027application/json\u0027,\n      \u0027x-api-key\u0027: \u0027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\u0027,\n      \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n      \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n    }\n  }, function(res) {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, function(c) { d += c; });\n    res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet analysis = \u0027\u0027;\ntry { analysis = JSON.parse(result.body).content[0].text || \u0027No response.\u0027; } catch(e) { analysis = result.body.substring(0, 500); }\n\nlet fitScore = null;\nconst lines = analysis.split(\u0027\\n\u0027);\nfor (let i = 0; i \u003c lines.length; i++) {\n  if (lines[i].toUpperCase().indexOf(\u0027FIT SCORE\u0027) !== -1) {\n    const nums = lines[i].match(/\\d+/);\n    if (nums) { fitScore = parseInt(nums[0]); break; }\n  }\n}\n\nlet goNoGo = \u0027AWARENESS\u0027;\nfor (let i = 0; i \u003c lines.length; i++) {\n  const line = lines[i].toUpperCase();\n  if (line.indexOf(\u0027GO/NO-GO\u0027) !== -1 || line.indexOf(\u0027GO NO GO\u0027) !== -1) {\n    if (lines[i].indexOf(\u0027NO-GO\u0027) !== -1 || lines[i].indexOf(\u0027NO GO\u0027) !== -1) { goNoGo = \u0027NO-GO\u0027; }\n    else if (lines[i].indexOf(\u0027AWARENESS\u0027) !== -1) { goNoGo = \u0027AWARENESS\u0027; }\n    else if (lines[i].indexOf(\u0027GO\u0027) !== -1) { goNoGo = \u0027GO\u0027; }\n    break;\n  }\n}\n\n// Override: if agency on watchlist and score \u003e= 30, minimum AWARENESS\nif (onWatchlist \u0026\u0026 goNoGo === \u0027NO-GO\u0027) {\n  goNoGo = \u0027AWARENESS\u0027;\n}\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.analysis = analysis;\nout.fitScore = fitScore;\nout.goNoGo = goNoGo;\nout.onWatchlist = onWatchlist;\nreturn [{ json: out }];"
+                                     },
+                      "id":  "b0f8ff49-6ff8-4629-bbda-d95f776004b0",
+                      "name":  "Score RFP (Sonnet)",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       672,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\n\nif (input.error || input.duplicate) {\n  return [{ json: input }];\n}\n\nconst shouldDraft = (input.goNoGo === \u0027AWARENESS\u0027 || input.goNoGo === \u0027GO\u0027) \u0026\u0026 input.onWatchlist;\n\nif (!shouldDraft) {\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.awarenessDraft = null;\n  out.draftSkipped = true;\n  return [{ json: out }];\n}\n\nconst systemMessage = \u0027You are drafting a professional vendor awareness response on behalf of Kevin Alexander Smith, CEO of KAI-Netics (Kevin Alexander International LLC dba KAI-Netics, MWVOB minority-owned). Write in a professional, confident, brief tone. Not a sales pitch — a credentialed vendor making themselves known. Under 200 words total.\u0027;\n\nconst userMessage = \u0027Draft a vendor awareness response for this procurement:\\n\\n\u0027 +\n  \u0027Agency: \u0027 + input.agency + \u0027\\n\u0027 +\n  \u0027RFP: \u0027 + input.rfpName + \u0027\\n\u0027 +\n  \u0027Commodity: \u0027 + input.commodity + \u0027\\n\u0027 +\n  \u0027Fit Score: \u0027 + (input.fitScore || \u0027N/A\u0027) + \u0027/100\\n\\n\u0027 +\n  \u0027Instructions:\\n\u0027 +\n  \u00271. Acknowledge the solicitation professionally\\n\u0027 +\n  \u00272. If fit is low (below 60): note KAI-Netics scope does not align with THIS requirement, but introduce capabilities\\n\u0027 +\n  \u00273. If fit is higher (60+): express interest and relevant qualifications\\n\u0027 +\n  \u00274. Plant a forward-looking hook for future drone/tech/cybersecurity requirements\\n\u0027 +\n  \u00275. Close with Kevin credentials: FAA Part 107 #5250157, CISSP, PMP, MWVOB\\n\\n\u0027 +\n  \u0027Format as a ready-to-send email body. Include subject line on first line prefixed with SUBJECT:\u0027;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-opus-4-6\u0027,\n  max_tokens: 1024,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request({\n    hostname: \u0027api.anthropic.com\u0027,\n    port: 443,\n    path: \u0027/v1/messages\u0027,\n    method: \u0027POST\u0027,\n    headers: {\n      \u0027Content-Type\u0027: \u0027application/json\u0027,\n      \u0027x-api-key\u0027: \u0027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\u0027,   // ← paste your key here\n      \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n      \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n    }\n  }, function(res) {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, function(c) { d += c; });\n    res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet draft = \u0027\u0027;\ntry { draft = JSON.parse(result.body).content[0].text || \u0027\u0027; } catch(e) { draft = \u0027\u0027; }\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.awarenessDraft = draft;\nout.draftSkipped = false;\nreturn [{ json: out }];"
+                                     },
+                      "id":  "f594d5cb-a449-40a0-9a84-be6080250e6c",
+                      "name":  "Draft Response (Opus)",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       880,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\n\nconst SUPABASE_URL = \u0027raxpmeltyxmtiihxoxpa.supabase.co\u0027;\nconst SUPABASE_KEY = \u0027sb_secret_Jz8T31FHgqpfOrqijr1qtQ_HcbbZ8Nu\u0027;\n\nif (input.error) {\n  return [{ json: input }];\n}\n\nif (input.duplicate) {\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.supabaseLogged = false;\n  out.supabaseNote = \u0027duplicate\u0027;\n  return [{ json: out }];\n}\n\n// Save analysis to file\nconst safeAgency = input.agency.substring(0, 30).split(\u0027\u0027).map(function(c) {\n  const code = c.charCodeAt(0);\n  if ((code \u003e= 65 \u0026\u0026 code \u003c= 90) || (code \u003e= 97 \u0026\u0026 code \u003c= 122) || (code \u003e= 48 \u0026\u0026 code \u003c= 57)) return c;\n  return \u0027_\u0027;\n}).join(\u0027\u0027);\n\nconst safeTime = input.timestamp.split(\u0027:\u0027).join(\u0027-\u0027).split(\u0027.\u0027).join(\u0027-\u0027);\nconst outputPath = \u0027/data/Aidan_Outputs/Nova/RFP_\u0027 + safeTime + \u0027_\u0027 + safeAgency + \u0027.txt\u0027;\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Nova\u0027, { recursive: true });\n\nlet fileContent = \u0027NOVA RFP ANALYSIS\\n\u0027;\nfileContent += \u0027Agency: \u0027 + input.agency + \u0027\\n\u0027;\nfileContent += \u0027RFP: \u0027 + input.rfpName + \u0027\\n\u0027;\nfileContent += \u0027BPM ID: \u0027 + input.bpmId + \u0027\\n\u0027;\nfileContent += \u0027Deadline: \u0027 + input.deadline + \u0027\\n\u0027;\nfileContent += \u0027Fit Score: \u0027 + (input.fitScore || \u0027N/A\u0027) + \u0027\\n\u0027;\nfileContent += \u0027Decision: \u0027 + input.goNoGo + \u0027\\n\u0027;\nfileContent += \u0027Generated: \u0027 + input.timestamp + \u0027\\n\\n\u0027;\nfileContent += \u0027--- ANALYSIS ---\\n\u0027 + (input.analysis || \u0027\u0027) + \u0027\\n\\n\u0027;\nif (input.awarenessDraft) {\n  fileContent += \u0027--- AWARENESS DRAFT ---\\n\u0027 + input.awarenessDraft + \u0027\\n\u0027;\n}\nfs.writeFileSync(outputPath, fileContent, \u0027utf8\u0027);\n\n// Log to Supabase\nconst record = {\n  rfp_name: input.rfpName,\n  bpm_id: input.bpmId || null,\n  agency: input.agency,\n  commodity: input.commodity || null,\n  deadline: input.deadline || null,\n  fit_score: input.fitScore || null,\n  go_no_go: input.goNoGo,\n  awareness_draft: input.awarenessDraft || null,\n  kevin_decision: \u0027PENDING\u0027,\n  sent: false,\n  content_hash: input.contentHash,\n  source: input.source || \u0027manual\u0027\n};\n\nlet supabaseLogged = false;\ntry {\n  const body = JSON.stringify(record);\n  const result = await new Promise(function(resolve, reject) {\n    const req = https.request({\n      hostname: SUPABASE_URL,\n      port: 443,\n      path: \u0027/rest/v1/rfp_responses\u0027,\n      method: \u0027POST\u0027,\n      headers: {\n        \u0027Content-Type\u0027: \u0027application/json\u0027,\n        \u0027apikey\u0027: SUPABASE_KEY,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n        \u0027Prefer\u0027: \u0027return=minimal\u0027,\n        \u0027Content-Length\u0027: Buffer.byteLength(body)\n      }\n    }, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode }); });\n    });\n    req.on(\u0027error\u0027, reject);\n    req.write(body);\n    req.end();\n  });\n  supabaseLogged = result.status === 201 || result.status === 200;\n} catch(e) {\n  supabaseLogged = false;\n}\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.outputPath = outputPath;\nout.supabaseLogged = supabaseLogged;\nreturn [{ json: out }];"
+                                     },
+                      "id":  "9bb9fde4-84bb-4e4d-baf6-79abc82d72b9",
+                      "name":  "Save + Log to Supabase",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1104,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\nif (input.error) {\n  const errMsg = \u0027NOVA ERROR: \u0027 + input.message;\n  const msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: errMsg } });\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\n  await new Promise(function(r) { const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); }); req.on(\u0027error\u0027, r); req.write(msgBody); req.end(); });\n  return [{ json: { success: false, error: input.message } }];\n}\n\nif (input.duplicate) {\n  const dupMsg = \u0027NOVA: Duplicate RFP detected -- \u0027 + input.rfpName + \u0027 already processed. Decision: \u0027 + (input.existingRecord \u0026\u0026 input.existingRecord.kevin_decision ? input.existingRecord.kevin_decision : \u0027PENDING\u0027);\n  const msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: dupMsg } });\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\n  await new Promise(function(r) { const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); }); req.on(\u0027error\u0027, r); req.write(msgBody); req.end(); });\n  return [{ json: { success: true, duplicate: true } }];\n}\n\nconst fitDisplay = input.fitScore !== null ? input.fitScore + \u0027/100\u0027 : \u0027N/A\u0027;\nconst dbStatus = input.supabaseLogged ? \u0027💾 Logged\u0027 : \u0027⚠️ Log failed\u0027;\n\nlet whatsappMsg = \u0027NOVA RFP ANALYSIS\\n\\n\u0027;\nwhatsappMsg += \u0027RFP: \u0027 + input.rfpName + \u0027\\n\u0027;\nwhatsappMsg += \u0027Agency: \u0027 + input.agency + \u0027\\n\u0027;\nif (input.bpmId) { whatsappMsg += \u0027BPM ID: \u0027 + input.bpmId + \u0027\\n\u0027; }\nif (input.deadline) { whatsappMsg += \u0027Deadline: \u0027 + input.deadline + \u0027\\n\u0027; }\nwhatsappMsg += \u0027Fit Score: \u0027 + fitDisplay + \u0027\\n\u0027;\nwhatsappMsg += \u0027Decision: \u0027 + input.goNoGo + \u0027\\n\u0027;\nwhatsappMsg += dbStatus + \u0027\\n\u0027;\n\nif (input.goNoGo === \u0027GO\u0027) {\n  whatsappMsg += \u0027\\nACTION REQUIRED: High fit -- Jordan drafting capability statement\\n\u0027;\n  whatsappMsg += \u0027Reply: NOVA APPLY or NOVA PASS\u0027;\n} else if (input.goNoGo === \u0027AWARENESS\u0027 \u0026\u0026 !input.draftSkipped) {\n  whatsappMsg += \u0027\\nAwareness response drafted by Opus\\n\u0027;\n  whatsappMsg += \u0027Reply NOVA SEND to send, NOVA SKIP to pass\u0027;\n} else {\n  whatsappMsg += \u0027\\nLow fit -- no action required\u0027;\n}\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: whatsappMsg } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\n// If awareness draft exists, send it as a second WhatsApp message\nif (input.awarenessDraft \u0026\u0026 !input.draftSkipped) {\n  await new Promise(function(r) { setTimeout(r, 1500); });\n  const draftPreview = \u0027OPUS DRAFT PREVIEW:\\n\\n\u0027 + input.awarenessDraft.substring(0, 1000);\n  const draftBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: draftPreview } });\n  const draftOpts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(draftBody) } };\n  await new Promise(function(r) { const req = http.request(draftOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); }); req.on(\u0027error\u0027, r); req.write(draftBody); req.end(); });\n}\n\nconst cbBody = JSON.stringify({\n  agent: \u0027Nova\u0027,\n  rfpName: input.rfpName,\n  agency: input.agency,\n  fitScore: input.fitScore,\n  goNoGo: input.goNoGo,\n  supabaseLogged: input.supabaseLogged,\n  timestamp: new Date().toISOString()\n});\nconst cbOpts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, function(){}); });\ncbReq.on(\u0027error\u0027, function(){});\ncbReq.write(cbBody);\ncbReq.end();\n\nreturn [{ json: { success: true, agent: \u0027Nova\u0027, rfpName: input.rfpName, fitScore: input.fitScore, goNoGo: input.goNoGo, supabaseLogged: input.supabaseLogged } }];"
+                                     },
+                      "id":  "487c2707-0eed-490d-a636-d7aa5dd09d8c",
+                      "name":  "WhatsApp Alert + Callback",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1328,
+                                       0
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Parse RFP Input",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Parse RFP Input":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Deduplicate Check",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Deduplicate Check":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Score RFP (Sonnet)",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Score RFP (Sonnet)":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Draft Response (Opus)",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Draft Response (Opus)":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Save + Log to Supabase",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Save + Log to Supabase":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "WhatsApp Alert + Callback",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "0ac1df00-65ca-4c6e-a354-1cb471eeb02e",
+    "activeVersionId":  "0ac1df00-65ca-4c6e-a354-1cb471eeb02e",
+    "versionCounter":  68,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-21T22:13:32.022Z",
+                       "createdAt":  "2026-04-21T22:13:32.022Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "SVzmB2AzqiyGtsJF",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T22:13:30.395Z",
+                     "createdAt":  "2026-04-21T22:13:30.395Z",
+                     "id":  "5NXEAo2ffL18rIB8",
+                     "name":  "RFP"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T22:13:30.381Z",
+                     "createdAt":  "2026-04-21T22:13:30.381Z",
+                     "id":  "J2QzCkM7UAmoAr6b",
+                     "name":  "Nova"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T19:14:31.224Z",
+                     "createdAt":  "2026-04-21T19:14:31.224Z",
+                     "id":  "TjxfhhlH70HyB4sp",
+                     "name":  "Supabase"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-05-02T11:59:00.000Z",
+                          "createdAt":  "2026-05-02T11:58:42.610Z",
+                          "versionId":  "0ac1df00-65ca-4c6e-a354-1cb471eeb02e",
+                          "workflowId":  "SVzmB2AzqiyGtsJF",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "nova-rfp",
+                                                               "responseMode":  "lastNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "034b082a-e66c-4f0b-b6c1-c07cf945b082",
+                                            "name":  "Webhook Trigger",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ],
+                                            "webhookId":  "kai-nova-rfp"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const input = $input.first().json;\nconst body = input.body || input;\nconst rfpText = String(body.rfp_text || body.text || body.email_body || \u0027\u0027);\nconst rfpName = String(body.rfp_name || body.subject || body.rfx_name || \u0027Manual RFP\u0027);\nconst agency = String(body.agency || body.from || \u0027Unknown Agency\u0027);\nconst bpmId = String(body.bpm_id || body.rfx_id || \u0027\u0027);\nconst deadline = String(body.deadline || body.end_date || \u0027\u0027);\nconst commodity = String(body.commodity || body.main_commodity || \u0027\u0027);\nconst source = String(body.source || \u0027manual\u0027);\nif (!rfpText || rfpText.length \u003c 10) {\n  return [{ json: {\n    error: true,\n    message: \u0027No RFP content provided. Send rfp_text in the request body.\u0027,\n    rfpName: rfpName\n  }}];\n}\nconst crypto = require(\u0027crypto\u0027);\nconst contentHash = crypto.createHash(\u0027md5\u0027).update(rfpText.substring(0, 500) + agency).digest(\u0027hex\u0027);\nconst https_exec = require(\u0027https\u0027);\nconst supabase_url_exec = $env.SUPABASE_URL || \u0027\u0027;\nconst supabase_key_exec = $env.SUPABASE_SERVICE_KEY || \u0027\u0027;\nconst hostname_exec = supabase_url_exec.replace(\u0027https://\u0027, \u0027\u0027).replace(\u0027http://\u0027, \u0027\u0027);\nlet executionId = null;\ntry {\n  const execRecord = JSON.stringify({\n    agent: \u0027Nova\u0027,\n    trigger_type: \u0027webhook\u0027,\n    status: \u0027success\u0027,\n    workflow_version: \u0027v1\u0027,\n    notes: \u0027rfp:\u0027 + rfpName.substring(0, 80) + \u0027 | agency:\u0027 + agency.substring(0, 50)\n  });\n  const execResult = await new Promise(function(resolve, reject) {\n    const req = https_exec.request({\n      hostname: hostname_exec, port: 443,\n      path: \u0027/rest/v1/agent_executions\u0027,\n      method: \u0027POST\u0027,\n      headers: {\n        \u0027Content-Type\u0027: \u0027application/json\u0027,\n        \u0027apikey\u0027: supabase_key_exec,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + supabase_key_exec,\n        \u0027Prefer\u0027: \u0027return=representation\u0027,\n        \u0027Content-Length\u0027: Buffer.byteLength(execRecord)\n      }\n    }, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n    });\n    req.on(\u0027error\u0027, reject);\n    req.write(execRecord);\n    req.end();\n  });\n  if (execResult.status === 201) {\n    const rows = JSON.parse(execResult.body);\n    executionId = rows \u0026\u0026 rows[0] ? rows[0].id : null;\n  }\n} catch(e) {}\nreturn [{ json: {\n  rfpText: rfpText,\n  rfpName: rfpName,\n  agency: agency,\n  bpmId: bpmId,\n  deadline: deadline,\n  commodity: commodity,\n  source: source,\n  contentHash: contentHash,\n  executionId: executionId,\n  timestamp: new Date().toISOString()\n}}];"
+                                                           },
+                                            "id":  "49ef01db-1a91-41dc-8043-45474006c6a5",
+                                            "name":  "Parse RFP Input",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             224,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\n\nif (input.error) {\n  return [{ json: input }];\n}\n\nconst SUPABASE_URL = \u0027raxpmeltyxmtiihxoxpa.supabase.co\u0027;\nconst SUPABASE_KEY = \u0027sb_secret_Jz8T31FHgqpfOrqijr1qtQ_HcbbZ8Nu\u0027;\n\n// Check if we already processed this RFP\ntry {\n  const result = await new Promise(function(resolve, reject) {\n    const path = \u0027/rest/v1/rfp_responses?content_hash=eq.\u0027 + input.contentHash + \u0027\u0026select=id,rfp_name,fit_score,kevin_decision\u0027;\n    const req = https.request({\n      hostname: SUPABASE_URL,\n      port: 443,\n      path: path,\n      method: \u0027GET\u0027,\n      headers: {\n        \u0027apikey\u0027: SUPABASE_KEY,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n        \u0027Content-Type\u0027: \u0027application/json\u0027\n      }\n    }, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n    });\n    req.on(\u0027error\u0027, reject);\n    req.end();\n  });\n\n  if (result.status === 200) {\n    const existing = JSON.parse(result.body);\n    if (existing \u0026\u0026 existing.length \u003e 0) {\n      const out = {};\n      const keys = Object.keys(input);\n      for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n      out.duplicate = true;\n      out.existingRecord = existing[0];\n      return [{ json: out }];\n    }\n  }\n} catch(e) {\n  // if dedup check fails, proceed anyway\n}\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.duplicate = false;\nreturn [{ json: out }];"
+                                                           },
+                                            "id":  "7c67b12f-6795-4e29-b929-9418660ba1f4",
+                                            "name":  "Deduplicate Check",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             448,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const https = require(\u0027https\u0027);\nconst fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\n\nif (input.error || input.duplicate) {\n  return [{ json: input }];\n}\n\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) { ctx = {}; }\n\nconst founder = ctx.founder || {};\nconst entities = ctx.entities || {};\nconst naics = ctx.naics || {};\n\nconst AGENCY_WATCHLIST = [\n  \u0027mdsha\u0027, \u0027sha.maryland\u0027, \u0027state highway\u0027,\n  \u0027mta\u0027, \u0027transit\u0027, \u0027wmata\u0027,\n  \u0027baltimore city\u0027, \u0027baltimorecity\u0027,\n  \u0027bge\u0027, \u0027pepco\u0027, \u0027smeco\u0027, \u0027utility\u0027,\n  \u0027mdot\u0027, \u0027department of transportation\u0027,\n  \u0027mema\u0027, \u0027emergency management\u0027,\n  \u0027anne arundel\u0027, \u0027howard county\u0027, \u0027prince george\u0027,\n  \u0027nih\u0027, \u0027hhs\u0027, \u0027hrsa\u0027, \u0027cms\u0027,\n  \u0027fema\u0027, \u0027dhs\u0027, \u0027cisa\u0027,\n  \u0027umms\u0027, \u0027university of maryland\u0027, \u0027johns hopkins\u0027, \u0027medstar\u0027,\n  \u0027usda\u0027, \u0027rural development\u0027,\n  \u0027emma\u0027, \u0027maryland.gov\u0027\n];\n\nconst agencyLower = input.agency.toLowerCase();\nconst rfpLower = input.rfpText.toLowerCase();\nconst onWatchlist = AGENCY_WATCHLIST.some(function(w) {\n  return agencyLower.indexOf(w) !== -1 || rfpLower.indexOf(w) !== -1;\n});\n\nconst naicsList = (naics.registered || []).map(function(n) { return n.code + \u0027 \u0027 + n.description; }).join(\u0027, \u0027);\n\nconst systemMessage = \u0027You are Nova, RFP Intelligence Agent for KAI-Netics. Analyze procurement opportunities and score them for fit. Be precise and decisive. Never fabricate contacts or requirements.\u0027;\n\nconst userMessage = \u0027Analyze this RFP/RFI for KAI-Netics.\\n\\n\u0027 +\n  \u0027RFP NAME: \u0027 + input.rfpName + \u0027\\n\u0027 +\n  \u0027AGENCY: \u0027 + input.agency + \u0027\\n\u0027 +\n  \u0027COMMODITY: \u0027 + input.commodity + \u0027\\n\u0027 +\n  \u0027DEADLINE: \u0027 + input.deadline + \u0027\\n\\n\u0027 +\n  \u0027RFP CONTENT:\\n\u0027 + input.rfpText.substring(0, 3000) + \u0027\\n\\n\u0027 +\n  \u0027KAI-NETICS PROFILE:\\n\u0027 +\n  \u0027Founder: \u0027 + founder.name + \u0027 | \u0027 + (founder.credentials || []).join(\u0027, \u0027) + \u0027\\n\u0027 +\n  \u0027Entity FP: \u0027 + (entities.FP \u0026\u0026 entities.FP.name ? entities.FP.name : \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027Entity EAF: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.name ? entities.EAF.name : \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027NAICS Registered: \u0027 + naicsList + \u0027\\n\u0027 +\n  \u0027Capabilities: Commercial drone operations (FAA Part 107), infrastructure inspection, cybersecurity consulting (CISSP), workforce development (EAF/CAKO), MONK hardware trust layer\\n\\n\u0027 +\n  \u0027Produce this EXACT format:\\n\\n\u0027 +\n  \u0027OPPORTUNITY SUMMARY:\\n[Agency, value if stated, type RFI/RFP/RFQ, deadline]\\n\\n\u0027 +\n  \u0027NAICS ALIGNMENT:\\n[Does it match 541519, 488190, or 541690? Yes/No with reason]\\n\\n\u0027 +\n  \u0027FIT SCORE: [0-100]\\n\\n\u0027 +\n  \u0027GO/NO-GO: [GO / NO-GO / AWARENESS]\\n\u0027 +\n  \u0027GO = score 70+ and direct capability match\\n\u0027 +\n  \u0027AWARENESS = score 30-69 OR agency on watchlist but low fit\\n\u0027 +\n  \u0027NO-GO = score below 30 and agency not on watchlist\\n\\n\u0027 +\n  \u0027RATIONALE:\\n[2-3 sentences explaining score]\\n\\n\u0027 +\n  \u0027COMPLIANCE FLAGS:\\n[SAM.gov UEI required? Bonding? Insurance minimums? NDAA?]\\n\\n\u0027 +\n  \u0027TEAMING RECOMMENDATION:\\n[Prime or sub? Suggested partners from: RK\u0026K, JMT, Mobley \u0026 Brown]\\n\\n\u0027 +\n  \u0027WIN THEMES:\\n1.\\n2.\\n3.\\n\\n\u0027 +\n  \u0027IMMEDIATE NEXT ACTIONS:\\n1. [action | owner | deadline]\\n2. [action | owner | deadline]\\n3. [action | owner | deadline]\u0027;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-sonnet-4-6\u0027,\n  max_tokens: 2048,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request({\n    hostname: \u0027api.anthropic.com\u0027,\n    port: 443,\n    path: \u0027/v1/messages\u0027,\n    method: \u0027POST\u0027,\n    headers: {\n      \u0027Content-Type\u0027: \u0027application/json\u0027,\n      \u0027x-api-key\u0027: \u0027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\u0027,\n      \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n      \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n    }\n  }, function(res) {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, function(c) { d += c; });\n    res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet analysis = \u0027\u0027;\ntry { analysis = JSON.parse(result.body).content[0].text || \u0027No response.\u0027; } catch(e) { analysis = result.body.substring(0, 500); }\n\nlet fitScore = null;\nconst lines = analysis.split(\u0027\\n\u0027);\nfor (let i = 0; i \u003c lines.length; i++) {\n  if (lines[i].toUpperCase().indexOf(\u0027FIT SCORE\u0027) !== -1) {\n    const nums = lines[i].match(/\\d+/);\n    if (nums) { fitScore = parseInt(nums[0]); break; }\n  }\n}\n\nlet goNoGo = \u0027AWARENESS\u0027;\nfor (let i = 0; i \u003c lines.length; i++) {\n  const line = lines[i].toUpperCase();\n  if (line.indexOf(\u0027GO/NO-GO\u0027) !== -1 || line.indexOf(\u0027GO NO GO\u0027) !== -1) {\n    if (lines[i].indexOf(\u0027NO-GO\u0027) !== -1 || lines[i].indexOf(\u0027NO GO\u0027) !== -1) { goNoGo = \u0027NO-GO\u0027; }\n    else if (lines[i].indexOf(\u0027AWARENESS\u0027) !== -1) { goNoGo = \u0027AWARENESS\u0027; }\n    else if (lines[i].indexOf(\u0027GO\u0027) !== -1) { goNoGo = \u0027GO\u0027; }\n    break;\n  }\n}\n\n// Override: if agency on watchlist and score \u003e= 30, minimum AWARENESS\nif (onWatchlist \u0026\u0026 goNoGo === \u0027NO-GO\u0027) {\n  goNoGo = \u0027AWARENESS\u0027;\n}\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.analysis = analysis;\nout.fitScore = fitScore;\nout.goNoGo = goNoGo;\nout.onWatchlist = onWatchlist;\nreturn [{ json: out }];"
+                                                           },
+                                            "id":  "b0f8ff49-6ff8-4629-bbda-d95f776004b0",
+                                            "name":  "Score RFP (Sonnet)",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             672,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\n\nif (input.error || input.duplicate) {\n  return [{ json: input }];\n}\n\nconst shouldDraft = (input.goNoGo === \u0027AWARENESS\u0027 || input.goNoGo === \u0027GO\u0027) \u0026\u0026 input.onWatchlist;\n\nif (!shouldDraft) {\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.awarenessDraft = null;\n  out.draftSkipped = true;\n  return [{ json: out }];\n}\n\nconst systemMessage = \u0027You are drafting a professional vendor awareness response on behalf of Kevin Alexander Smith, CEO of KAI-Netics (Kevin Alexander International LLC dba KAI-Netics, MWVOB minority-owned). Write in a professional, confident, brief tone. Not a sales pitch — a credentialed vendor making themselves known. Under 200 words total.\u0027;\n\nconst userMessage = \u0027Draft a vendor awareness response for this procurement:\\n\\n\u0027 +\n  \u0027Agency: \u0027 + input.agency + \u0027\\n\u0027 +\n  \u0027RFP: \u0027 + input.rfpName + \u0027\\n\u0027 +\n  \u0027Commodity: \u0027 + input.commodity + \u0027\\n\u0027 +\n  \u0027Fit Score: \u0027 + (input.fitScore || \u0027N/A\u0027) + \u0027/100\\n\\n\u0027 +\n  \u0027Instructions:\\n\u0027 +\n  \u00271. Acknowledge the solicitation professionally\\n\u0027 +\n  \u00272. If fit is low (below 60): note KAI-Netics scope does not align with THIS requirement, but introduce capabilities\\n\u0027 +\n  \u00273. If fit is higher (60+): express interest and relevant qualifications\\n\u0027 +\n  \u00274. Plant a forward-looking hook for future drone/tech/cybersecurity requirements\\n\u0027 +\n  \u00275. Close with Kevin credentials: FAA Part 107 #5250157, CISSP, PMP, MWVOB\\n\\n\u0027 +\n  \u0027Format as a ready-to-send email body. Include subject line on first line prefixed with SUBJECT:\u0027;\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-opus-4-6\u0027,\n  max_tokens: 1024,\n  system: systemMessage,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request({\n    hostname: \u0027api.anthropic.com\u0027,\n    port: 443,\n    path: \u0027/v1/messages\u0027,\n    method: \u0027POST\u0027,\n    headers: {\n      \u0027Content-Type\u0027: \u0027application/json\u0027,\n      \u0027x-api-key\u0027: \u0027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\u0027,   // ← paste your key here\n      \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n      \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n    }\n  }, function(res) {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, function(c) { d += c; });\n    res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet draft = \u0027\u0027;\ntry { draft = JSON.parse(result.body).content[0].text || \u0027\u0027; } catch(e) { draft = \u0027\u0027; }\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.awarenessDraft = draft;\nout.draftSkipped = false;\nreturn [{ json: out }];"
+                                                           },
+                                            "id":  "f594d5cb-a449-40a0-9a84-be6080250e6c",
+                                            "name":  "Draft Response (Opus)",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             880,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const https = require(\u0027https\u0027);\nconst fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\n\nconst SUPABASE_URL = \u0027raxpmeltyxmtiihxoxpa.supabase.co\u0027;\nconst SUPABASE_KEY = \u0027sb_secret_Jz8T31FHgqpfOrqijr1qtQ_HcbbZ8Nu\u0027;\n\nif (input.error) {\n  return [{ json: input }];\n}\n\nif (input.duplicate) {\n  const out = {};\n  const keys = Object.keys(input);\n  for (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\n  out.supabaseLogged = false;\n  out.supabaseNote = \u0027duplicate\u0027;\n  return [{ json: out }];\n}\n\n// Save analysis to file\nconst safeAgency = input.agency.substring(0, 30).split(\u0027\u0027).map(function(c) {\n  const code = c.charCodeAt(0);\n  if ((code \u003e= 65 \u0026\u0026 code \u003c= 90) || (code \u003e= 97 \u0026\u0026 code \u003c= 122) || (code \u003e= 48 \u0026\u0026 code \u003c= 57)) return c;\n  return \u0027_\u0027;\n}).join(\u0027\u0027);\n\nconst safeTime = input.timestamp.split(\u0027:\u0027).join(\u0027-\u0027).split(\u0027.\u0027).join(\u0027-\u0027);\nconst outputPath = \u0027/data/Aidan_Outputs/Nova/RFP_\u0027 + safeTime + \u0027_\u0027 + safeAgency + \u0027.txt\u0027;\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Nova\u0027, { recursive: true });\n\nlet fileContent = \u0027NOVA RFP ANALYSIS\\n\u0027;\nfileContent += \u0027Agency: \u0027 + input.agency + \u0027\\n\u0027;\nfileContent += \u0027RFP: \u0027 + input.rfpName + \u0027\\n\u0027;\nfileContent += \u0027BPM ID: \u0027 + input.bpmId + \u0027\\n\u0027;\nfileContent += \u0027Deadline: \u0027 + input.deadline + \u0027\\n\u0027;\nfileContent += \u0027Fit Score: \u0027 + (input.fitScore || \u0027N/A\u0027) + \u0027\\n\u0027;\nfileContent += \u0027Decision: \u0027 + input.goNoGo + \u0027\\n\u0027;\nfileContent += \u0027Generated: \u0027 + input.timestamp + \u0027\\n\\n\u0027;\nfileContent += \u0027--- ANALYSIS ---\\n\u0027 + (input.analysis || \u0027\u0027) + \u0027\\n\\n\u0027;\nif (input.awarenessDraft) {\n  fileContent += \u0027--- AWARENESS DRAFT ---\\n\u0027 + input.awarenessDraft + \u0027\\n\u0027;\n}\nfs.writeFileSync(outputPath, fileContent, \u0027utf8\u0027);\n\n// Log to Supabase\nconst record = {\n  rfp_name: input.rfpName,\n  bpm_id: input.bpmId || null,\n  agency: input.agency,\n  commodity: input.commodity || null,\n  deadline: input.deadline || null,\n  fit_score: input.fitScore || null,\n  go_no_go: input.goNoGo,\n  awareness_draft: input.awarenessDraft || null,\n  kevin_decision: \u0027PENDING\u0027,\n  sent: false,\n  content_hash: input.contentHash,\n  source: input.source || \u0027manual\u0027\n};\n\nlet supabaseLogged = false;\ntry {\n  const body = JSON.stringify(record);\n  const result = await new Promise(function(resolve, reject) {\n    const req = https.request({\n      hostname: SUPABASE_URL,\n      port: 443,\n      path: \u0027/rest/v1/rfp_responses\u0027,\n      method: \u0027POST\u0027,\n      headers: {\n        \u0027Content-Type\u0027: \u0027application/json\u0027,\n        \u0027apikey\u0027: SUPABASE_KEY,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n        \u0027Prefer\u0027: \u0027return=minimal\u0027,\n        \u0027Content-Length\u0027: Buffer.byteLength(body)\n      }\n    }, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode }); });\n    });\n    req.on(\u0027error\u0027, reject);\n    req.write(body);\n    req.end();\n  });\n  supabaseLogged = result.status === 201 || result.status === 200;\n} catch(e) {\n  supabaseLogged = false;\n}\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.outputPath = outputPath;\nout.supabaseLogged = supabaseLogged;\nreturn [{ json: out }];"
+                                                           },
+                                            "id":  "9bb9fde4-84bb-4e4d-baf6-79abc82d72b9",
+                                            "name":  "Save + Log to Supabase",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1104,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\nif (input.error) {\n  const errMsg = \u0027NOVA ERROR: \u0027 + input.message;\n  const msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: errMsg } });\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\n  await new Promise(function(r) { const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); }); req.on(\u0027error\u0027, r); req.write(msgBody); req.end(); });\n  return [{ json: { success: false, error: input.message } }];\n}\n\nif (input.duplicate) {\n  const dupMsg = \u0027NOVA: Duplicate RFP detected -- \u0027 + input.rfpName + \u0027 already processed. Decision: \u0027 + (input.existingRecord \u0026\u0026 input.existingRecord.kevin_decision ? input.existingRecord.kevin_decision : \u0027PENDING\u0027);\n  const msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: dupMsg } });\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\n  await new Promise(function(r) { const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); }); req.on(\u0027error\u0027, r); req.write(msgBody); req.end(); });\n  return [{ json: { success: true, duplicate: true } }];\n}\n\nconst fitDisplay = input.fitScore !== null ? input.fitScore + \u0027/100\u0027 : \u0027N/A\u0027;\nconst dbStatus = input.supabaseLogged ? \u0027💾 Logged\u0027 : \u0027⚠️ Log failed\u0027;\n\nlet whatsappMsg = \u0027NOVA RFP ANALYSIS\\n\\n\u0027;\nwhatsappMsg += \u0027RFP: \u0027 + input.rfpName + \u0027\\n\u0027;\nwhatsappMsg += \u0027Agency: \u0027 + input.agency + \u0027\\n\u0027;\nif (input.bpmId) { whatsappMsg += \u0027BPM ID: \u0027 + input.bpmId + \u0027\\n\u0027; }\nif (input.deadline) { whatsappMsg += \u0027Deadline: \u0027 + input.deadline + \u0027\\n\u0027; }\nwhatsappMsg += \u0027Fit Score: \u0027 + fitDisplay + \u0027\\n\u0027;\nwhatsappMsg += \u0027Decision: \u0027 + input.goNoGo + \u0027\\n\u0027;\nwhatsappMsg += dbStatus + \u0027\\n\u0027;\n\nif (input.goNoGo === \u0027GO\u0027) {\n  whatsappMsg += \u0027\\nACTION REQUIRED: High fit -- Jordan drafting capability statement\\n\u0027;\n  whatsappMsg += \u0027Reply: NOVA APPLY or NOVA PASS\u0027;\n} else if (input.goNoGo === \u0027AWARENESS\u0027 \u0026\u0026 !input.draftSkipped) {\n  whatsappMsg += \u0027\\nAwareness response drafted by Opus\\n\u0027;\n  whatsappMsg += \u0027Reply NOVA SEND to send, NOVA SKIP to pass\u0027;\n} else {\n  whatsappMsg += \u0027\\nLow fit -- no action required\u0027;\n}\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: whatsappMsg } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\n// If awareness draft exists, send it as a second WhatsApp message\nif (input.awarenessDraft \u0026\u0026 !input.draftSkipped) {\n  await new Promise(function(r) { setTimeout(r, 1500); });\n  const draftPreview = \u0027OPUS DRAFT PREVIEW:\\n\\n\u0027 + input.awarenessDraft.substring(0, 1000);\n  const draftBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: draftPreview } });\n  const draftOpts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(draftBody) } };\n  await new Promise(function(r) { const req = http.request(draftOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); }); req.on(\u0027error\u0027, r); req.write(draftBody); req.end(); });\n}\n\nconst cbBody = JSON.stringify({\n  agent: \u0027Nova\u0027,\n  rfpName: input.rfpName,\n  agency: input.agency,\n  fitScore: input.fitScore,\n  goNoGo: input.goNoGo,\n  supabaseLogged: input.supabaseLogged,\n  timestamp: new Date().toISOString()\n});\nconst cbOpts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, function(){}); });\ncbReq.on(\u0027error\u0027, function(){});\ncbReq.write(cbBody);\ncbReq.end();\n\nreturn [{ json: { success: true, agent: \u0027Nova\u0027, rfpName: input.rfpName, fitScore: input.fitScore, goNoGo: input.goNoGo, supabaseLogged: input.supabaseLogged } }];"
+                                                           },
+                                            "id":  "487c2707-0eed-490d-a636-d7aa5dd09d8c",
+                                            "name":  "WhatsApp Alert + Callback",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1328,
+                                                             0
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Webhook Trigger":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Parse RFP Input",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Parse RFP Input":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Deduplicate Check",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Deduplicate Check":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "Score RFP (Sonnet)",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    },
+                                              "Score RFP (Sonnet)":  {
+                                                                         "main":  [
+                                                                                      [
+                                                                                          {
+                                                                                              "node":  "Draft Response (Opus)",
+                                                                                              "type":  "main",
+                                                                                              "index":  0
+                                                                                          }
+                                                                                      ]
+                                                                                  ]
+                                                                     },
+                                              "Draft Response (Opus)":  {
+                                                                            "main":  [
+                                                                                         [
+                                                                                             {
+                                                                                                 "node":  "Save + Log to Supabase",
+                                                                                                 "type":  "main",
+                                                                                                 "index":  0
+                                                                                             }
+                                                                                         ]
+                                                                                     ]
+                                                                        },
+                                              "Save + Log to Supabase":  {
+                                                                             "main":  [
+                                                                                          [
+                                                                                              {
+                                                                                                  "node":  "WhatsApp Alert + Callback",
+                                                                                                  "type":  "main",
+                                                                                                  "index":  0
+                                                                                              }
+                                                                                          ]
+                                                                                      ]
+                                                                         }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version 0ac1df00",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-05-02T11:59:00.652Z",
+                                                             "id":  483,
+                                                             "workflowId":  "SVzmB2AzqiyGtsJF",
+                                                             "versionId":  "0ac1df00-65ca-4c6e-a354-1cb471eeb02e",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

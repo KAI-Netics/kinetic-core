@@ -1,0 +1,646 @@
+﻿{
+    "updatedAt":  "2026-04-08T02:53:08.087Z",
+    "createdAt":  "2026-04-07T02:13:00.055Z",
+    "id":  "KI2lwLOiOvFm19i5",
+    "name":  "Logic B — FP 3PL Controller (Aidan)",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 6,12,18 * * *"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "41f823a1-a5f9-4914-83cf-ec372763b15b",
+                      "name":  "Schedule 3x Daily",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -960,
+                                       32
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "tpl-monitor",
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "1c16d3ab-2d7a-46a5-8357-249ca2f8ac92",
+                      "name":  "Webhook Trigger",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -960,
+                                       224
+                                   ],
+                      "webhookId":  "kai-tpl-monitor"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "readFile"
+                                     },
+                      "id":  "b7a7bf95-e6c1-44d8-a46b-8fa7e4085f33",
+                      "name":  "Read 3PL Log",
+                      "type":  "n8n-nodes-base.readWriteFile",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -720,
+                                       128
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Parse CSV and detect anomalies\nconst fileItem = $input.first();\nlet csvText = \u0027\u0027;\n\nif (fileItem.binary \u0026\u0026 fileItem.binary.data) {\n  csvText = Buffer.from(fileItem.binary.data, \u0027base64\u0027).toString(\u0027utf8\u0027);\n} else if (fileItem.json.content) {\n  csvText = String(fileItem.json.content);\n}\n\n// Parse CSV rows\nconst lines = csvText.trim().split(\u0027\\n\u0027);\nconst headers = lines[0].split(\u0027,\u0027).map(h =\u003e h.trim().replace(/^\"|\"$/g, \u0027\u0027));\nconst rows = [];\n\nfor (let i = 1; i \u003c lines.length; i++) {\n  if (!lines[i].trim()) continue;\n  const values = lines[i].split(\u0027,\u0027).map(v =\u003e v.trim().replace(/^\"|\"$/g, \u0027\u0027));\n  const row = {};\n  headers.forEach((h, idx) =\u003e { row[h] = values[idx] || \u0027\u0027; });\n  rows.push(row);\n}\n\n// Anomaly detection\nconst now = new Date();\nconst flagged = [];\nconst stats = { total: rows.length, delayed: 0, variance: 0, medical: 0 };\nconst MEDICAL_KEYWORDS = [\u0027pharma\u0027,\u0027medical\u0027,\u0027rx\u0027,\u0027clinical\u0027,\u0027hospital\u0027,\u0027cold chain\u0027];\n\nfor (const row of rows) {\n  const flags = [];\n  const status = (row[\u0027Status\u0027] || \u0027\u0027).toLowerCase();\n  const eta = row[\u0027Expected_Delivery\u0027] ? new Date(row[\u0027Expected_Delivery\u0027]) : null;\n\n  if (eta \u0026\u0026 ![\u0027delivered\u0027,\u0027complete\u0027,\u0027closed\u0027].includes(status)) {\n    const hoursLate = (now - eta) / 3600000;\n    if (hoursLate \u003e 24) {\n      flags.push(`DELAY: ${Math.round(hoursLate)}h overdue`);\n      stats.delayed++;\n    }\n  }\n\n  const expQty = parseFloat(row[\u0027Expected_Qty\u0027] || 0);\n  const actQty = parseFloat(row[\u0027Actual_Qty\u0027] || 0);\n  if (expQty \u003e 0 \u0026\u0026 actQty \u003e= 0) {\n    const variance = Math.abs(expQty - actQty) / expQty;\n    if (variance \u003e 0.10) {\n      flags.push(`INVENTORY VARIANCE: ${(variance*100).toFixed(1)}% (Exp:${expQty} Act:${actQty})`);\n      stats.variance++;\n    }\n  }\n\n  const rowStr = JSON.stringify(row).toLowerCase();\n  if (MEDICAL_KEYWORDS.some(k =\u003e rowStr.includes(k)) \u0026\u0026 flags.length \u003e 0) {\n    flags.push(\u0027MEDICAL SHIPMENT — Chain-of-custody review required\u0027);\n    stats.medical++;\n  }\n\n  if (flags.length \u003e 0) {\n    flagged.push({\n      id: row[\u0027Shipment_ID\u0027] || row[\u0027Order_ID\u0027] || \u0027Unknown\u0027,\n      carrier: row[\u0027Carrier\u0027] || \u0027Unknown\u0027,\n      destination: row[\u0027Destination\u0027] || \u0027Unknown\u0027,\n      flags\n    });\n  }\n}\n\nconst summary = `3PL SCAN RESULTS\\nTotal: ${stats.total} | Delayed: ${stats.delayed} | Variance: ${stats.variance} | Medical: ${stats.medical} | Flagged: ${flagged.length}`;\n\nconst flagDetail = flagged.map((f,i) =\u003e \n  `${i+1}. ${f.id} | ${f.carrier} → ${f.destination}\\n   ${f.flags.join(\u0027 | \u0027)}`\n).join(\u0027\\n\u0027);\n\nconst userMessage = `You are the 3PL Controller for KAI-Netics (FP entity).\\n\\n${summary}\\n\\nFLAGGED SHIPMENTS:\\n${flagDetail || \u0027None\u0027}\\n\\nPrioritize by impact. Suggest specific remediation for each. Provide a 3-sentence BLUF for Kevin. List what needs his decision vs what Aidan handles.`;\n\nreturn [{\n  json: {\n    summary,\n    flagged,\n    stats,\n    hasAlerts: flagged.length \u003e 0,\n    userMessage,\n    timestamp: new Date().toISOString()\n  }\n}];"
+                                     },
+                      "id":  "6012ddef-5bab-4971-9c91-d6287ac9d381",
+                      "name":  "Anomaly Detection",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -480,
+                                       128
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "condition1",
+                                                                                   "leftValue":  "={{ $json.hasAlerts }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "459719da-9f83-48b7-a273-e9b509a9bb39",
+                      "name":  "Has Alerts?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -240,
+                                       128
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.anthropic.com/v1/messages",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "x-api-key",
+                                                                                         "value":  "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"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "anthropic-version",
+                                                                                         "value":  "2023-06-01"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "content-type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "134f6e08-f8a7-48a4-a0f1-63edee232ba8",
+                      "name":  "Claude 3PL Analyst",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const ai = $input.first().json;\nconst prev = $(\u0027Anomaly Detection\u0027).first().json;\nconst aiText = ai.content?.[0]?.text || \u0027No AI response\u0027;\nconst timestamp = new Date().toISOString();\n\nconst report = `========================================\n3PL CONTROLLER ALERT — AIDAN COS\n========================================\n${prev.summary}\nGenerated: ${timestamp}\n========================================\n\n${aiText}\n\n========================================\nReply ACK [ShipmentID] to acknowledge.\n========================================`;\n\nreturn [{ json: { report, timestamp, stats: prev.stats } }];"
+                                     },
+                      "id":  "7a86d0b4-9cc8-4b40-adfd-f5f49bae04b9",
+                      "name":  "Format 3PL Report",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       240,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "writeFile"
+                                     },
+                      "id":  "e21f5ba6-6505-4388-b5b3-c2a1a19296a8",
+                      "name":  "Save 3PL Report",
+                      "type":  "n8n-nodes-base.readWriteFile",
+                      "typeVersion":  1,
+                      "position":  [
+                                       480,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const prev = $(\u0027Anomaly Detection\u0027).first().json;\nreturn [{ json: { status: \u0027CLEAN\u0027, message: `3PL scan complete — no anomalies in ${prev.stats.total} records.`, timestamp: new Date().toISOString() } }];"
+                                     },
+                      "id":  "b290151f-4374-480f-903f-642c931f162c",
+                      "name":  "Log Clean Status",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       272
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Schedule 3x Daily":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Read 3PL Log",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Read 3PL Log",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Read 3PL Log":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Anomaly Detection",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Anomaly Detection":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Has Alerts?",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Has Alerts?":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Claude 3PL Analyst",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Log Clean Status",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Claude 3PL Analyst":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Format 3PL Report",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Format 3PL Report":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Save 3PL Report",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate",
+                     "availableInMCP":  true
+                 },
+    "staticData":  {
+                       "node:Schedule 3x Daily":  {
+                                                      "recurrenceRules":  [
+
+                                                                          ]
+                                                  }
+                   },
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "218eae16-6fa7-478f-a423-38a9b095982b",
+    "activeVersionId":  "218eae16-6fa7-478f-a423-38a9b095982b",
+    "versionCounter":  53,
+    "triggerCount":  2,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-07T02:13:00.060Z",
+                       "createdAt":  "2026-04-07T02:13:00.060Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "KI2lwLOiOvFm19i5",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.295Z",
+                     "createdAt":  "2026-04-07T01:42:36.295Z",
+                     "id":  "B0QrEiqfwdS6WU2L",
+                     "name":  "Aidan"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T02:12:57.206Z",
+                     "createdAt":  "2026-04-07T02:12:57.206Z",
+                     "id":  "ucXs4HQN4r2M9x54",
+                     "name":  "3PL"
+                 },
+                 {
+                     "updatedAt":  "2026-04-07T02:12:57.245Z",
+                     "createdAt":  "2026-04-07T02:12:57.245Z",
+                     "id":  "wiNwJSeSMkjixjWn",
+                     "name":  "FP"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-04-07T02:13:14.000Z",
+                          "createdAt":  "2026-04-07T02:13:00.063Z",
+                          "versionId":  "218eae16-6fa7-478f-a423-38a9b095982b",
+                          "workflowId":  "KI2lwLOiOvFm19i5",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "rule":  {
+                                                                            "interval":  [
+                                                                                             {
+                                                                                                 "field":  "cronExpression",
+                                                                                                 "expression":  "0 6,12,18 * * *"
+                                                                                             }
+                                                                                         ]
+                                                                        }
+                                                           },
+                                            "id":  "41f823a1-a5f9-4914-83cf-ec372763b15b",
+                                            "name":  "Schedule 3x Daily",
+                                            "type":  "n8n-nodes-base.scheduleTrigger",
+                                            "typeVersion":  1.2,
+                                            "position":  [
+                                                             -960,
+                                                             32
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "tpl-monitor",
+                                                               "responseMode":  "lastNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "1c16d3ab-2d7a-46a5-8357-249ca2f8ac92",
+                                            "name":  "Webhook Trigger",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             -960,
+                                                             224
+                                                         ],
+                                            "webhookId":  "kai-tpl-monitor"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "operation":  "readFile"
+                                                           },
+                                            "id":  "b7a7bf95-e6c1-44d8-a46b-8fa7e4085f33",
+                                            "name":  "Read 3PL Log",
+                                            "type":  "n8n-nodes-base.readWriteFile",
+                                            "typeVersion":  1,
+                                            "position":  [
+                                                             -720,
+                                                             128
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Parse CSV and detect anomalies\nconst fileItem = $input.first();\nlet csvText = \u0027\u0027;\n\nif (fileItem.binary \u0026\u0026 fileItem.binary.data) {\n  csvText = Buffer.from(fileItem.binary.data, \u0027base64\u0027).toString(\u0027utf8\u0027);\n} else if (fileItem.json.content) {\n  csvText = String(fileItem.json.content);\n}\n\n// Parse CSV rows\nconst lines = csvText.trim().split(\u0027\\n\u0027);\nconst headers = lines[0].split(\u0027,\u0027).map(h =\u003e h.trim().replace(/^\"|\"$/g, \u0027\u0027));\nconst rows = [];\n\nfor (let i = 1; i \u003c lines.length; i++) {\n  if (!lines[i].trim()) continue;\n  const values = lines[i].split(\u0027,\u0027).map(v =\u003e v.trim().replace(/^\"|\"$/g, \u0027\u0027));\n  const row = {};\n  headers.forEach((h, idx) =\u003e { row[h] = values[idx] || \u0027\u0027; });\n  rows.push(row);\n}\n\n// Anomaly detection\nconst now = new Date();\nconst flagged = [];\nconst stats = { total: rows.length, delayed: 0, variance: 0, medical: 0 };\nconst MEDICAL_KEYWORDS = [\u0027pharma\u0027,\u0027medical\u0027,\u0027rx\u0027,\u0027clinical\u0027,\u0027hospital\u0027,\u0027cold chain\u0027];\n\nfor (const row of rows) {\n  const flags = [];\n  const status = (row[\u0027Status\u0027] || \u0027\u0027).toLowerCase();\n  const eta = row[\u0027Expected_Delivery\u0027] ? new Date(row[\u0027Expected_Delivery\u0027]) : null;\n\n  if (eta \u0026\u0026 ![\u0027delivered\u0027,\u0027complete\u0027,\u0027closed\u0027].includes(status)) {\n    const hoursLate = (now - eta) / 3600000;\n    if (hoursLate \u003e 24) {\n      flags.push(`DELAY: ${Math.round(hoursLate)}h overdue`);\n      stats.delayed++;\n    }\n  }\n\n  const expQty = parseFloat(row[\u0027Expected_Qty\u0027] || 0);\n  const actQty = parseFloat(row[\u0027Actual_Qty\u0027] || 0);\n  if (expQty \u003e 0 \u0026\u0026 actQty \u003e= 0) {\n    const variance = Math.abs(expQty - actQty) / expQty;\n    if (variance \u003e 0.10) {\n      flags.push(`INVENTORY VARIANCE: ${(variance*100).toFixed(1)}% (Exp:${expQty} Act:${actQty})`);\n      stats.variance++;\n    }\n  }\n\n  const rowStr = JSON.stringify(row).toLowerCase();\n  if (MEDICAL_KEYWORDS.some(k =\u003e rowStr.includes(k)) \u0026\u0026 flags.length \u003e 0) {\n    flags.push(\u0027MEDICAL SHIPMENT — Chain-of-custody review required\u0027);\n    stats.medical++;\n  }\n\n  if (flags.length \u003e 0) {\n    flagged.push({\n      id: row[\u0027Shipment_ID\u0027] || row[\u0027Order_ID\u0027] || \u0027Unknown\u0027,\n      carrier: row[\u0027Carrier\u0027] || \u0027Unknown\u0027,\n      destination: row[\u0027Destination\u0027] || \u0027Unknown\u0027,\n      flags\n    });\n  }\n}\n\nconst summary = `3PL SCAN RESULTS\\nTotal: ${stats.total} | Delayed: ${stats.delayed} | Variance: ${stats.variance} | Medical: ${stats.medical} | Flagged: ${flagged.length}`;\n\nconst flagDetail = flagged.map((f,i) =\u003e \n  `${i+1}. ${f.id} | ${f.carrier} → ${f.destination}\\n   ${f.flags.join(\u0027 | \u0027)}`\n).join(\u0027\\n\u0027);\n\nconst userMessage = `You are the 3PL Controller for KAI-Netics (FP entity).\\n\\n${summary}\\n\\nFLAGGED SHIPMENTS:\\n${flagDetail || \u0027None\u0027}\\n\\nPrioritize by impact. Suggest specific remediation for each. Provide a 3-sentence BLUF for Kevin. List what needs his decision vs what Aidan handles.`;\n\nreturn [{\n  json: {\n    summary,\n    flagged,\n    stats,\n    hasAlerts: flagged.length \u003e 0,\n    userMessage,\n    timestamp: new Date().toISOString()\n  }\n}];"
+                                                           },
+                                            "id":  "6012ddef-5bab-4971-9c91-d6287ac9d381",
+                                            "name":  "Anomaly Detection",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             -480,
+                                                             128
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  false,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict"
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "condition1",
+                                                                                                         "leftValue":  "={{ $json.hasAlerts }}",
+                                                                                                         "rightValue":  true,
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "boolean",
+                                                                                                                          "operation":  "true"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "459719da-9f83-48b7-a273-e9b509a9bb39",
+                                            "name":  "Has Alerts?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             -240,
+                                                             128
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "https://api.anthropic.com/v1/messages",
+                                                               "sendHeaders":  true,
+                                                               "headerParameters":  {
+                                                                                        "parameters":  [
+                                                                                                           {
+                                                                                                               "name":  "x-api-key",
+                                                                                                               "value":  "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"
+                                                                                                           },
+                                                                                                           {
+                                                                                                               "name":  "anthropic-version",
+                                                                                                               "value":  "2023-06-01"
+                                                                                                           },
+                                                                                                           {
+                                                                                                               "name":  "content-type",
+                                                                                                               "value":  "application/json"
+                                                                                                           }
+                                                                                                       ]
+                                                                                    },
+                                                               "sendBody":  true,
+                                                               "bodyParameters":  {
+                                                                                      "parameters":  [
+                                                                                                         {
+
+                                                                                                         }
+                                                                                                     ]
+                                                                                  },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "134f6e08-f8a7-48a4-a0f1-63edee232ba8",
+                                            "name":  "Claude 3PL Analyst",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.2,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const ai = $input.first().json;\nconst prev = $(\u0027Anomaly Detection\u0027).first().json;\nconst aiText = ai.content?.[0]?.text || \u0027No AI response\u0027;\nconst timestamp = new Date().toISOString();\n\nconst report = `========================================\n3PL CONTROLLER ALERT — AIDAN COS\n========================================\n${prev.summary}\nGenerated: ${timestamp}\n========================================\n\n${aiText}\n\n========================================\nReply ACK [ShipmentID] to acknowledge.\n========================================`;\n\nreturn [{ json: { report, timestamp, stats: prev.stats } }];"
+                                                           },
+                                            "id":  "7a86d0b4-9cc8-4b40-adfd-f5f49bae04b9",
+                                            "name":  "Format 3PL Report",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             240,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "operation":  "writeFile"
+                                                           },
+                                            "id":  "e21f5ba6-6505-4388-b5b3-c2a1a19296a8",
+                                            "name":  "Save 3PL Report",
+                                            "type":  "n8n-nodes-base.readWriteFile",
+                                            "typeVersion":  1,
+                                            "position":  [
+                                                             480,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const prev = $(\u0027Anomaly Detection\u0027).first().json;\nreturn [{ json: { status: \u0027CLEAN\u0027, message: `3PL scan complete — no anomalies in ${prev.stats.total} records.`, timestamp: new Date().toISOString() } }];"
+                                                           },
+                                            "id":  "b290151f-4374-480f-903f-642c931f162c",
+                                            "name":  "Log Clean Status",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             272
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Schedule 3x Daily":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "Read 3PL Log",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    },
+                                              "Webhook Trigger":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Read 3PL Log",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Read 3PL Log":  {
+                                                                   "main":  [
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "Anomaly Detection",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ]
+                                                                            ]
+                                                               },
+                                              "Anomaly Detection":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "Has Alerts?",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    },
+                                              "Has Alerts?":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "Claude 3PL Analyst",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ],
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "Log Clean Status",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              },
+                                              "Claude 3PL Analyst":  {
+                                                                         "main":  [
+                                                                                      [
+                                                                                          {
+                                                                                              "node":  "Format 3PL Report",
+                                                                                              "type":  "main",
+                                                                                              "index":  0
+                                                                                          }
+                                                                                      ]
+                                                                                  ]
+                                                                     },
+                                              "Format 3PL Report":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "Save 3PL Report",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    }
+                                          },
+                          "authors":  "Kevin kas@kevin-llc.com",
+                          "name":  "Version 218eae16",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-04-07T02:13:14.068Z",
+                                                             "id":  43,
+                                                             "workflowId":  "KI2lwLOiOvFm19i5",
+                                                             "versionId":  "218eae16-6fa7-478f-a423-38a9b095982b",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-04-08T02:53:08.246Z",
+                                                             "id":  92,
+                                                             "workflowId":  "KI2lwLOiOvFm19i5",
+                                                             "versionId":  "218eae16-6fa7-478f-a423-38a9b095982b",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-04-08T02:53:08.203Z",
+                                                             "id":  91,
+                                                             "workflowId":  "KI2lwLOiOvFm19i5",
+                                                             "versionId":  "218eae16-6fa7-478f-a423-38a9b095982b",
+                                                             "event":  "deactivated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

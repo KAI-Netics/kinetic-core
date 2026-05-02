@@ -1,0 +1,433 @@
+﻿{
+    "updatedAt":  "2026-05-02T12:00:53.647Z",
+    "createdAt":  "2026-04-26T23:27:52.689Z",
+    "id":  "uWar6a3rBK9yUZHt",
+    "name":  "Atlas - Technical Architect v2",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "atlas-architect",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       -656,
+                                       80
+                                   ],
+                      "id":  "e44c8ae3-7deb-4a75-b052-4ee928f1a8d4",
+                      "name":  "Webhook",
+                      "webhookId":  "4e74cbbc-7466-4e34-9da5-bc5f3613bfcc"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\n\nlet ctx = {};\ntry {\n  ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027).replace(/\\uFEFF/g, \u0027\u0027));\n} catch(e) { ctx = {}; }\n\nconst todayStr = new Date().toLocaleDateString(\u0027en-US\u0027, {timeZone: \u0027America/New_York\u0027, weekday: \u0027long\u0027, year: \u0027numeric\u0027, month: \u0027long\u0027, day: \u0027numeric\u0027});\nconst nowStr = new Date().toLocaleString(\u0027en-US\u0027, {timeZone: \u0027America/New_York\u0027});\n\nconst raw = $input.first().json;\nconst body = raw.body || raw;\nconst command = String(body.command || \u0027\u0027).trim();\nconst detail = String(body.detail || \u0027\u0027).trim();\n\nconst entities = ctx.entities || {};\nconst founder = ctx.founder || {};\nconst verticals = ctx.verticals || {};\nconst tech = ctx.technology || {};\nconst dates = ctx.key_dates || {};\nconst revenue = ctx.revenue_targets || {};\nconst compliance = (ctx.compliance_rules || []).join(\u0027\\n- \u0027);\nconst naics = ((ctx.naics \u0026\u0026 ctx.naics.registered) || []).map(function(n){ return n.code + \u0027 \u0027 + n.description; }).join(\u0027, \u0027);\n\nconst deadlines = (ctx.deadlines || []).filter(function(d){\n  const st = (d.status || \u0027\u0027).toUpperCase();\n  return st !== \u0027FILED\u0027 \u0026\u0026 st !== \u0027COMPLETE\u0027 \u0026\u0026 st !== \u0027EXEMPT\u0027;\n}).slice(0, 12);\n\nconst verticalSummary = Object.entries(verticals).map(function(entry){\n  const k = entry[0]; const v = entry[1];\n  return k + \u0027 -- \u0027 + v.name + \u0027 | Status: \u0027 + v.status + \u0027 | Margin: \u0027 + (v.margin || \u0027TBD\u0027);\n}).join(\u0027\\n\u0027);\n\nconst deadlineSummary = deadlines.map(function(d){\n  const days = Math.ceil((new Date(d.date) - new Date()) / (1000 * 60 * 60 * 24));\n  const label = days \u003c 0 ? \u0027OVERDUE \u0027 + Math.abs(days) + \u0027d\u0027 : days + \u0027d\u0027;\n  return label + \u0027 -- \u0027 + d.item + \u0027 [\u0027 + (d.entity || \u0027?\u0027) + \u0027]\u0027;\n}).join(\u0027\\n\u0027) || \u0027None loaded\u0027;\n\nconst companyContext = \u0027TODAY: \u0027 + todayStr + \u0027\\n\\nKAI-NETICS CONTEXT\\n\u0027 +\n  \u0027FP: \u0027 + (entities.FP \u0026\u0026 entities.FP.name || \u0027KAI-Netics\u0027) + \u0027 | EIN: \u0027 + (entities.FP \u0026\u0026 entities.FP.ein || \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027EAF: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.name || \u0027EAF\u0027) + \u0027 | EIN: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.ein || \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027MONK LLC: \u0027 + (entities.MONK \u0026\u0026 entities.MONK.status || \u0027In formation\u0027) + \u0027\\n\u0027 +\n  \u0027Founder: \u0027 + (founder.name || \u0027Kevin Alexander Smith\u0027) + \u0027\\n\u0027 +\n  \u0027Credentials: \u0027 + (founder.credentials || []).join(\u0027, \u0027) + \u0027\\n\\n\u0027 +\n  \u0027VERTICALS:\\n\u0027 + verticalSummary + \u0027\\n\\n\u0027 +\n  \u0027TECHNOLOGY:\\n\u0027 +\n  \u0027  MONK: \u0027 + (tech.MONK \u0026\u0026 tech.MONK.description || \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027  BVLOS: \u0027 + (tech.MONK \u0026\u0026 tech.MONK.bvlos_relevance || \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027  SBIR Target: \u0027 + (tech.MONK \u0026\u0026 tech.MONK.sbi"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -448,
+                                       80
+                                   ],
+                      "id":  "8e46fe76-5b24-4352-be8e-06f9e64e97c6",
+                      "name":  "Load Context + Build Prompt"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "s1",
+                                                                                   "leftValue":  "={{ $json.isStatus }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -224,
+                                       80
+                                   ],
+                      "id":  "da3e9e09-80c5-4418-81b8-8c8b0a965ecb",
+                      "name":  "Is Status?"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst https = require(\u0027https\u0027);\n\nconst {\n  systemPrompt,\n  userPrompt,\n  outputFolder,\n  outputPrefix,\n  command,\n  timestamp,\n  clientName\n} = $input.first().json;\n\nconst DEEP_ANALYSIS_TRIGGERS = [\n  \u0027drift\u0027, \u0027analyze\u0027, \u0027compare\u0027, \u0027replication\u0027, \u0027client config\u0027,\n  \u0027industry\u0027, \u0027best practice\u0027, \u0027optimize\u0027, \u0027architecture review\u0027,\n  \u0027upgrade path\u0027, \u0027strategic\u0027, \u0027gap analysis\u0027, \u0027implementation plan\u0027,\n  \u0027cost model\u0027, \u0027version audit\u0027, \u0027platform review\u0027, \u0027scheduled_review\u0027,\n  \u00273_week_review\u0027\n];\n\nconst commandLower = (command || \u0027\u0027).toLowerCase();\nconst promptLower = (userPrompt || \u0027\u0027).toLowerCase();\nconst isDeepAnalysis = DEEP_ANALYSIS_TRIGGERS.some(t =\u003e\n  commandLower.includes(t) || promptLower.includes(t)\n);\n\nconst MODEL = isDeepAnalysis ? \u0027claude-opus-4-6\u0027 : \u0027claude-sonnet-4-6\u0027;\nconst MODEL_MODE = isDeepAnalysis ? \u0027opus_deep\u0027 : \u0027sonnet_default\u0027;\nconst MAX_TOKENS = isDeepAnalysis ? 4096 : 2048;\n\nconst RATES = {\n  \u0027claude-opus-4-6\u0027:   { input: 0.000015, output: 0.000075 },\n  \u0027claude-sonnet-4-6\u0027: { input: 0.000003, output: 0.000015 }\n};\n\nlet atlasSystemPrompt = systemPrompt;\ntry {\n  const promptPath = \u0027/data/Atlas_System_Prompt.txt\u0027;\n  if (fs.existsSync(promptPath)) {\n    atlasSystemPrompt = fs.readFileSync(promptPath, \u0027utf8\u0027);\n  }\n} catch(e) {}\n\nconst requestBody = JSON.stringify({\n  model: MODEL,\n  max_tokens: MAX_TOKENS,\n  system: atlasSystemPrompt,\n  messages: [{ role: \u0027user\u0027, content: userPrompt }]\n});\n\nconst ANTHROPIC_KEY = $env.ANTHROPIC_API_KEY || \u0027\u0027;\n\nconst apiOptions = {\n  hostname: \u0027api.anthropic.com\u0027,\n  port: 443,\n  path: \u0027/v1/messages\u0027,\n  method: \u0027POST\u0027,\n  headers: {\n    \u0027Content-Type\u0027: \u0027application/json\u0027,\n    \u0027x-api-key\u0027: ANTHROPIC_KEY,\n    \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n    \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n  }\n};\n\nconst result = await new Promise((resolve, reject) =\u003e {\n  const req = https.request(apiOptions, (res) =\u003e {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, c =\u003e d += c);\n    res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: d }));\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet fullText = \u0027\u0027;\nlet inputTokens = 0;\nlet outputTokens = 0;\n\ntry {\n  const parsed = JSON.parse(result.body);\n  fullText = parsed.content?.[0]?.text || \u0027No response.\u0027;\n  inputTokens = parsed.usage?.input_tokens || 0;\n  outputTokens = parsed.usage?.output_tokens || 0;\n} catch(e) {\n  fullText = result.body.substring(0, 500);\n}\n\nconst rate = RATES[MODEL] || RATES[\u0027claude-sonnet-4-6\u0027];\nconst costUsd = (inputTokens * rate.input) + (outputTokens * rate.output);\n\nconst wordCount = fullText.split(/\\s+/).filter(w =\u003e w.length \u003e 0).length;\nconst dateStr = new Date(timestamp).toISOString().slice(0, 10).replace(/-/g, \u0027\u0027);\nconst timeStr = new Date(timestamp).toTimeString().slice(0, 5).replace(\u0027:\u0027, \u0027\u0027);\nconst filename = `${outputPrefix}_${dateStr}_${timeStr}.txt`;\nconst folderPath = `/data/${outputFolder || \u0027Aidan_Outputs/Atlas\u0027}`;\n\nfs.mkdirSync(folderPath, { recursive: true });\nfs.writeFileSync(\n  `${folderPath}/${filename}`,\n  `ATLAS v3 — KAI-NETICS\\nCommand: ${command}\\nModel: ${MODEL} (${MODEL_MODE})\\nGenerated: ${timestamp}\\nTokens: ${inputTokens} in / ${outputTokens} out\\nCost: $${costUsd.toFixed(6)}\\nWords: ${wordCount}\\n\\n${fullText}\\n`,\n  \u0027utf8\u0027\n);\n\nconst SUPA_URL = $env.SUPABASE_URL || \u0027\u0027;\nconst SUPA_KEY = $env.SUPABASE_SERVICE_KEY || \u0027\u0027;\nconst sessionId = `atlas_${dateStr}_${timeStr}`;\n\nasync function supabaseInsert(table, payload) {\n  if (!SUPA_URL || !SUPA_KEY) return null;\n  const body = JSON.stringify(payload);\n  const urlStr = `${SUPA_URL}/rest/v1/${table}`;\nconst hostname = SUPA_URL.replace(\u0027https://\u0027, \u0027\u0027).replace(\u0027http://\u0027, \u0027\u0027);\nconst path = `/rest/v1/${table}`;\n  return new Promise((resolve) =\u003e {\n    const opts = {\n      hostname: hostname,\nport: 443,\npath: path,\n      method: \u0027POST\u0027,\n      headers: {\n        \u0027Content-Type\u0027: \u0027application/json\u0027,\n        \u0027apikey\u0027: SUPA_KEY,\n        \u0027Authorization\u0027: `Bearer ${SUPA_KEY}`,\n        \u0027Prefer\u0027: \u0027return=minimal\u0027,\n        \u0027Content-Length\u0027: Buffer.byteLength(body)\n      }\n    };\n    const req = https.request(opts, (res) =\u003e {\n      res.on(\u0027data\u0027, () =\u003e {});\n      res.on(\u0027end\u0027, () =\u003e resolve(res.statusCode));\n    });\n    req.on(\u0027error\u0027, () =\u003e resolve(null));\n    req.write(body);\n    req.end();\n  });\n}\n\nawait supabaseInsert(\u0027cost_log\u0027, {\n  workflow_name: \u0027Atlas - Technical Architect v3\u0027,\n  node_name: \u0027Call Claude + Save Output\u0027,\n  model: MODEL,\n  input_tokens: inputTokens,\n  output_tokens: outputTokens,\n  cost_usd: costUsd,\n  api_provider: \u0027anthropic\u0027,\n  call_mode: \u0027on_demand\u0027,\n  success: result.status === 200,\n  session_id: sessionId\n});\n\nawait supabaseInsert(\u0027atlas_decisions\u0027, {\n  decision_type: isDeepAnalysis ? \u0027deep_analysis\u0027 : \u0027routine_query\u0027,\n  model_used: MODEL,\n  context_summary: (command || \u0027\u0027).substring(0, 200),\n  recommendation: fullText.substring(0, 500),\n  tokens_used: inputTokens + outputTokens,\n  cost_usd: costUsd\n});\n\nconst aidanSummary = [\n  `ATLAS v3 COMPLETE`,\n  `Command: ${command}`,\n  `Model: ${MODEL} (${MODEL_MODE})`,\n  `Tokens: ${inputTokens + outputTokens} | Cost: $${costUsd.toFixed(4)}`,\n  `File: ${filename}`,\n  `Saved: /data/${outputFolder}/`\n].join(\u0027\\n\u0027);\n\nreturn [{\n  json: {\n    command,\n    fullText,\n    filename,\n    outputFolder,\n    wordCount,\n    aidanSummary,\n    timestamp,\n    status: \u0027written\u0027,\n    model: MODEL,\n    modelMode: MODEL_MODE,\n    inputTokens,\n    outputTokens,\n    costUsd: costUsd.toFixed(6),\n    sessionId\n  }\n}];\n"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "id":  "502a9aca-478f-4739-ba06-21abf983b288",
+                      "name":  "Call Claude + Save Output"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "return [{ json: { aidanSummary: $input.first().json.statusReport, command: \u0027Atlas status\u0027, timestamp: $input.first().json.timestamp, status: \u0027status\u0027 } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       160
+                                   ],
+                      "id":  "f8daf4b3-3c0e-4a78-8fb4-cc282bc80bc0",
+                      "name":  "Pass Status"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst { aidanSummary = \u0027\u0027, command = \u0027Atlas\u0027, wordCount = 0, fullText = \u0027\u0027, filename = \u0027\u0027, outputFolder = \u0027Atlas_Outputs\u0027, sessionId = null } = $input.first().json;\n\nlet summaryBullets = \u0027\u0027;\nif (fullText) {\n  const lines = fullText.split(\u0027\\n\u0027).filter(function(l){ return l.trim(); });\n  const bullets = [];\n  for (let i = 0; i \u003c lines.length; i++) {\n    const l = lines[i].trim();\n    if (l.match(/^[*\\-•]|^\\d+\\./) \u0026\u0026 l.length \u003e 20 \u0026\u0026 l.length \u003c 200) {\n      bullets.push(\u0027• \u0027 + l.replace(/^[*\\-•\\d\\.\\s]+/, \u0027\u0027).replace(/\\*\\*/g, \u0027\u0027).trim());\n      if (bullets.length \u003e= 5) break;\n    }\n  }\n  if (bullets.length \u003e 0) {\n    summaryBullets = \u0027\\n\\n\u0027 + bullets.join(\u0027\\n\u0027);\n  }\n}\n\nconst fileLink = filename ? \u0027\\n\\nFull report: http://localhost:3030/\u0027 + outputFolder + \u0027/\u0027 + filename : \u0027\u0027;\nconst shortCmd = command.length \u003e 80 ? command.substring(0, 80) + \u0027...\u0027 : command;\nconst whatsappMsg = \u0027ATLAS COMPLETE\\nQuery: \u0027 + shortCmd + summaryBullets + fileLink;\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: whatsappMsg } });\nconst waOpts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(function(r){ const req = http.request(waOpts, function(res){ res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\n\nconst cbBody = JSON.stringify({ agent: \u0027Atlas\u0027, command, summary: aidanSummary, wordCount, sessionId: sessionId, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, function(res){ res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,function(){}); }); cbReq.on(\u0027error\u0027,function(){}); cbReq.write(cbBody); cbReq.end();\n\nreturn [{ json: { success: true, agent: \u0027Atlas\u0027, command, whatsappMsg, sessionId: sessionId } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       80
+                                   ],
+                      "id":  "b441e540-b142-4005-8fd6-40f3c4d2feba",
+                      "name":  "Aidan Callback"
+                  }
+              ],
+    "connections":  {
+                        "Webhook":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Load Context + Build Prompt",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Load Context + Build Prompt":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "Is Status?",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                        "Is Status?":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Pass Status",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "node":  "Call Claude + Save Output",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Call Claude + Save Output":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Aidan Callback",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Pass Status":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Aidan Callback",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Aidan Callback":  {
+                                               "main":  [
+                                                            [
+
+                                                            ]
+                                                        ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "b0d8cb2a-7449-4d9a-9d37-46b0c108495d",
+    "activeVersionId":  "b0d8cb2a-7449-4d9a-9d37-46b0c108495d",
+    "versionCounter":  99,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-26T23:27:52.692Z",
+                       "createdAt":  "2026-04-26T23:27:52.692Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "uWar6a3rBK9yUZHt",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T14:57:42.940Z",
+                     "createdAt":  "2026-04-09T14:57:42.940Z",
+                     "id":  "fEadKQpSGiNBKQFK",
+                     "name":  "Atlas"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T14:57:42.927Z",
+                     "createdAt":  "2026-04-09T14:57:42.927Z",
+                     "id":  "m749TgYIGFrtkDAS",
+                     "name":  "SBIR"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-05-02T12:00:56.000Z",
+                          "createdAt":  "2026-05-02T12:00:35.804Z",
+                          "versionId":  "b0d8cb2a-7449-4d9a-9d37-46b0c108495d",
+                          "workflowId":  "uWar6a3rBK9yUZHt",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "atlas-architect",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             -656,
+                                                             80
+                                                         ],
+                                            "id":  "e44c8ae3-7deb-4a75-b052-4ee928f1a8d4",
+                                            "name":  "Webhook",
+                                            "webhookId":  "4e74cbbc-7466-4e34-9da5-bc5f3613bfcc"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027);\n\nlet ctx = {};\ntry {\n  ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027).replace(/\\uFEFF/g, \u0027\u0027));\n} catch(e) { ctx = {}; }\n\nconst todayStr = new Date().toLocaleDateString(\u0027en-US\u0027, {timeZone: \u0027America/New_York\u0027, weekday: \u0027long\u0027, year: \u0027numeric\u0027, month: \u0027long\u0027, day: \u0027numeric\u0027});\nconst nowStr = new Date().toLocaleString(\u0027en-US\u0027, {timeZone: \u0027America/New_York\u0027});\n\nconst raw = $input.first().json;\nconst body = raw.body || raw;\nconst command = String(body.command || \u0027\u0027).trim();\nconst detail = String(body.detail || \u0027\u0027).trim();\n\nconst entities = ctx.entities || {};\nconst founder = ctx.founder || {};\nconst verticals = ctx.verticals || {};\nconst tech = ctx.technology || {};\nconst dates = ctx.key_dates || {};\nconst revenue = ctx.revenue_targets || {};\nconst compliance = (ctx.compliance_rules || []).join(\u0027\\n- \u0027);\nconst naics = ((ctx.naics \u0026\u0026 ctx.naics.registered) || []).map(function(n){ return n.code + \u0027 \u0027 + n.description; }).join(\u0027, \u0027);\n\nconst deadlines = (ctx.deadlines || []).filter(function(d){\n  const st = (d.status || \u0027\u0027).toUpperCase();\n  return st !== \u0027FILED\u0027 \u0026\u0026 st !== \u0027COMPLETE\u0027 \u0026\u0026 st !== \u0027EXEMPT\u0027;\n}).slice(0, 12);\n\nconst verticalSummary = Object.entries(verticals).map(function(entry){\n  const k = entry[0]; const v = entry[1];\n  return k + \u0027 -- \u0027 + v.name + \u0027 | Status: \u0027 + v.status + \u0027 | Margin: \u0027 + (v.margin || \u0027TBD\u0027);\n}).join(\u0027\\n\u0027);\n\nconst deadlineSummary = deadlines.map(function(d){\n  const days = Math.ceil((new Date(d.date) - new Date()) / (1000 * 60 * 60 * 24));\n  const label = days \u003c 0 ? \u0027OVERDUE \u0027 + Math.abs(days) + \u0027d\u0027 : days + \u0027d\u0027;\n  return label + \u0027 -- \u0027 + d.item + \u0027 [\u0027 + (d.entity || \u0027?\u0027) + \u0027]\u0027;\n}).join(\u0027\\n\u0027) || \u0027None loaded\u0027;\n\nconst companyContext = \u0027TODAY: \u0027 + todayStr + \u0027\\n\\nKAI-NETICS CONTEXT\\n\u0027 +\n  \u0027FP: \u0027 + (entities.FP \u0026\u0026 entities.FP.name || \u0027KAI-Netics\u0027) + \u0027 | EIN: \u0027 + (entities.FP \u0026\u0026 entities.FP.ein || \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027EAF: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.name || \u0027EAF\u0027) + \u0027 | EIN: \u0027 + (entities.EAF \u0026\u0026 entities.EAF.ein || \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027MONK LLC: \u0027 + (entities.MONK \u0026\u0026 entities.MONK.status || \u0027In formation\u0027) + \u0027\\n\u0027 +\n  \u0027Founder: \u0027 + (founder.name || \u0027Kevin Alexander Smith\u0027) + \u0027\\n\u0027 +\n  \u0027Credentials: \u0027 + (founder.credentials || []).join(\u0027, \u0027) + \u0027\\n\\n\u0027 +\n  \u0027VERTICALS:\\n\u0027 + verticalSummary + \u0027\\n\\n\u0027 +\n  \u0027TECHNOLOGY:\\n\u0027 +\n  \u0027  MONK: \u0027 + (tech.MONK \u0026\u0026 tech.MONK.description || \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027  BVLOS: \u0027 + (tech.MONK \u0026\u0026 tech.MONK.bvlos_relevance || \u0027\u0027) + \u0027\\n\u0027 +\n  \u0027  SBIR Target: \u0027 + (tech.MONK \u0026\u0026 tech.MONK.sbi"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             -448,
+                                                             80
+                                                         ],
+                                            "id":  "8e46fe76-5b24-4352-be8e-06f9e64e97c6",
+                                            "name":  "Load Context + Build Prompt"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  false,
+                                                                                                  "typeValidation":  "strict"
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "s1",
+                                                                                                         "leftValue":  "={{ $json.isStatus }}",
+                                                                                                         "rightValue":  true,
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "boolean",
+                                                                                                                          "operation":  "true"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             -224,
+                                                             80
+                                                         ],
+                                            "id":  "da3e9e09-80c5-4418-81b8-8c8b0a965ecb",
+                                            "name":  "Is Status?"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027);\nconst https = require(\u0027https\u0027);\n\nconst {\n  systemPrompt,\n  userPrompt,\n  outputFolder,\n  outputPrefix,\n  command,\n  timestamp,\n  clientName\n} = $input.first().json;\n\nconst DEEP_ANALYSIS_TRIGGERS = [\n  \u0027drift\u0027, \u0027analyze\u0027, \u0027compare\u0027, \u0027replication\u0027, \u0027client config\u0027,\n  \u0027industry\u0027, \u0027best practice\u0027, \u0027optimize\u0027, \u0027architecture review\u0027,\n  \u0027upgrade path\u0027, \u0027strategic\u0027, \u0027gap analysis\u0027, \u0027implementation plan\u0027,\n  \u0027cost model\u0027, \u0027version audit\u0027, \u0027platform review\u0027, \u0027scheduled_review\u0027,\n  \u00273_week_review\u0027\n];\n\nconst commandLower = (command || \u0027\u0027).toLowerCase();\nconst promptLower = (userPrompt || \u0027\u0027).toLowerCase();\nconst isDeepAnalysis = DEEP_ANALYSIS_TRIGGERS.some(t =\u003e\n  commandLower.includes(t) || promptLower.includes(t)\n);\n\nconst MODEL = isDeepAnalysis ? \u0027claude-opus-4-6\u0027 : \u0027claude-sonnet-4-6\u0027;\nconst MODEL_MODE = isDeepAnalysis ? \u0027opus_deep\u0027 : \u0027sonnet_default\u0027;\nconst MAX_TOKENS = isDeepAnalysis ? 4096 : 2048;\n\nconst RATES = {\n  \u0027claude-opus-4-6\u0027:   { input: 0.000015, output: 0.000075 },\n  \u0027claude-sonnet-4-6\u0027: { input: 0.000003, output: 0.000015 }\n};\n\nlet atlasSystemPrompt = systemPrompt;\ntry {\n  const promptPath = \u0027/data/Atlas_System_Prompt.txt\u0027;\n  if (fs.existsSync(promptPath)) {\n    atlasSystemPrompt = fs.readFileSync(promptPath, \u0027utf8\u0027);\n  }\n} catch(e) {}\n\nconst requestBody = JSON.stringify({\n  model: MODEL,\n  max_tokens: MAX_TOKENS,\n  system: atlasSystemPrompt,\n  messages: [{ role: \u0027user\u0027, content: userPrompt }]\n});\n\nconst ANTHROPIC_KEY = $env.ANTHROPIC_API_KEY || \u0027\u0027;\n\nconst apiOptions = {\n  hostname: \u0027api.anthropic.com\u0027,\n  port: 443,\n  path: \u0027/v1/messages\u0027,\n  method: \u0027POST\u0027,\n  headers: {\n    \u0027Content-Type\u0027: \u0027application/json\u0027,\n    \u0027x-api-key\u0027: ANTHROPIC_KEY,\n    \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n    \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n  }\n};\n\nconst result = await new Promise((resolve, reject) =\u003e {\n  const req = https.request(apiOptions, (res) =\u003e {\n    let d = \u0027\u0027;\n    res.on(\u0027data\u0027, c =\u003e d += c);\n    res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: d }));\n  });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet fullText = \u0027\u0027;\nlet inputTokens = 0;\nlet outputTokens = 0;\n\ntry {\n  const parsed = JSON.parse(result.body);\n  fullText = parsed.content?.[0]?.text || \u0027No response.\u0027;\n  inputTokens = parsed.usage?.input_tokens || 0;\n  outputTokens = parsed.usage?.output_tokens || 0;\n} catch(e) {\n  fullText = result.body.substring(0, 500);\n}\n\nconst rate = RATES[MODEL] || RATES[\u0027claude-sonnet-4-6\u0027];\nconst costUsd = (inputTokens * rate.input) + (outputTokens * rate.output);\n\nconst wordCount = fullText.split(/\\s+/).filter(w =\u003e w.length \u003e 0).length;\nconst dateStr = new Date(timestamp).toISOString().slice(0, 10).replace(/-/g, \u0027\u0027);\nconst timeStr = new Date(timestamp).toTimeString().slice(0, 5).replace(\u0027:\u0027, \u0027\u0027);\nconst filename = `${outputPrefix}_${dateStr}_${timeStr}.txt`;\nconst folderPath = `/data/${outputFolder || \u0027Aidan_Outputs/Atlas\u0027}`;\n\nfs.mkdirSync(folderPath, { recursive: true });\nfs.writeFileSync(\n  `${folderPath}/${filename}`,\n  `ATLAS v3 — KAI-NETICS\\nCommand: ${command}\\nModel: ${MODEL} (${MODEL_MODE})\\nGenerated: ${timestamp}\\nTokens: ${inputTokens} in / ${outputTokens} out\\nCost: $${costUsd.toFixed(6)}\\nWords: ${wordCount}\\n\\n${fullText}\\n`,\n  \u0027utf8\u0027\n);\n\nconst SUPA_URL = $env.SUPABASE_URL || \u0027\u0027;\nconst SUPA_KEY = $env.SUPABASE_SERVICE_KEY || \u0027\u0027;\nconst sessionId = `atlas_${dateStr}_${timeStr}`;\n\nasync function supabaseInsert(table, payload) {\n  if (!SUPA_URL || !SUPA_KEY) return null;\n  const body = JSON.stringify(payload);\n  const urlStr = `${SUPA_URL}/rest/v1/${table}`;\nconst hostname = SUPA_URL.replace(\u0027https://\u0027, \u0027\u0027).replace(\u0027http://\u0027, \u0027\u0027);\nconst path = `/rest/v1/${table}`;\n  return new Promise((resolve) =\u003e {\n    const opts = {\n      hostname: hostname,\nport: 443,\npath: path,\n      method: \u0027POST\u0027,\n      headers: {\n        \u0027Content-Type\u0027: \u0027application/json\u0027,\n        \u0027apikey\u0027: SUPA_KEY,\n        \u0027Authorization\u0027: `Bearer ${SUPA_KEY}`,\n        \u0027Prefer\u0027: \u0027return=minimal\u0027,\n        \u0027Content-Length\u0027: Buffer.byteLength(body)\n      }\n    };\n    const req = https.request(opts, (res) =\u003e {\n      res.on(\u0027data\u0027, () =\u003e {});\n      res.on(\u0027end\u0027, () =\u003e resolve(res.statusCode));\n    });\n    req.on(\u0027error\u0027, () =\u003e resolve(null));\n    req.write(body);\n    req.end();\n  });\n}\n\nawait supabaseInsert(\u0027cost_log\u0027, {\n  workflow_name: \u0027Atlas - Technical Architect v3\u0027,\n  node_name: \u0027Call Claude + Save Output\u0027,\n  model: MODEL,\n  input_tokens: inputTokens,\n  output_tokens: outputTokens,\n  cost_usd: costUsd,\n  api_provider: \u0027anthropic\u0027,\n  call_mode: \u0027on_demand\u0027,\n  success: result.status === 200,\n  session_id: sessionId\n});\n\nawait supabaseInsert(\u0027atlas_decisions\u0027, {\n  decision_type: isDeepAnalysis ? \u0027deep_analysis\u0027 : \u0027routine_query\u0027,\n  model_used: MODEL,\n  context_summary: (command || \u0027\u0027).substring(0, 200),\n  recommendation: fullText.substring(0, 500),\n  tokens_used: inputTokens + outputTokens,\n  cost_usd: costUsd\n});\n\nconst aidanSummary = [\n  `ATLAS v3 COMPLETE`,\n  `Command: ${command}`,\n  `Model: ${MODEL} (${MODEL_MODE})`,\n  `Tokens: ${inputTokens + outputTokens} | Cost: $${costUsd.toFixed(4)}`,\n  `File: ${filename}`,\n  `Saved: /data/${outputFolder}/`\n].join(\u0027\\n\u0027);\n\nreturn [{\n  json: {\n    command,\n    fullText,\n    filename,\n    outputFolder,\n    wordCount,\n    aidanSummary,\n    timestamp,\n    status: \u0027written\u0027,\n    model: MODEL,\n    modelMode: MODEL_MODE,\n    inputTokens,\n    outputTokens,\n    costUsd: costUsd.toFixed(6),\n    sessionId\n  }\n}];\n"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ],
+                                            "id":  "502a9aca-478f-4739-ba06-21abf983b288",
+                                            "name":  "Call Claude + Save Output"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "return [{ json: { aidanSummary: $input.first().json.statusReport, command: \u0027Atlas status\u0027, timestamp: $input.first().json.timestamp, status: \u0027status\u0027 } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             160
+                                                         ],
+                                            "id":  "f8daf4b3-3c0e-4a78-8fb4-cc282bc80bc0",
+                                            "name":  "Pass Status"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const http = require(\u0027http\u0027);\nconst { aidanSummary = \u0027\u0027, command = \u0027Atlas\u0027, wordCount = 0, fullText = \u0027\u0027, filename = \u0027\u0027, outputFolder = \u0027Atlas_Outputs\u0027, sessionId = null } = $input.first().json;\n\nlet summaryBullets = \u0027\u0027;\nif (fullText) {\n  const lines = fullText.split(\u0027\\n\u0027).filter(function(l){ return l.trim(); });\n  const bullets = [];\n  for (let i = 0; i \u003c lines.length; i++) {\n    const l = lines[i].trim();\n    if (l.match(/^[*\\-•]|^\\d+\\./) \u0026\u0026 l.length \u003e 20 \u0026\u0026 l.length \u003c 200) {\n      bullets.push(\u0027• \u0027 + l.replace(/^[*\\-•\\d\\.\\s]+/, \u0027\u0027).replace(/\\*\\*/g, \u0027\u0027).trim());\n      if (bullets.length \u003e= 5) break;\n    }\n  }\n  if (bullets.length \u003e 0) {\n    summaryBullets = \u0027\\n\\n\u0027 + bullets.join(\u0027\\n\u0027);\n  }\n}\n\nconst fileLink = filename ? \u0027\\n\\nFull report: http://localhost:3030/\u0027 + outputFolder + \u0027/\u0027 + filename : \u0027\u0027;\nconst shortCmd = command.length \u003e 80 ? command.substring(0, 80) + \u0027...\u0027 : command;\nconst whatsappMsg = \u0027ATLAS COMPLETE\\nQuery: \u0027 + shortCmd + summaryBullets + fileLink;\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: whatsappMsg } });\nconst waOpts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(function(r){ const req = http.request(waOpts, function(res){ res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\n\nconst cbBody = JSON.stringify({ agent: \u0027Atlas\u0027, command, summary: aidanSummary, wordCount, sessionId: sessionId, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, function(res){ res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,function(){}); }); cbReq.on(\u0027error\u0027,function(){}); cbReq.write(cbBody); cbReq.end();\n\nreturn [{ json: { success: true, agent: \u0027Atlas\u0027, command, whatsappMsg, sessionId: sessionId } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             224,
+                                                             80
+                                                         ],
+                                            "id":  "b441e540-b142-4005-8fd6-40f3c4d2feba",
+                                            "name":  "Aidan Callback"
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Webhook":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Load Context + Build Prompt",
+                                                                                   "type":  "main",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                                              "Load Context + Build Prompt":  {
+                                                                                  "main":  [
+                                                                                               [
+                                                                                                   {
+                                                                                                       "node":  "Is Status?",
+                                                                                                       "type":  "main",
+                                                                                                       "index":  0
+                                                                                                   }
+                                                                                               ]
+                                                                                           ]
+                                                                              },
+                                              "Is Status?":  {
+                                                                 "main":  [
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "Pass Status",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ],
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "Call Claude + Save Output",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ]
+                                                                          ]
+                                                             },
+                                              "Call Claude + Save Output":  {
+                                                                                "main":  [
+                                                                                             [
+                                                                                                 {
+                                                                                                     "node":  "Aidan Callback",
+                                                                                                     "type":  "main",
+                                                                                                     "index":  0
+                                                                                                 }
+                                                                                             ]
+                                                                                         ]
+                                                                            },
+                                              "Pass Status":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "Aidan Callback",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              },
+                                              "Aidan Callback":  {
+                                                                     "main":  [
+                                                                                  [
+
+                                                                                  ]
+                                                                              ]
+                                                                 }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version b0d8cb2a",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-05-02T12:00:56.776Z",
+                                                             "id":  485,
+                                                             "workflowId":  "uWar6a3rBK9yUZHt",
+                                                             "versionId":  "b0d8cb2a-7449-4d9a-9d37-46b0c108495d",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

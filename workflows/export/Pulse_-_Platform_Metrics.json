@@ -1,0 +1,393 @@
+﻿{
+    "updatedAt":  "2026-04-21T22:52:31.490Z",
+    "createdAt":  "2026-04-21T22:52:31.490Z",
+    "id":  "7Q7yuRJyev9s3DQW",
+    "name":  "Pulse - Platform Metrics",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "pulse-metrics",
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "ed11c3fa-98f6-4db7-9aba-f29fc4e99b19",
+                      "name":  "Webhook Trigger",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       0,
+                                       160
+                                   ],
+                      "webhookId":  "kai-pulse-metrics"
+                  },
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 0 14 * * 1-5"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "68796b12-6d20-487d-b9da-881c90f9de39",
+                      "name":  "Daily 10AM Trigger",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst SUPABASE_URL = \u0027raxpmeltyxmtiihxoxpa.supabase.co\u0027;\nconst SUPABASE_KEY = \u0027sb_secret_Jz8T31FHgqpfOrqijr1qtQ_HcbbZ8Nu\u0027;\n\nasync function query(path) {\n  return new Promise(function(resolve) {\n    const req = https.request({\n      hostname: SUPABASE_URL,\n      port: 443,\n      path: path,\n      method: \u0027GET\u0027,\n      headers: {\n        \u0027apikey\u0027: SUPABASE_KEY,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n        \u0027Content-Type\u0027: \u0027application/json\u0027\n      }\n    }, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() {\n        try { resolve(JSON.parse(d)); }\n        catch(e) { resolve([]); }\n      });\n    });\n    req.on(\u0027error\u0027, function() { resolve([]); });\n    req.end();\n  });\n}\n\n// Query all views and tables in parallel\nconst results = await Promise.all([\n  query(\u0027/rest/v1/pipeline_summary?select=*\u0027),\n  query(\u0027/rest/v1/grant_pipeline_summary?select=*\u0027),\n  query(\u0027/rest/v1/agent_health_7d?select=*\u0027),\n  query(\u0027/rest/v1/scout_reports?select=id,run_date,fit_score,status,mode\u0026order=run_date.desc\u0026limit=5\u0027),\n  query(\u0027/rest/v1/compliance_items?resolved=eq.false\u0026order=deadline.asc\u0026limit=5\u0026select=item_name,deadline,severity,days_remaining\u0027),\n  query(\u0027/rest/v1/rfp_responses?select=id,rfp_name,fit_score,go_no_go,kevin_decision\u0026order=created_at.desc\u0026limit=5\u0027)\n]);\n\nconst pipeline = results[0] \u0026\u0026 results[0][0] ? results[0][0] : {};\nconst grants = results[1] \u0026\u0026 results[1][0] ? results[1][0] : {};\nconst agentHealth = results[2] || [];\nconst recentScout = results[3] || [];\nconst openCompliance = results[4] || [];\nconst recentRfp = results[5] || [];\n\nreturn [{ json: {\n  pipeline: pipeline,\n  grants: grants,\n  agentHealth: agentHealth,\n  recentScout: recentScout,\n  openCompliance: openCompliance,\n  recentRfp: recentRfp,\n  timestamp: new Date().toISOString()\n}}];"
+                                     },
+                      "id":  "6e3aff66-060a-4843-8672-278a250cabbf",
+                      "name":  "Query Supabase",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const input = $input.first().json;\nconst pipeline = input.pipeline || {};\nconst grants = input.grants || {};\nconst agentHealth = input.agentHealth || [];\nconst recentScout = input.recentScout || [];\nconst openCompliance = input.openCompliance || [];\nconst recentRfp = input.recentRfp || [];\n\nconst today = new Date().toLocaleDateString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027, month: \u0027short\u0027, day: \u0027numeric\u0027, year: \u0027numeric\u0027 });\n\nlet report = \u0027PULSE PLATFORM REPORT\\n\u0027;\nreport += today + \u0027 | KAI-Netics Core Engine v2\\n\u0027;\nreport += \u0027================================\\n\\n\u0027;\n\n// BD PIPELINE\nreport += \u0027BD PIPELINE\\n\u0027;\nreport += \u0027  Active MRR:      $\u0027 + (pipeline.total_active_mrr || \u00270\u0027) + \u0027/mo\\n\u0027;\nreport += \u0027  Pipeline Value:  $\u0027 + (pipeline.total_pipeline_value || \u00270\u0027)+ \u0027\\n\u0027;\nreport += \u0027  Stage 0 (Outreach):    \u0027 + (pipeline.outreach_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 1 (Discovery):   \u0027 + (pipeline.discovery_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 2 (POC Prop):    \u0027 + (pipeline.poc_proposal_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 3 (POC Exec):    \u0027 + (pipeline.poc_execution_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 4 (SLA Conv):    \u0027 + (pipeline.sla_conversion_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 5 (MRR Active):  \u0027 + (pipeline.mrr_active_count || 0) + \u0027\\n\\n\u0027;\n\n// GRANT PIPELINE\nreport += \u0027GRANT PIPELINE\\n\u0027;\nreport += \u0027  LOI Drafted:     \u0027 + (grants.loi_drafted || 0) + \u0027\\n\u0027;\nreport += \u0027  LOI Sent:        \u0027 + (grants.loi_sent || 0) + \u0027\\n\u0027;\nreport += \u0027  Submitted:       \u0027 + (grants.submitted || 0) + \u0027\\n\u0027;\nreport += \u0027  Under Review:    \u0027 + (grants.under_review || 0) + \u0027\\n\u0027;\nreport += \u0027  Awarded:         \u0027 + (grants.awarded || 0) + \u0027\\n\u0027;\nreport += \u0027  Total Awarded:   $\u0027 + (grants.total_awarded || \u00270\u0027) + \u0027\\n\u0027;\nreport += \u0027  Due in 30 days:  \u0027 + (grants.due_in_30_days || 0) + \u0027\\n\\n\u0027;\n\n// AGENT HEALTH\nreport += \u0027AGENT HEALTH (7 days)\\n\u0027;\nif (agentHealth.length === 0) {\n  report += \u0027  No execution data yet\\n\u0027;\n} else {\n  agentHealth.forEach(function(a) {\n    const rate = a.success_rate_pct !== null ? a.success_rate_pct + \u0027%\u0027 : \u0027N/A\u0027;\n    const lastRun = a.last_run ? new Date(a.last_run).toLocaleDateString(\u0027en-US\u0027, { month: \u0027short\u0027, day: \u0027numeric\u0027, hour: \u00272-digit\u0027, minute: \u00272-digit\u0027, timeZone: \u0027America/New_York\u0027 }) : \u0027Never\u0027;\n    report += \u0027  \u0027 + a.agent + \u0027: \u0027 + a.total_runs + \u0027 runs | \u0027 + rate + \u0027 success | Last: \u0027 + lastRun + \u0027\\n\u0027;\n  });\n}\nreport += \u0027\\n\u0027;\n\n// RECENT SCOUT ACTIVITY\nreport += \u0027RECENT SCOUT FINDS (last 5)\\n\u0027;\nif (recentScout.length === 0) {\n  report += \u0027  No Scout data yet\\n\u0027;\n} else {\n  recentScout.forEach(function(s) {\n    report += \u0027  \u0027 + (s.run_date || \u0027?\u0027) + \u0027 | \u0027 + (s.mode || \u0027?\u0027).toUpperCase() + \u0027 | Score: \u0027 + (s.fit_score || \u0027N/A\u0027) + \u0027 | \u0027 + (s.status || \u0027new\u0027) + \u0027\\n\u0027;\n  });\n}\nreport += \u0027\\n\u0027;\n\n// COMPLIANCE FLAGS\nreport += \u0027OPEN COMPLIANCE ITEMS\\n\u0027;\nif (openCompliance.length === 0) {\n  report += \u0027  All clear\\n\u0027;\n} else {\n  openCompliance.forEach(function(c) {\n    const days = c.days_remaining !== null ? c.days_remaining + \u0027d\u0027 : \u0027?\u0027;\n    report += \u0027  [\u0027 + (c.severity || \u0027?\u0027).toUpperCase() + \u0027] \u0027 + c.item_name + \u0027 -- \u0027 + days + \u0027 (\u0027 + (c.deadline || \u0027?\u0027) + \u0027)\\n\u0027;\n  });\n}\nreport += \u0027\\n\u0027;\n\n// RECENT RFP ACTIVITY\nreport += \u0027RECENT RFP ACTIVITY (last 5)\\n\u0027;\nif (recentRfp.length === 0) {\n  report += \u0027  No RFP data yet\\n\u0027;\n} else {\n  recentRfp.forEach(function(r) {\n    report += \u0027  \u0027 + (r.rfp_name || \u0027Unknown\u0027).substring(0, 40) + \u0027 | \u0027 + (r.go_no_go || \u0027?\u0027) + \u0027 | Score: \u0027 + (r.fit_score || \u0027N/A\u0027) + \u0027 | Decision: \u0027 + (r.kevin_decision || \u0027PENDING\u0027) + \u0027\\n\u0027;\n  });\n}\n\nreport += \u0027\\n================================\\n\u0027;\nreport += \u0027Generated: \u0027 + new Date().toLocaleString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027 }) + \u0027 ET\\n\u0027;\n\n// Build WhatsApp summary (shorter)\nlet waSummary = \u0027PULSE REPORT -- \u0027 + today + \u0027\\n\\n\u0027;\nwaSummary += \u0027BD: MRR $\u0027 + (pipeline.total_active_mrr || \u00270\u0027) + \u0027/mo | Pipeline $\u0027 + (pipeline.total_pipeline_value || \u00270\u0027) + \u0027\\n\u0027;\nwaSummary += \u0027GRANTS: \u0027 + (grants.loi_drafted || 0) + \u0027 drafted | \u0027 + (grants.submitted || 0) + \u0027 submitted | $\u0027 + (grants.total_awarded || \u00270\u0027) + \u0027 awarded\\n\u0027;\n\nconst criticalItems = openCompliance.filter(function(c) { return c.severity === \u0027critical\u0027 || c.severity === \u0027overdue\u0027; });\nif (criticalItems.length \u003e 0) {\n  waSummary += \u0027COMPLIANCE FLAGS: \u0027 + criticalItems.length + \u0027 critical/overdue\\n\u0027;\n  criticalItems.forEach(function(c) {\n    waSummary += \u0027  * \u0027 + c.item_name + \u0027 -- \u0027 + (c.days_remaining !== null ? c.days_remaining + \u0027d\u0027 : \u0027?\u0027) + \u0027\\n\u0027;\n  });\n} else {\n  waSummary += \u0027COMPLIANCE: All clear\\n\u0027;\n}\n\nwaSummary += \u0027RFP: \u0027 + recentRfp.length + \u0027 recent | AGENTS: \u0027 + agentHealth.length + \u0027 tracked\u0027;\n\nreturn [{ json: {\n  report: report,\n  waSummary: waSummary,\n  timestamp: input.timestamp\n}}];"
+                                     },
+                      "id":  "cfa068da-ee2b-47e9-8c93-3f75039e1e76",
+                      "name":  "Build Pulse Report",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\nconst safeTime = input.timestamp.split(\u0027:\u0027).join(\u0027-\u0027).split(\u0027.\u0027).join(\u0027-\u0027);\nconst outputPath = \u0027/data/Aidan_Outputs/Pulse/Pulse_Report_\u0027 + safeTime + \u0027.txt\u0027;\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Pulse\u0027, { recursive: true });\nfs.writeFileSync(outputPath, input.report, \u0027utf8\u0027);\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.savedTo = outputPath;\nreturn [{ json: out }];"
+                                     },
+                      "id":  "c5f48a6e-3346-48ee-af76-11f1bf0d671d",
+                      "name":  "Save Report",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       672,
+                                       80
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\n// Send WhatsApp summary\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: input.waSummary } });\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\n// Callback to Aidan\nconst cbBody = JSON.stringify({\n  agent: \u0027Pulse\u0027,\n  summary: input.waSummary,\n  savedTo: input.savedTo,\n  timestamp: new Date().toISOString()\n});\nconst cbOpts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) }\n};\nconst cbReq = http.request(cbOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, function(){}); });\ncbReq.on(\u0027error\u0027, function(){});\ncbReq.write(cbBody);\ncbReq.end();\n\nreturn [{ json: { success: true, agent: \u0027Pulse\u0027, savedTo: input.savedTo } }];"
+                                     },
+                      "id":  "dee00771-83a8-4d23-84bf-607bb7dec7f0",
+                      "name":  "WhatsApp + Callback",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       880,
+                                       80
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Query Supabase",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Daily 10AM Trigger":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Query Supabase",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Query Supabase":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Build Pulse Report",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Build Pulse Report":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Save Report",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Save Report":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "WhatsApp + Callback",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  {
+                       "node:Daily 10AM Trigger":  {
+                                                       "recurrenceRules":  [
+
+                                                                           ]
+                                                   }
+                   },
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "ee19b5d8-f71f-4ff0-b90e-5c04874f82e5",
+    "activeVersionId":  "ee19b5d8-f71f-4ff0-b90e-5c04874f82e5",
+    "versionCounter":  25,
+    "triggerCount":  2,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-21T22:52:31.499Z",
+                       "createdAt":  "2026-04-21T22:52:31.499Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "7Q7yuRJyev9s3DQW",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T22:52:29.830Z",
+                     "createdAt":  "2026-04-21T22:52:29.830Z",
+                     "id":  "929pfUDaRarXhUKB",
+                     "name":  "Pulse"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T22:52:29.794Z",
+                     "createdAt":  "2026-04-21T22:52:29.794Z",
+                     "id":  "DwP3z9iELWVCrOwO",
+                     "name":  "Metrics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T19:14:31.224Z",
+                     "createdAt":  "2026-04-21T19:14:31.224Z",
+                     "id":  "TjxfhhlH70HyB4sp",
+                     "name":  "Supabase"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-04-21T22:52:46.000Z",
+                          "createdAt":  "2026-04-21T22:52:31.501Z",
+                          "versionId":  "ee19b5d8-f71f-4ff0-b90e-5c04874f82e5",
+                          "workflowId":  "7Q7yuRJyev9s3DQW",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "pulse-metrics",
+                                                               "responseMode":  "lastNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "ed11c3fa-98f6-4db7-9aba-f29fc4e99b19",
+                                            "name":  "Webhook Trigger",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             0,
+                                                             160
+                                                         ],
+                                            "webhookId":  "kai-pulse-metrics"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "rule":  {
+                                                                            "interval":  [
+                                                                                             {
+                                                                                                 "field":  "cronExpression",
+                                                                                                 "expression":  "0 0 14 * * 1-5"
+                                                                                             }
+                                                                                         ]
+                                                                        }
+                                                           },
+                                            "id":  "68796b12-6d20-487d-b9da-881c90f9de39",
+                                            "name":  "Daily 10AM Trigger",
+                                            "type":  "n8n-nodes-base.scheduleTrigger",
+                                            "typeVersion":  1.2,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const https = require(\u0027https\u0027);\nconst SUPABASE_URL = \u0027raxpmeltyxmtiihxoxpa.supabase.co\u0027;\nconst SUPABASE_KEY = \u0027sb_secret_Jz8T31FHgqpfOrqijr1qtQ_HcbbZ8Nu\u0027;\n\nasync function query(path) {\n  return new Promise(function(resolve) {\n    const req = https.request({\n      hostname: SUPABASE_URL,\n      port: 443,\n      path: path,\n      method: \u0027GET\u0027,\n      headers: {\n        \u0027apikey\u0027: SUPABASE_KEY,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n        \u0027Content-Type\u0027: \u0027application/json\u0027\n      }\n    }, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() {\n        try { resolve(JSON.parse(d)); }\n        catch(e) { resolve([]); }\n      });\n    });\n    req.on(\u0027error\u0027, function() { resolve([]); });\n    req.end();\n  });\n}\n\n// Query all views and tables in parallel\nconst results = await Promise.all([\n  query(\u0027/rest/v1/pipeline_summary?select=*\u0027),\n  query(\u0027/rest/v1/grant_pipeline_summary?select=*\u0027),\n  query(\u0027/rest/v1/agent_health_7d?select=*\u0027),\n  query(\u0027/rest/v1/scout_reports?select=id,run_date,fit_score,status,mode\u0026order=run_date.desc\u0026limit=5\u0027),\n  query(\u0027/rest/v1/compliance_items?resolved=eq.false\u0026order=deadline.asc\u0026limit=5\u0026select=item_name,deadline,severity,days_remaining\u0027),\n  query(\u0027/rest/v1/rfp_responses?select=id,rfp_name,fit_score,go_no_go,kevin_decision\u0026order=created_at.desc\u0026limit=5\u0027)\n]);\n\nconst pipeline = results[0] \u0026\u0026 results[0][0] ? results[0][0] : {};\nconst grants = results[1] \u0026\u0026 results[1][0] ? results[1][0] : {};\nconst agentHealth = results[2] || [];\nconst recentScout = results[3] || [];\nconst openCompliance = results[4] || [];\nconst recentRfp = results[5] || [];\n\nreturn [{ json: {\n  pipeline: pipeline,\n  grants: grants,\n  agentHealth: agentHealth,\n  recentScout: recentScout,\n  openCompliance: openCompliance,\n  recentRfp: recentRfp,\n  timestamp: new Date().toISOString()\n}}];"
+                                                           },
+                                            "id":  "6e3aff66-060a-4843-8672-278a250cabbf",
+                                            "name":  "Query Supabase",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             224,
+                                                             80
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const input = $input.first().json;\nconst pipeline = input.pipeline || {};\nconst grants = input.grants || {};\nconst agentHealth = input.agentHealth || [];\nconst recentScout = input.recentScout || [];\nconst openCompliance = input.openCompliance || [];\nconst recentRfp = input.recentRfp || [];\n\nconst today = new Date().toLocaleDateString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027, month: \u0027short\u0027, day: \u0027numeric\u0027, year: \u0027numeric\u0027 });\n\nlet report = \u0027PULSE PLATFORM REPORT\\n\u0027;\nreport += today + \u0027 | KAI-Netics Core Engine v2\\n\u0027;\nreport += \u0027================================\\n\\n\u0027;\n\n// BD PIPELINE\nreport += \u0027BD PIPELINE\\n\u0027;\nreport += \u0027  Active MRR:      $\u0027 + (pipeline.total_active_mrr || \u00270\u0027) + \u0027/mo\\n\u0027;\nreport += \u0027  Pipeline Value:  $\u0027 + (pipeline.total_pipeline_value || \u00270\u0027)+ \u0027\\n\u0027;\nreport += \u0027  Stage 0 (Outreach):    \u0027 + (pipeline.outreach_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 1 (Discovery):   \u0027 + (pipeline.discovery_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 2 (POC Prop):    \u0027 + (pipeline.poc_proposal_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 3 (POC Exec):    \u0027 + (pipeline.poc_execution_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 4 (SLA Conv):    \u0027 + (pipeline.sla_conversion_count || 0) + \u0027\\n\u0027;\nreport += \u0027  Stage 5 (MRR Active):  \u0027 + (pipeline.mrr_active_count || 0) + \u0027\\n\\n\u0027;\n\n// GRANT PIPELINE\nreport += \u0027GRANT PIPELINE\\n\u0027;\nreport += \u0027  LOI Drafted:     \u0027 + (grants.loi_drafted || 0) + \u0027\\n\u0027;\nreport += \u0027  LOI Sent:        \u0027 + (grants.loi_sent || 0) + \u0027\\n\u0027;\nreport += \u0027  Submitted:       \u0027 + (grants.submitted || 0) + \u0027\\n\u0027;\nreport += \u0027  Under Review:    \u0027 + (grants.under_review || 0) + \u0027\\n\u0027;\nreport += \u0027  Awarded:         \u0027 + (grants.awarded || 0) + \u0027\\n\u0027;\nreport += \u0027  Total Awarded:   $\u0027 + (grants.total_awarded || \u00270\u0027) + \u0027\\n\u0027;\nreport += \u0027  Due in 30 days:  \u0027 + (grants.due_in_30_days || 0) + \u0027\\n\\n\u0027;\n\n// AGENT HEALTH\nreport += \u0027AGENT HEALTH (7 days)\\n\u0027;\nif (agentHealth.length === 0) {\n  report += \u0027  No execution data yet\\n\u0027;\n} else {\n  agentHealth.forEach(function(a) {\n    const rate = a.success_rate_pct !== null ? a.success_rate_pct + \u0027%\u0027 : \u0027N/A\u0027;\n    const lastRun = a.last_run ? new Date(a.last_run).toLocaleDateString(\u0027en-US\u0027, { month: \u0027short\u0027, day: \u0027numeric\u0027, hour: \u00272-digit\u0027, minute: \u00272-digit\u0027, timeZone: \u0027America/New_York\u0027 }) : \u0027Never\u0027;\n    report += \u0027  \u0027 + a.agent + \u0027: \u0027 + a.total_runs + \u0027 runs | \u0027 + rate + \u0027 success | Last: \u0027 + lastRun + \u0027\\n\u0027;\n  });\n}\nreport += \u0027\\n\u0027;\n\n// RECENT SCOUT ACTIVITY\nreport += \u0027RECENT SCOUT FINDS (last 5)\\n\u0027;\nif (recentScout.length === 0) {\n  report += \u0027  No Scout data yet\\n\u0027;\n} else {\n  recentScout.forEach(function(s) {\n    report += \u0027  \u0027 + (s.run_date || \u0027?\u0027) + \u0027 | \u0027 + (s.mode || \u0027?\u0027).toUpperCase() + \u0027 | Score: \u0027 + (s.fit_score || \u0027N/A\u0027) + \u0027 | \u0027 + (s.status || \u0027new\u0027) + \u0027\\n\u0027;\n  });\n}\nreport += \u0027\\n\u0027;\n\n// COMPLIANCE FLAGS\nreport += \u0027OPEN COMPLIANCE ITEMS\\n\u0027;\nif (openCompliance.length === 0) {\n  report += \u0027  All clear\\n\u0027;\n} else {\n  openCompliance.forEach(function(c) {\n    const days = c.days_remaining !== null ? c.days_remaining + \u0027d\u0027 : \u0027?\u0027;\n    report += \u0027  [\u0027 + (c.severity || \u0027?\u0027).toUpperCase() + \u0027] \u0027 + c.item_name + \u0027 -- \u0027 + days + \u0027 (\u0027 + (c.deadline || \u0027?\u0027) + \u0027)\\n\u0027;\n  });\n}\nreport += \u0027\\n\u0027;\n\n// RECENT RFP ACTIVITY\nreport += \u0027RECENT RFP ACTIVITY (last 5)\\n\u0027;\nif (recentRfp.length === 0) {\n  report += \u0027  No RFP data yet\\n\u0027;\n} else {\n  recentRfp.forEach(function(r) {\n    report += \u0027  \u0027 + (r.rfp_name || \u0027Unknown\u0027).substring(0, 40) + \u0027 | \u0027 + (r.go_no_go || \u0027?\u0027) + \u0027 | Score: \u0027 + (r.fit_score || \u0027N/A\u0027) + \u0027 | Decision: \u0027 + (r.kevin_decision || \u0027PENDING\u0027) + \u0027\\n\u0027;\n  });\n}\n\nreport += \u0027\\n================================\\n\u0027;\nreport += \u0027Generated: \u0027 + new Date().toLocaleString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027 }) + \u0027 ET\\n\u0027;\n\n// Build WhatsApp summary (shorter)\nlet waSummary = \u0027PULSE REPORT -- \u0027 + today + \u0027\\n\\n\u0027;\nwaSummary += \u0027BD: MRR $\u0027 + (pipeline.total_active_mrr || \u00270\u0027) + \u0027/mo | Pipeline $\u0027 + (pipeline.total_pipeline_value || \u00270\u0027) + \u0027\\n\u0027;\nwaSummary += \u0027GRANTS: \u0027 + (grants.loi_drafted || 0) + \u0027 drafted | \u0027 + (grants.submitted || 0) + \u0027 submitted | $\u0027 + (grants.total_awarded || \u00270\u0027) + \u0027 awarded\\n\u0027;\n\nconst criticalItems = openCompliance.filter(function(c) { return c.severity === \u0027critical\u0027 || c.severity === \u0027overdue\u0027; });\nif (criticalItems.length \u003e 0) {\n  waSummary += \u0027COMPLIANCE FLAGS: \u0027 + criticalItems.length + \u0027 critical/overdue\\n\u0027;\n  criticalItems.forEach(function(c) {\n    waSummary += \u0027  * \u0027 + c.item_name + \u0027 -- \u0027 + (c.days_remaining !== null ? c.days_remaining + \u0027d\u0027 : \u0027?\u0027) + \u0027\\n\u0027;\n  });\n} else {\n  waSummary += \u0027COMPLIANCE: All clear\\n\u0027;\n}\n\nwaSummary += \u0027RFP: \u0027 + recentRfp.length + \u0027 recent | AGENTS: \u0027 + agentHealth.length + \u0027 tracked\u0027;\n\nreturn [{ json: {\n  report: report,\n  waSummary: waSummary,\n  timestamp: input.timestamp\n}}];"
+                                                           },
+                                            "id":  "cfa068da-ee2b-47e9-8c93-3f75039e1e76",
+                                            "name":  "Build Pulse Report",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             448,
+                                                             80
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\nconst safeTime = input.timestamp.split(\u0027:\u0027).join(\u0027-\u0027).split(\u0027.\u0027).join(\u0027-\u0027);\nconst outputPath = \u0027/data/Aidan_Outputs/Pulse/Pulse_Report_\u0027 + safeTime + \u0027.txt\u0027;\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Pulse\u0027, { recursive: true });\nfs.writeFileSync(outputPath, input.report, \u0027utf8\u0027);\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.savedTo = outputPath;\nreturn [{ json: out }];"
+                                                           },
+                                            "id":  "c5f48a6e-3346-48ee-af76-11f1bf0d671d",
+                                            "name":  "Save Report",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             672,
+                                                             80
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\n\n// Send WhatsApp summary\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: input.waSummary } });\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\n// Callback to Aidan\nconst cbBody = JSON.stringify({\n  agent: \u0027Pulse\u0027,\n  summary: input.waSummary,\n  savedTo: input.savedTo,\n  timestamp: new Date().toISOString()\n});\nconst cbOpts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) }\n};\nconst cbReq = http.request(cbOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, function(){}); });\ncbReq.on(\u0027error\u0027, function(){});\ncbReq.write(cbBody);\ncbReq.end();\n\nreturn [{ json: { success: true, agent: \u0027Pulse\u0027, savedTo: input.savedTo } }];"
+                                                           },
+                                            "id":  "dee00771-83a8-4d23-84bf-607bb7dec7f0",
+                                            "name":  "WhatsApp + Callback",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             880,
+                                                             80
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Webhook Trigger":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Query Supabase",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Daily 10AM Trigger":  {
+                                                                         "main":  [
+                                                                                      [
+                                                                                          {
+                                                                                              "node":  "Query Supabase",
+                                                                                              "type":  "main",
+                                                                                              "index":  0
+                                                                                          }
+                                                                                      ]
+                                                                                  ]
+                                                                     },
+                                              "Query Supabase":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Build Pulse Report",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "Build Pulse Report":  {
+                                                                         "main":  [
+                                                                                      [
+                                                                                          {
+                                                                                              "node":  "Save Report",
+                                                                                              "type":  "main",
+                                                                                              "index":  0
+                                                                                          }
+                                                                                      ]
+                                                                                  ]
+                                                                     },
+                                              "Save Report":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "WhatsApp + Callback",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version ee19b5d8",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-04-21T22:52:46.374Z",
+                                                             "id":  318,
+                                                             "workflowId":  "7Q7yuRJyev9s3DQW",
+                                                             "versionId":  "ee19b5d8-f71f-4ff0-b90e-5c04874f82e5",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

@@ -1,0 +1,198 @@
+﻿{
+    "updatedAt":  "2026-04-27T06:45:08.000Z",
+    "createdAt":  "2026-04-21T22:01:02.534Z",
+    "id":  "ca7TqjAjheOeGET0",
+    "name":  "Iris - Compliance Monitor v3 - PRE-BOM-FIX",
+    "description":  null,
+    "active":  false,
+    "isArchived":  true,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "iris-monitor",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       0,
+                                       160
+                                   ],
+                      "id":  "37fc53f3-06bb-44b5-b45f-b03cb669d651",
+                      "name":  "Webhook",
+                      "webhookId":  "41a73734-f3bf-4b0f-8d8c-5da8db94cdbb"
+                  },
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "triggerAtHour":  8
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "id":  "8d9c3de4-6d39-4423-ac80-8d25734eedd3",
+                      "name":  "Daily 8AM Trigger"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027);\nlet ctx = {};\ntry {\n  ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027));\n} catch(e) {\n  ctx = {};\n}\nconst rawDeadlines = ctx.deadlines || [];\nconst compliance = ctx.compliance_rules || [];\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\n\nfunction isValidDate(s) {\n  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) return false;\n  return !isNaN(new Date(s).getTime());\n}\nfunction daysUntil(s) {\n  return Math.ceil((new Date(s) - today) / (1000 * 60 * 60 * 24));\n}\n\nconst deadlines = rawDeadlines.filter(function(d) {\n  if (!d || !d.item || !d.date) return false;\n  const st = (d.status || \u0027\u0027).toUpperCase();\n  if (st === \u0027FILED\u0027 || st === \u0027COMPLETE\u0027 || st === \u0027EXEMPT\u0027) return false;\n  return isValidDate(d.date);\n});\n\nconst overdue  = deadlines.filter(function(d) { return daysUntil(d.date) \u003c 0; });\nconst critical = deadlines.filter(function(d) { const n = daysUntil(d.date); return n \u003e= 0 \u0026\u0026 n \u003c= 7; });\nconst urgent   = deadlines.filter(function(d) { const n = daysUntil(d.date); return n \u003e 7 \u0026\u0026 n \u003c= 21; });\nconst upcoming = deadlines.filter(function(d) { const n = daysUntil(d.date); return n \u003e 21 \u0026\u0026 n \u003c= 90; });\n\nlet report = \u0027IRIS COMPLIANCE MONITOR v3\\n\u0027;\nreport += \u0027Generated: \u0027 + today.toLocaleString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027 }) + \u0027 EST\\n\u0027;\nreport += \u0027KAI_Context.json v\u0027 + (ctx.meta \u0026\u0026 ctx.meta.version ? ctx.meta.version : \u0027unknown\u0027) + \u0027 loaded\\n\u0027;\nreport += \u0027Active deadlines tracked: \u0027 + deadlines.length + \u0027 | Filed/Complete skipped: \u0027 + (rawDeadlines.length - deadlines.length) + \u0027\\n\\n\u0027;\n\nif (overdue.length) {\n  report += \u0027OVERDUE:\\n\u0027;\n  overdue.forEach(function(d) {\n    report += \u0027  * \u0027 + d.item + \u0027 -- \u0027 + Math.abs(daysUntil(d.date)) + \u0027d overdue [\u0027 + (d.entity || \u0027?\u0027) + \u0027]\\n\u0027;\n    if (d.notes) report += \u0027    Notes: \u0027 + d.notes + \u0027\\n\u0027;\n  });\n  report += \u0027\\n\u0027;\n}\n\nif (critical.length) {\n  report += \u0027CRITICAL (7 days or less):\\n\u0027;\n  critical.forEach(function(d) {\n    report += \u0027  * \u0027 + d.item + \u0027 -- \u0027 + daysUntil(d.date) + \u0027d (\u0027 + d.date + \u0027) [\u0027 + (d.entity || \u0027?\u0027) + \u0027] Owner: \u0027 + (d.owner || \u0027Kevin\u0027) + \u0027\\n\u0027;\n    if (d.notes) report += \u0027    Notes: \u0027 + d.notes + \u0027\\n\u0027;\n  });\n  report += \u0027\\n\u0027;\n}\n\nif (urgent.length) {\n  report += \u0027URGENT (8-21 days):\\n\u0027;\n  urgent.forEach(function(d) {\n    report += \u0027  * \u0027 + d.item + \u0027 -- \u0027 + daysUntil(d.date) + \u0027d (\u0027 + d.date + \u0027) [\u0027 + (d.entity || \u0027?\u0027) + \u0027]\\n\u0027;\n    if (d.notes) report += \u0027    Notes: \u0027 + d.notes + \u0027\\n\u0027;\n  });\n  report += \u0027\\n\u0027;\n}\n\nif (upcoming.length) {\n  report += \u0027UPCOMING (22-90 days):\\n\u0027;\n  upcoming.forEach(function(d) {\n    report += \u0027  * \u0027 + d.item + \u0027 -- \u0027 + daysUntil(d.date) + \u0027d (\u0027 + d.date + \u0027) [\u0027 + (d.entity || \u0027?\u0027) + \u0027]\\n\u0027;\n  });\n  report += \u0027\\n\u0027;\n}\n\nif (!overdue.length \u0026\u0026 !critical.length \u0026\u0026 !urgent.length) {\n  report += \u0027No overdue, critical, or urgent items.\\n\\n\u0027;\n}\n\nreport += \u0027COMPLIANCE RULES:\\n\u0027 + compliance.map(function(r) { return \u0027* \u0027 + r; }).join(\u0027\\n\u0027) + \u0027\\n\\n\u0027;\nreport += \u0027REGULATORY WATCH:\\n\u0027;\nreport += \u0027* FAA Part 108 BVLOS final rule INCOMING\\n\u0027;\nreport += \u0027* OMB M-26-02 federal drone compliance deadline: 2026-05-20\\n\u0027;\n\nconst outputPath = \u0027/data/Aidan_Outputs/Iris/Iris_Report_\u0027 + today.toISOString().replace(/[:.]/g, \u0027-\u0027) + \u0027.txt\u0027;\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Iris\u0027, { recursive: true });\nfs.writeFileSync(outputPath, report, \u0027utf8\u0027);\n\nlet whatsappMsg = \u0027IRIS COMPLIANCE v3\\n\u0027;\nwhatsappMsg += today.toLocaleDateString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027, month: \u0027short\u0027, day: \u0027numeric\u0027 }) + \u0027 | Tracking: \u0027 + deadlines.length + \u0027 items\\n\\n\u0027;\n\nif (overdue.length) {\n  whatsappMsg += \u0027OVERDUE (\u0027 + overdue.length + \u0027):\\n\u0027;\n  overdue.forEach(function(d) { whatsappMsg += \u0027* \u0027 + d.item + \u0027 -- \u0027 + Math.abs(daysUntil(d.date)) + \u0027d ago\\n\u0027; });\n  whatsappMsg += \u0027\\n\u0027;\n}\nif (critical.length) {\n  whatsappMsg += \u0027CRITICAL (\u0027 + critical.length + \u0027):\\n\u0027;\n  critical.forEach(function(d) { whatsappMsg += \u0027* \u0027 + d.item + \u0027 -- \u0027 + daysUntil(d.date) + \u0027d\\n\u0027; });\n  whatsappMsg += \u0027\\n\u0027;\n}\nif (urgent.length) {\n  whatsappMsg += \u0027URGENT (\u0027 + urgent.length + \u0027):\\n\u0027;\n  urgent.forEach(function(d) { whatsappMsg += \u0027* \u0027 + d.item + \u0027 -- \u0027 + daysUntil(d.date) + \u0027d\\n\u0027; });\n  whatsappMsg += \u0027\\n\u0027;\n}\nif (!overdue.length \u0026\u0026 !critical.length \u0026\u0026 !urgent.length) {\n  whatsappMsg += \u0027All clear -- no critical or overdue items.\\n\\n\u0027;\n}\nwhatsappMsg += \u0027Part 108 BVLOS: INCOMING -- Atlas flagged.\u0027;\n\nconst summary = \u0027IRIS v3 COMPLETE | Critical: \u0027 + critical.length + \u0027 | Urgent: \u0027 + urgent.length + \u0027 | Overdue: \u0027 + overdue.length + \u0027 | Saved: \u0027 + outputPath;\n\nconst supabaseItems = [];\noverdue.forEach(function(d) { supabaseItems.push({ item: d, severity: \u0027overdue\u0027, days: daysUntil(d.date) }); });\ncritical.forEach(function(d) { supabaseItems.push({ item: d, severity: \u0027critical\u0027, days: daysUntil(d.date) }); });\nurgent.forEach(function(d) { supabaseItems.push({ item: d, severity: \u0027urgent\u0027, days: daysUntil(d.date) }); });\n\nreturn [{\n  json: {\n    report: report,\n    whatsappMsg: whatsappMsg,\n    summary: summary,\n    criticalCount: critical.length,\n    urgentCount: urgent.length,\n    overdueCount: overdue.length,\n    activeCount: deadlines.length,\n    savedTo: outputPath,\n    supabaseItems: supabaseItems,\n    runDate: today.toISOString().slice(0, 10)\n  }\n}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       80
+                                   ],
+                      "id":  "77097ffb-c945-47c0-8a19-f802dfeb4e36",
+                      "name":  "Iris Brain v3"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst input = $input.first().json;\nconst SUPABASE_URL = \u0027raxpmeltyxmtiihxoxpa.supabase.co\u0027;\nconst SUPABASE_KEY = \u0027sb_secret_Jz8T31FHgqpfOrqijr1qtQ_HcbbZ8Nu\u0027;\nconst items = input.supabaseItems || [];\nconst runDate = input.runDate || new Date().toISOString().slice(0, 10);\n\nlet loggedCount = 0;\nfor (let i = 0; i \u003c items.length; i++) {\n  const item = items[i];\n  const d = item.item;\n  const record = {\n    item_name: d.item,\n    entity: d.entity || null,\n    deadline: d.date || null,\n    days_remaining: item.days,\n    severity: item.severity,\n    owner: d.owner || \u0027Kevin\u0027,\n    notes: d.notes || null,\n    resolved: false,\n    iris_run_date: runDate\n  };\n  try {\n    const body = JSON.stringify(record);\n    const result = await new Promise(function(resolve, reject) {\n      const req = https.request({\n        hostname: SUPABASE_URL,\n        port: 443,\n        path: \u0027/rest/v1/compliance_items\u0027,\n        method: \u0027POST\u0027,\n        headers: {\n          \u0027Content-Type\u0027: \u0027application/json\u0027,\n          \u0027apikey\u0027: SUPABASE_KEY,\n          \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n          \u0027Prefer\u0027: \u0027return=minimal\u0027,\n          \u0027Content-Length\u0027: Buffer.byteLength(body)\n        }\n      }, function(res) {\n        let d = \u0027\u0027;\n        res.on(\u0027data\u0027, function(c) { d += c; });\n        res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode }); });\n      });\n      req.on(\u0027error\u0027, reject);\n      req.write(body);\n      req.end();\n    });\n    if (result.status === 201 || result.status === 200) { loggedCount++; }\n  } catch(e) {\n    // never break the workflow\n  }\n}\n\nconst out = {};\nconst keys = Object.keys(input);\nfor (let i = 0; i \u003c keys.length; i++) { out[keys[i]] = input[keys[i]]; }\nout.supabaseLogged = loggedCount;\nreturn [{ json: out }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       80
+                                   ],
+                      "id":  "836dde2a-20a6-4822-9557-2fbf2d5e5998",
+                      "name":  "Log to Supabase"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\nconst whatsappMsg = input.whatsappMsg || \u0027Iris complete.\u0027;\nconst summary = input.summary || \u0027Iris complete.\u0027;\nconst supabaseLogged = input.supabaseLogged || 0;\nconst dbStatus = supabaseLogged \u003e 0 ? \u0027💾 \u0027 + supabaseLogged + \u0027 items logged to Supabase\u0027 : \u0027⚠️ Supabase log failed\u0027;\nconst fullMsg = whatsappMsg + \u0027\\n\u0027 + dbStatus;\n\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: fullMsg } });\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 8081,\n  path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, r); });\n  req.on(\u0027error\u0027, r); req.write(msgBody); req.end();\n});\n\nconst cbBody = JSON.stringify({\n  agent: \u0027Iris\u0027,\n  summary: summary,\n  criticalCount: input.criticalCount || 0,\n  urgentCount: input.urgentCount || 0,\n  overdueCount: input.overdueCount || 0,\n  supabaseLogged: supabaseLogged,\n  timestamp: new Date().toISOString()\n});\nconst cbOpts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) }\n};\nconst cbReq = http.request(cbOpts, function(res) { res.on(\u0027data\u0027, function(){}); res.on(\u0027end\u0027, function(){}); });\ncbReq.on(\u0027error\u0027, function(){});\ncbReq.write(cbBody);\ncbReq.end();\n\nreturn [{ json: { success: true, agent: \u0027Iris\u0027, version: \u0027v3\u0027, summary: summary, supabaseLogged: supabaseLogged } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       672,
+                                       80
+                                   ],
+                      "id":  "7a1a4bc3-dfad-44d3-a463-94c4232e596b",
+                      "name":  "Aidan Callback"
+                  }
+              ],
+    "connections":  {
+                        "Webhook":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Iris Brain v3",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Daily 8AM Trigger":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Iris Brain v3",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Iris Brain v3":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Log to Supabase",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Log to Supabase":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Aidan Callback",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  {
+                       "node:Daily 8AM Trigger":  {
+                                                      "recurrenceRules":  [
+
+                                                                          ]
+                                                  }
+                   },
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "2c2efe2e-4d6b-4ad4-90e3-5255ec07e620",
+    "activeVersionId":  null,
+    "versionCounter":  14,
+    "triggerCount":  2,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-21T22:01:02.539Z",
+                       "createdAt":  "2026-04-21T22:01:02.539Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "ca7TqjAjheOeGET0",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T15:14:50.304Z",
+                     "createdAt":  "2026-04-09T15:14:50.304Z",
+                     "id":  "QRDa1WqpBYnKX1qY",
+                     "name":  "Iris"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T19:14:31.224Z",
+                     "createdAt":  "2026-04-21T19:14:31.224Z",
+                     "id":  "TjxfhhlH70HyB4sp",
+                     "name":  "Supabase"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T15:14:50.262Z",
+                     "createdAt":  "2026-04-09T15:14:50.262Z",
+                     "id":  "VmHI8eOIi4FRcdoV",
+                     "name":  "Compliance"
+                 }
+             ],
+    "activeVersion":  null
+}

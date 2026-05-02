@@ -1,0 +1,253 @@
+﻿{
+    "updatedAt":  "2026-04-20T20:24:36.000Z",
+    "createdAt":  "2026-04-20T17:50:07.988Z",
+    "id":  "evZNj73FOl5qzG9b",
+    "name":  "Scout - BD Research v5",
+    "description":  null,
+    "active":  false,
+    "isArchived":  true,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 0 11 * * 1-5"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "id":  "7333c8b5-79ef-424f-876f-205cd19fb4ea",
+                      "name":  "Daily 7AM Trigger"
+                  },
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "scout-research",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       0,
+                                       208
+                                   ],
+                      "id":  "d0bc8f9c-c7b5-48c3-8fda-8a865200604c",
+                      "name":  "Webhook Trigger",
+                      "webhookId":  "bad5071c-c38c-4e8b-99ec-21573ac025ed"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst isScheduled = !body.query \u0026\u0026 !body.command;\nconst query = String(body.query || body.command || \u0027\u0027);\nconst today = new Date();\nconst day = today.getDay();\nconst startOfYear = new Date(today.getFullYear(), 0, 1);\nconst weekNum = Math.ceil(((today - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);\nconst isWeekA = weekNum % 2 !== 0;\nconst weekA = {\n  1: { mode: \u0027grant\u0027, query: \u0027Maryland Lighthouse Industries Upskilling Reskilling Program 2026 workforce grant nonprofit aerospace defense IT manufacturing site:dllr.state.md.us OR site:governor.maryland.gov OR site:commerce.maryland.gov\u0027, grantName: \u0027MD_Lighthouse_Upskilling_2026.txt\u0027, source: \u0027Maryland DLLR — Lighthouse Sectors\u0027 },\n  2: { mode: \u0027grant\u0027, query: \u0027TEDCO Maryland technology development corporation grant 2026 autonomous drone UAS cybersecurity defense startup SBIR matching funds site:tedco.md OR tedco.md\u0027, grantName: \u0027TEDCO_2026.txt\u0027, source: \u0027TEDCO Maryland\u0027 },\n  3: { mode: \u0027grant\u0027, query: \u0027Maryland \"Build Our Future\" grant 2026 OR \"DECADE Act\" autonomous technology cybersecurity aerospace defense nonprofit private company site:commerce.maryland.gov OR site:governor.maryland.gov\u0027, grantName: \u0027MD_BuildOurFuture_DECADE_2026.txt\u0027, source: \u0027Maryland Commerce — Build Our Future / DECADE Act\u0027 },\n  4: { mode: \u0027grant\u0027, query: \u0027FEMA C-UAS SLTT counter drone Homeland Security Grant Program 2026 state local tribal territorial FIFA World Cup security grant site:dhs.gov OR site:fema.gov\u0027, grantName: \u0027FEMA_CUAS_SLTT_2026.txt\u0027, source: \u0027FEMA / DHS\u0027 },\n  5: { mode: \u0027grant\u0027, query: \u0027FAA Aircraft Pilots Workforce Development UAS drone operator grant 2026 OR Maryland Governor Moore press release grant technology workforce announcement site:faa.gov OR site:governor.maryland.gov\u0027, grantName: \u0027FAA_Workforce_MD_Governor_2026.txt\u0027, source: \u0027FAA Workforce / MD Governor Office\u0027 }\n};\nconst weekB = {\n  1: { mode: \u0027bd\u0027, query: \u0027Maryland State Highway Administration MDSHA bridge inspection vendor registration drone aerial UAS Part 107 2026 OR Anne Arundel County DPW infrastructure inspection contract RFP\u0027, source: \u0027V1 Infrastructure — MDSHA + County DPW\u0027 },\n  2: { mode: \u0027bd\u0027, query: \u0027BGE Baltimore Gas Electric NERC FAC-001 FAC-003 drone transmission inspection vendor 2026 OR OMB M-26-02 federal agency UAS compliance deadline May 2026 drone consulting\u0027, source: \u0027V1 Utility BD + V3 OMB Compliance\u0027 },\n  3: { mode: \u0027bd\u0027, query: \u0027Amazon fulfillment warehouse Baltimore autonomous inventory scanning drone 2026 OR pharmaceutical distribution center Maryland autonomous inventory drone inspection 3PL vendor\u0027, source: \u0027V2 Warehouse Autonomous Operations\u0027 },\n  4: { mode: \u0027bd\u0027, query: \u0027Baltimore City Police drone first responder DFR program 2026 OR Anne Arundel Howard County police drone program vendor RFP OR Port Baltimore PSGP security grant drone\u0027, source: \u0027V3 DFR / Public Safety\u0027 },\n  5: { mode: \u0027grant\u0027, query: \u0027SBIR DHS DoD drone autonomous UAS trust cybersecurity hardware 2026 Phase I grant site:sbir.gov OR DroneDeploy Resilient Futures grant 2026 nonprofit OR Northrop Grumman Foundation STEM workforce drone grant\u0027, grantName: \u0027SBIR_Private_Foundation_2026.txt\u0027, source: \u0027SBIR + Private Foundations\u0027 }\n};\nconst sweepQueries = {\n  grants_gov_uas:         { mode: \u0027grant\u0027, query: \u0027site:grants.gov UAS unmanned aircraft autonomous drone workforce development 2026 open solicitation\u0027, grantName: \u0027GrantsGov_UAS_Sweep.txt\u0027, source: \u0027Grants.gov UAS Sweep\u0027 },\n  grants_gov_workforce:   { mode: \u0027grant\u0027, query: \u0027site:grants.gov workforce development technology training drone aerospace cybersecurity 2026 nonprofit Maryland\u0027, grantName: \u0027GrantsGov_Workforce_Sweep.txt\u0027, source: \u0027Grants.gov Workforce Sweep\u0027 },\n  earn_maryland:          { mode: \u0027grant\u0027, query: \u0027Maryland EARN workforce development grant 2026 drone technology training nonprofit June deadline\u0027, grantName: \u0027EARN_Maryland_2026.txt\u0027, source: \u0027Maryland EARN\u0027 },\n  cdbg_baltimore:         { mode: \u0027grant\u0027, query: \u0027Maryland CDBG Community Development Block Grant Baltimore City 2026 minority nonprofit facility technology\u0027, grantName: \u0027CDBG_Baltimore_2026.txt\u0027, source: \u0027CDBG Baltimore City\u0027 },\n  lighthouse_internship:  { mode: \u0027grant\u0027, query: \u0027Maryland Lighthouse Industries AI Internship Program 2026 employer application rolling basis workforce\u0027, grantName: \u0027MD_Lighthouse_Internship_2026.txt\u0027, source: \u0027MD Lighthouse Internship Program\u0027 },\n  psgp_port_security:     { mode: \u0027grant\u0027, query: \u0027FEMA Port Security Grant Program PSGP 2026 maritime drone aerial surveillance security\u0027, grantName: \u0027PSGP_PortSecurity_2026.txt\u0027, source: \u0027FEMA PSGP\u0027 },\n  uasi_urban_security:    { mode: \u0027grant\u0027, query: \u0027FEMA Urban Areas Security Initiative UASI 2026 Baltimore Washington drone detection public safety technology grant\u0027, grantName: \u0027UASI_2026.txt\u0027, source: \u0027FEMA UASI\u0027 },\n  shsp_state_homeland:    { mode: \u0027grant\u0027, query: \u0027State Homeland Security Program SHSP 2026 Maryland drone C-UAS technology grant law enforcement\u0027, grantName: \u0027SHSP_2026.txt\u0027, source: \u0027DHS SHSP\u0027 },\n  dol_wioa:               { mode: \u0027grant\u0027, query: \u0027DOL WIOA Workforce Innovation Opportunity Act 2026 technology training drone aerospace cybersecurity Maryland nonprofit\u0027, grantName: \u0027DOL_WIOA_2026.txt\u0027, source: \u0027DOL WIOA\u0027 },\n  nsf_ate:                { mode: \u0027grant\u0027, query: \u0027NSF Advanced Technological Education ATE grant 2026 drone UAS autonomous technology community college workforce\u0027, grantName: \u0027NSF_ATE_2026.txt\u0027, source: \u0027NSF ATE Program\u0027 },\n  v3_dfr_public_safety:   { mode: \u0027bd\u0027, query: \u0027Baltimore City Police drone first responder DFR program 2026 OR Anne Arundel Howard County police drone program vendor RFP\u0027, source: \u0027V3 DFR / Public Safety\u0027 },\n  v4_entertainment_shows: { mode: \u0027bd\u0027, query: \u0027FIFA World Cup 2026 Baltimore Maryland venue security drone show entertainment FEMA grant\u0027, source: \u0027V4 Entertainment / Shows\u0027 },\n  v5_bvlos_logistics:     { mode: \u0027bd\u0027, query: \u0027FAA BVLOS drone delivery Maryland 2026 Part 108 pilot program OR Maryland drone delivery VLOS logistics vendor contract\u0027, source: \u0027V5 BVLOS Logistics\u0027 },\n  v7_monk_licensing:      { mode: \u0027bd\u0027, query: \u0027drone mission authorization hardware trust OEM licensing autonomous UAS BVLOS compliance 2026 OR DoD drone supply chain trusted hardware certification\u0027, source: \u0027V7 MONK Technology Licensing\u0027 },\n  cako_partnerships:      { mode: \u0027bd\u0027, query: \u0027Maryland community college drone workforce training partnership 2026 OR Maryland workforce pipeline employer agreement drone operator Part 107\u0027, source: \u0027CAKO Employer Partnerships\u0027 },\n  johns_hopkins_medical:  { mode: \u0027bd\u0027, query: \u0027Johns Hopkins medical campus drone delivery logistics 2026 OR UMMS MedStar drone medical supply vendor\u0027, source: \u0027Johns Hopkins / UMMS Medical Delivery\u0027 },\n  crown_castle_telecom:   { mode: \u0027bd\u0027, query: \u0027Crown Castle tower inspection drone vendor portal 2026 OR American Tower drone aerial inspection vendor registration Maryland\u0027, source: \u0027V1 Telecom Tower Inspection\u0027 },\n  insurance_surge:        { mode: \u0027bd\u0027, query: \u0027State Farm Allstate Travelers CBRE JLL drone aerial inspection Maryland property insurance claim 2026 vendor\u0027, source: \u0027V1 Insurance / CBRE / JLL\u0027 }\n};\nlet mode, resolvedQuery, grantName, sourceLabel;\nif (isScheduled) {\n  const schedule = isWeekA ? weekA : weekB;\n  const target = schedule[day] || weekA[1];\n  mode = target.mode; resolvedQuery = target.query; grantName = target.grantName || null; sourceLabel = target.source || \u0027Scheduled\u0027;\n} else if (body.sweep \u0026\u0026 sweepQueries[body.sweep]) {\n  const sq = sweepQueries[body.sweep];\n  mode = sq.mode; resolvedQuery = sq.query; grantName = sq.grantName || null; sourceLabel = sq.source || body.sweep;\n} else {\n  mode = body.mode || \u0027bd\u0027; resolvedQuery = query || \u0027Maryland drone infrastructure inspection contracts 2026\u0027; grantName = body.grantName || null; sourceLabel = \u0027Manual\u0027;\n}\nreturn [{ json: { mode, query: resolvedQuery, grantName, sourceLabel, isScheduled, timestamp: new Date().toISOString() } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       128
+                                   ],
+                      "id":  "a13d0643-37f7-4306-a9df-29c0abe90fb0",
+                      "name":  "Route + Build Task v5"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst { mode, query, grantName, sourceLabel, isScheduled, timestamp } = $input.first().json;\nconst BRAVE_API_KEY = \u0027BSAWHBob7ILPlWV-JX8iFTOr4wDaQ1I\u0027;\nconst encodedQuery = encodeURIComponent(query);\nconst path = `/res/v1/web/search?q=${encodedQuery}\u0026count=5\u0026search_lang=en\u0026country=us\u0026text_decorations=false\u0026extra_snippets=true`;\nconst options = {\n  hostname: \u0027api.search.brave.com\u0027,\n  port: 443,\n  path: path,\n  method: \u0027GET\u0027,\n  headers: { \u0027Accept\u0027: \u0027application/json\u0027, \u0027Accept-Encoding\u0027: \u0027gzip\u0027, \u0027X-Subscription-Token\u0027: BRAVE_API_KEY }\n};\nconst rawResponse = await new Promise((resolve, reject) =\u003e {\n  const req = https.request(options, (res) =\u003e {\n    const chunks = [];\n    res.on(\u0027data\u0027, c =\u003e chunks.push(c));\n    res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString() }));\n  });\n  req.on(\u0027error\u0027, reject);\n  req.end();\n});\nlet braveResults = [];\nlet braveError = null;\nif (rawResponse.status === 200) {\n  try {\n    const parsed = JSON.parse(rawResponse.body);\n    const webResults = parsed?.web?.results || [];\n    braveResults = webResults.slice(0, 5).map((r, i) =\u003e ({ index: i + 1, title: r.title || \u0027\u0027, url: r.url || \u0027\u0027, description: r.description || \u0027\u0027, extra_snippets: (r.extra_snippets || []).slice(0, 2) }));\n  } catch(e) { braveError = \u0027Failed to parse Brave response: \u0027 + e.message; }\n} else {\n  braveError = `Brave API returned status ${rawResponse.status}: ${rawResponse.body.substring(0, 200)}`;\n}\nlet braveContext = \u0027\u0027;\nif (braveResults.length \u003e 0) {\n  braveContext = braveResults.map(r =\u003e {\n    const snippets = r.extra_snippets.length \u003e 0 ? r.extra_snippets.join(\u0027 \u0027) : \u0027\u0027;\n    return `[${r.index}] ${r.title}\\nURL: ${r.url}\\nSummary: ${r.description}\\n${snippets ? \u0027Detail: \u0027 + snippets : \u0027\u0027}`;\n  }).join(\u0027\\n\\n\u0027);\n} else {\n  braveContext = braveError || \u0027No results returned from Brave Search.\u0027;\n}\nconst fetchUrls = braveResults.slice(0, 2).map(r =\u003e r.url).filter(u =\u003e u.length \u003e 0);\nreturn [{ json: { mode, query, grantName, sourceLabel, isScheduled, timestamp, braveContext, braveResults, fetchUrls, braveError } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       128
+                                   ],
+                      "id":  "5b4fab9f-d183-44eb-94df-658085315ced",
+                      "name":  "Brave Search v5"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst http = require(\u0027http\u0027);\nconst { mode, query, grantName, sourceLabel, isScheduled, timestamp, braveContext, braveResults, fetchUrls, braveError } = $input.first().json;\nconst WORD_THRESHOLD = 500;\nconst FETCH_TIMEOUT_MS = 8000;\nconst MAX_CONTENT_CHARS = 8000;\nfunction fetchUrl(url) {\n  return new Promise((resolve) =\u003e {\n    const timer = setTimeout(() =\u003e resolve({ ok: false, reason: \u0027timeout\u0027, content: \u0027\u0027 }), FETCH_TIMEOUT_MS);\n    try {\n      const lib = url.startsWith(\u0027https\u0027) ? https : http;\n      const req = lib.get(url, { headers: { \u0027User-Agent\u0027: \u0027Mozilla/5.0 (compatible; KAI-Netics-Scout/5.0)\u0027 } }, (res) =\u003e {\n        if ((res.statusCode === 301 || res.statusCode === 302) \u0026\u0026 res.headers.location) { clearTimeout(timer); fetchUrl(res.headers.location).then(resolve); return; }\n        if (res.statusCode !== 200) { clearTimeout(timer); resolve({ ok: false, reason: `HTTP ${res.statusCode}`, content: \u0027\u0027 }); return; }\n        const chunks = [];\n        res.on(\u0027data\u0027, c =\u003e chunks.push(c));\n        res.on(\u0027end\u0027, () =\u003e {\n          clearTimeout(timer);\n          let text = Buffer.concat(chunks).toString(\u0027utf8\u0027, 0, 60000);\n          text = text.replace(/\u003cscript[\\s\\S]*?\u003c\\/script\u003e/gi, \u0027\u0027).replace(/\u003cstyle[\\s\\S]*?\u003c\\/style\u003e/gi, \u0027\u0027).replace(/\u003c[^\u003e]+\u003e/g, \u0027 \u0027).replace(/\u0026nbsp;/g, \u0027 \u0027).replace(/\u0026amp;/g, \u0027\u0026\u0027).replace(/\u0026lt;/g, \u0027\u003c\u0027).replace(/\u0026gt;/g, \u0027\u003e\u0027).replace(/\\s{3,}/g, \u0027\\n\\n\u0027).trim();\n          resolve({ ok: true, content: text.substring(0, MAX_CONTENT_CHARS) });\n        });\n      });\n      req.on(\u0027error\u0027, (e) =\u003e { clearTimeout(timer); resolve({ ok: false, reason: e.message, content: \u0027\u0027 }); });\n    } catch(e) { clearTimeout(timer); resolve({ ok: false, reason: e.message, content: \u0027\u0027 }); }\n  });\n}\nfunction wordCount(text) { return text.split(/\\s+/).filter(w =\u003e w.length \u003e 0).length; }\nconst fetchPromises = (fetchUrls || []).slice(0, 2).map(url =\u003e fetchUrl(url).then(result =\u003e ({ url, ...result })));\nconst fetchResults = await Promise.all(fetchPromises);\nlet enrichedContext = \u0027\u0027;\nconst fetchSummary = [];\nfor (const result of fetchResults) {\n  const wc = wordCount(result.content || \u0027\u0027);\n  if (result.ok \u0026\u0026 wc \u003e= WORD_THRESHOLD) {\n    enrichedContext += `\\n\\n=== FULL PAGE CONTENT: ${result.url} ===\\n${result.content}\\n`;\n    fetchSummary.push(`FULL CONTENT (${wc} words): ${result.url}`);\n  } else {\n    const reason = !result.ok ? result.reason : `only ${wc} words — likely login wall or JS-rendered`;\n    enrichedContext += `\\n\\n=== PARTIAL/UNAVAILABLE: ${result.url} ===\\n[Full content unavailable: ${reason}. Brave snippet used instead. Verify manually at this URL.]\\n`;\n    fetchSummary.push(`SNIPPET FALLBACK (${reason}): ${result.url}`);\n  }\n}\nconst combinedContext = [\u0027=== LIVE BRAVE SEARCH RESULTS ===\u0027, braveContext || \u0027No Brave results available.\u0027, enrichedContext || \u0027\u0027].join(\u0027\\n\u0027);\nreturn [{ json: { mode, query, grantName, sourceLabel, isScheduled, timestamp, combinedContext, fetchSummary, braveResults } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       672,
+                                       128
+                                   ],
+                      "id":  "d479e2fa-f916-4c64-bf52-1a3819b8b453",
+                      "name":  "Web Fetch + Fallback v5"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const fs = require(\u0027fs\u0027), https = require(\u0027https\u0027);\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) { ctx = {}; }\nconst { mode, query, grantName, sourceLabel, isScheduled, timestamp, combinedContext, fetchSummary, braveResults } = $input.first().json;\nconst founder = ctx.founder || {};\nconst verticals = ctx.verticals || {};\nconst entities = ctx.entities || {};\nconst naics = ctx.naics || {};\nconst revenue = ctx.revenue_targets || {};\nconst tech = ctx.technology || {};\nconst verticalList = Object.entries(verticals).map(([k,v]) =\u003e `${k}: ${v.name} | Pricing: ${v.pricing || v.revenue_projection || \u0027TBD\u0027} | Margin: ${v.margin || \u0027TBD\u0027}`).join(\u0027\\n\u0027);\nconst eafProfile = `EAF: ${entities.EAF?.name} | EIN: ${entities.EAF?.ein} | Status: ${entities.EAF?.status}`;\nconst fpProfile  = `FP:  ${entities.FP?.name}  | EIN: ${entities.FP?.ein} | Status: ${entities.FP?.status}`;\nconst monkProfile = `MONK: ${entities.MONK?.name} | Role: ${entities.MONK?.role} | Status: ${entities.MONK?.status}`;\nconst techSummary = [`MONK: ${tech.MONK?.description || \u0027\u0027} Status: ${tech.MONK?.status || \u0027\u0027}`, `AKMS: ${tech.AKMS?.description || \u0027\u0027}`, `CAKO: ${tech.CAKO?.description || \u0027\u0027} Cohort 1: ${tech.CAKO?.cohort_1_target || \u0027\u0027}`].join(\u0027\\n\u0027);\nconst credStack = (founder.credentials || []).join(\u0027, \u0027);\nconst complianceRules = (ctx.compliance_rules || []).join(\u0027 | \u0027);\nconst activePrograms = (ctx.deadlines || []).filter(d =\u003e d.status !== \u0027FILED\u0027 \u0026\u0026 d.status !== \u0027COMPLETE\u0027 \u0026\u0026 d.status !== \u0027EXEMPT\u0027).map(d =\u003e `${d.item} | Due: ${d.date} | Entity: ${d.entity} | Notes: ${d.notes || \u0027\u0027}`).join(\u0027\\n\u0027);\nlet systemMessage, userMessage, outputFolder, outputPrefix;\nif (mode === \u0027grant\u0027) {\n  systemMessage = `You are Scout, Grant Intelligence Agent for KAI-Netics.\\n\\nENTITY PROFILES:\\n${eafProfile}\\n${fpProfile}\\n${monkProfile}\\n\\nFOUNDER: ${founder.name} — ${credStack}\\nBACKGROUND: ${founder.background}\\n\\nTECHNOLOGY ASSETS:\\n${techSummary}\\n\\nSEVEN VERTICALS:\\n${verticalList}\\n\\nSERVICE GEOGRAPHY: Maryland (all 24 counties, priority: Baltimore City, Anne Arundel, Howard, Baltimore County, PG County, Montgomery County), DC Metro, Northern Virginia\\n\\nNAICS REGISTERED: ${(naics.registered||[]).map(n=\u003en.code+\u0027 \u0027+n.description).join(\u0027, \u0027)}\\n\\nACTIVE PROGRAMS + DEADLINES (dynamic from context — only reference these):\\n${activePrograms || \u0027None currently active.\u0027}\\n\\nREVENUE TARGETS: Y1 ${revenue.year1_total} | Y2 ${revenue.year2_total} | Y3 ${revenue.year3_total}\\n\\nCOMPLIANCE RULES: ${complianceRules}\\n\\nIMPORTANT: You have been provided LIVE WEB SEARCH RESULTS and FULL PAGE CONTENT. Use this real-time data as your primary source. Do NOT rely on training data for deadlines, portal URLs, award amounts, or contacts. If a field cannot be confirmed from provided content, state UNCONFIRMED and direct Kevin to verify at the URL.\\n\\nFORMAT OUTPUT EXACTLY:\\n\\nFUNDER: [exact legal name]\\nPROGRAM: [exact program name]\\nDEADLINE: [from live content, or UNCONFIRMED — verify at URL]\\nAWARD RANGE: [from live content, or UNCONFIRMED]\\nPORTAL / CONTACT: [exact URL from search results]\\nELIGIBILITY: [from live content]\\nEAF FIT SCORE: [0-100%]\\nFP FIT SCORE: [0-100%]\\nFIT RATIONALE: [2-3 sentences]\\n\\nTOP 3 ALIGNMENT POINTS:\\n1.\\n2.\\n3.\\n\\nTOP 2 RISKS:\\n1.\\n2.\\n\\nCOMPETING APPLICANTS: [landscape]\\nRECOMMENDED ACTION: [APPLY IMMEDIATELY / APPLY / WATCH / PASS]\\nNEXT STEP: [single action with URL or contact]\\nDATA CONFIDENCE: [HIGH — full page retrieved / MEDIUM — snippet only / LOW — unavailable]\\n\\nLOI DRAFT:\\n[300-400 word LOI — EAF applicant, CAKO program, Kevin credentials, grant alignment. Ready for Jordan to refine.]`;\n  userMessage = `Research this grant using the live search results below.\\n\\nQUERY: ${query}\\nToday: ${new Date().toLocaleDateString(\u0027en-US\u0027, {timeZone: \u0027America/New_York\u0027})}\\n\\n--- LIVE SEARCH DATA ---\\n${combinedContext}\\n--- END LIVE SEARCH DATA ---\\n\\nFocus on grants with deadlines in next 120 days or rolling. Cover top 2 if multiple programs appear. Flag prerequisite steps.`;\n  outputFolder = \u0027Maryland_Grants\u0027;\n  outputPrefix = grantName ? grantName.replace(\u0027.txt\u0027,\u0027\u0027) : \u0027Grant_Intel_\u0027 + new Date().toISOString().slice(0,10);\n} else {\n  systemMessage = `You are Scout, Business Development Research Agent for KAI-Netics.\\n\\nENTITY PROFILES:\\n${fpProfile}\\n${eafProfile}\\n${monkProfile}\\n\\nFOUNDER: ${founder.name} — ${credStack}\\nBACKGROUND: ${founder.background}\\n\\nKEVIN\u0027S TWO ROLES ONLY: (1) Sales and BD — closing contracts; (2) MONK technology development.\\n\\nSEVEN VERTICALS:\\n${verticalList}\\n\\nTECHNOLOGY ASSETS:\\n${techSummary}\\n\\nTARGET GEOGRAPHY: Baltimore City, Anne Arundel, Howard, Baltimore County, PG County, Montgomery County, DC Metro, Northern Virginia\\n\\nNAICS REGISTERED: ${(naics.registered||[]).map(n=\u003en.code+\u0027 \u0027+n.description).join(\u0027, \u0027)}\\nKEY COMPLIANCE HOOKS: FHWA 23 CFR 650, PHMSA 49 CFR 192, OMB M-26-02 May 20 2026, NDAA fleet cert, NERC FAC-001/003, FAA Part 107, CISSP framework\\n\\nACTIVE PIPELINE:\\n${activePrograms || \u0027None currently active.\u0027}\\n\\nIMPORTANT: You have been provided LIVE WEB SEARCH RESULTS and FULL PAGE CONTENT. Use real-time data as primary source for procurement portals, vendor registration URLs, named contacts, and contract vehicles. State UNCONFIRMED if field cannot be verified.\\n\\nProduce ALL 9 sections:\\n1. TARGET ORG — full name, named decision maker with exact title\\n2. PROCUREMENT PORTAL — exact URL from live search results\\n3. CONTRACT VEHICLE — how they procure\\n4. FIT SCORE 0-100% — with rationale\\n5. CAPABILITY STATEMENT — 2-3 paragraphs; lead with CISSP + PMP + Part 107; cite compliance regulation\\n6. CERTIFICATIONS NEEDED — exact gaps\\n7. NEXT ACTION — specific name, phone, email, URL; compliance deadline urgency\\n8. FOLLOW-UP SEQUENCE — 3-touch plan with dates\\n9. DATA CONFIDENCE: [HIGH / MEDIUM / LOW] with reason\\n\\nNever fabricate contacts. Today: ${new Date().toLocaleDateString(\u0027en-US\u0027, {timeZone: \u0027America/New_York\u0027})}.`;\n  userMessage = `Research this BD target using live search results below.\\n\\nQUERY: ${query}\\nToday: ${new Date().toLocaleDateString(\u0027en-US\u0027, {timeZone: \u0027America/New_York\u0027})}\\n\\n--- LIVE SEARCH DATA ---\\n${combinedContext}\\n--- END LIVE SEARCH DATA ---\\n\\nProduce all 9 sections. Flag compliance deadlines creating urgency.`;\n  outputFolder = \u0027Aidan_Outputs/Scout\u0027;\n  outputPrefix = \u0027Scout_BD_\u0027 + new Date().toISOString().slice(0,10).replace(/-/g,\u0027\u0027);\n}\nconst requestBody = JSON.stringify({ model: \u0027claude-sonnet-4-6\u0027, max_tokens: 4096, system: systemMessage, messages: [{ role: \u0027user\u0027, content: userMessage }] });\nconst options = { hostname: \u0027api.anthropic.com\u0027, port: 443, path: \u0027/v1/messages\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027x-api-key\u0027: \u0027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\u0027, \u0027anthropic-version\u0027: \u00272023-06-01\u0027, \u0027Content-Length\u0027: Buffer.byteLength(requestBody) } };\nconst result = await new Promise((resolve, reject) =\u003e {\n  const req = https.request(options, (res) =\u003e { let d = \u0027\u0027; res.on(\u0027data\u0027, c =\u003e d += c); res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: d })); });\n  req.on(\u0027error\u0027, reject);\n  req.write(requestBody);\n  req.end();\n});\nlet aiOutput = \u0027\u0027;\ntry { aiOutput = JSON.parse(result.body).content?.[0]?.text || \u0027No response from Claude.\u0027; } catch(e) { aiOutput = result.body.substring(0, 500); }\nconst dateStr = new Date().toISOString().replace(/[:.]/g,\u0027-\u0027);\nconst filename = mode === \u0027grant\u0027 ? `${outputPrefix}.txt` : `${outputPrefix}_${dateStr}.txt`;\nconst folderPath = `/data/${outputFolder}`;\nfs.mkdirSync(folderPath, { recursive: true });\nconst fetchLog = fetchSummary \u0026\u0026 fetchSummary.length \u003e 0 ? \u0027\\n\\n--- FETCH LOG ---\\n\u0027 + fetchSummary.join(\u0027\\n\u0027) : \u0027\u0027;\nconst header = [`SCOUT v5 — KAI-NETICS`, `Mode: ${mode.toUpperCase()}`, `Source: ${sourceLabel}`, `Query: ${query}`, `Generated: ${timestamp}`, `Scheduled: ${isScheduled}`, `Live Search: YES (Brave API)`, ``, ``].join(\u0027\\n\u0027);\nfs.writeFileSync(`${folderPath}/${filename}`, header + aiOutput + fetchLog + \u0027\\n\u0027, \u0027utf8\u0027);\nconst fitMatch = aiOutput.match(/(?:EAF FIT SCORE|FIT SCORE)[:\\s*\\*]*\\s*\\*?\\*?(\\d+)/i);\nconst fitScore = fitMatch ? fitMatch[1] + \u0027%\u0027 : \u0027See report\u0027;\nconst actionMatch = aiOutput.match(/RECOMMENDED ACTION[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst action = actionMatch ? actionMatch[1].trim().replace(/\\*/g,\u0027\u0027) : \u0027Review report\u0027;\nconst nextMatch = aiOutput.match(/NEXT (?:STEP|ACTION)[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst nextStep = nextMatch ? nextMatch[1].trim().replace(/\\*/g,\u0027\u0027).substring(0,100) : \u0027See report\u0027;\nconst confMatch = aiOutput.match(/DATA CONFIDENCE[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst confidence = confMatch ? confMatch[1].trim().replace(/\\*/g,\u0027\u0027) : \u0027See report\u0027;\nconst modeLabel = mode === \u0027grant\u0027 ? \u0027GRANT INTEL\u0027 : \u0027BD REPORT\u0027;\nconst summary = [`SCOUT v5 ${modeLabel} — ${sourceLabel}`, `Live Search: YES | Confidence: ${confidence}`, `Fit: ${fitScore} | Action: ${action}`, `Next: ${nextStep}`, `Saved: /data/${outputFolder}/${filename}`].join(\u0027\\n\u0027);\nreturn [{ json: { aiOutput, summary, savedTo: `${folderPath}/${filename}`, query, fitScore, action, mode, filename, outputFolder, isScheduled, sourceLabel, timestamp, confidence } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       880,
+                                       128
+                                   ],
+                      "id":  "f821546e-9b73-47fa-baeb-2b849ebc1cca",
+                      "name":  "Scout Brain v5"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst { summary = \u0027Scout complete.\u0027, fitScore, query, mode, isScheduled, sourceLabel, confidence } = $input.first().json;\nconst modeLabel = mode?.toUpperCase() === \u0027GRANT\u0027 ? \u0027GRANT INTEL\u0027 : \u0027BD REPORT\u0027;\nconst msgText = isScheduled ? `SCOUT v5 MORNING SCAN LIVE\\n${sourceLabel || \u0027Scheduled\u0027}\\n\\n${summary}` : `SCOUT v5 ${modeLabel} LIVE\\nSource: ${sourceLabel || \u0027Manual\u0027}\\n\\n${summary}`;\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: msgText } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(r =\u003e { const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\nconst cbBody = JSON.stringify({ agent: \u0027Scout\u0027, version: \u0027v5\u0027, summary, fitScore, query, mode, sourceLabel, confidence, isScheduled, liveSearch: true, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,()=\u003e{}); }); cbReq.on(\u0027error\u0027,()=\u003e{}); cbReq.write(cbBody); cbReq.end();\nreturn [{ json: { success: true, agent: \u0027Scout\u0027, version: \u0027v5\u0027, summary, mode, sourceLabel, confidence, liveSearch: true } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1104,
+                                       128
+                                   ],
+                      "id":  "bc1b6223-c751-40cd-b62b-8ce0ed85c229",
+                      "name":  "Aidan Callback v5"
+                  }
+              ],
+    "connections":  {
+                        "Daily 7AM Trigger":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Route + Build Task v5",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Route + Build Task v5",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Route + Build Task v5":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Brave Search v5",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Brave Search v5":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Web Fetch + Fallback v5",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Web Fetch + Fallback v5":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Scout Brain v5",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Scout Brain v5":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Aidan Callback v5",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  {
+                       "node:Daily 7AM Trigger":  {
+                                                      "recurrenceRules":  [
+
+                                                                          ]
+                                                  }
+                   },
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "044a25d5-98da-40f6-8e28-8ba1b59e0513",
+    "activeVersionId":  null,
+    "versionCounter":  6,
+    "triggerCount":  2,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-20T17:50:08.004Z",
+                       "createdAt":  "2026-04-20T17:50:08.004Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "evZNj73FOl5qzG9b",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-04-20T17:50:06.530Z",
+                     "createdAt":  "2026-04-20T17:50:06.530Z",
+                     "id":  "igtfNToAtt6syxmT",
+                     "name":  "LiveSearch"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T19:46:47.685Z",
+                     "createdAt":  "2026-04-09T19:46:47.685Z",
+                     "id":  "jJD4opuR6AUrAijG",
+                     "name":  "AllVerticals"
+                 },
+                 {
+                     "updatedAt":  "2026-04-09T15:09:02.725Z",
+                     "createdAt":  "2026-04-09T15:09:02.725Z",
+                     "id":  "nyjT59SsYdOXJX6Z",
+                     "name":  "Scout"
+                 },
+                 {
+                     "updatedAt":  "2026-04-20T17:50:06.517Z",
+                     "createdAt":  "2026-04-20T17:50:06.517Z",
+                     "id":  "xsciUUgCZlJhDcUj",
+                     "name":  "v5"
+                 }
+             ],
+    "activeVersion":  null
+}
