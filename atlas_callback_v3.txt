@@ -1,0 +1,39 @@
+const http = require('http');
+const { aidanSummary = '', command = 'Atlas', wordCount = 0, fullText = '', filename = '', outputFolder = 'Atlas_Outputs' } = $input.first().json;
+
+// Build summary bullets from the full text
+let summaryBullets = '';
+if (fullText) {
+  const lines = fullText.split('\n').filter(function(l){ return l.trim(); });
+  const bullets = [];
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i].trim();
+    // Pick lines that look like action items or recommendations
+    if (l.match(/^[*\-•]|^\d+\./) && l.length > 20 && l.length < 200) {
+      bullets.push('• ' + l.replace(/^[*\-•\d\.\s]+/, '').replace(/\*\*/g, '').trim());
+      if (bullets.length >= 5) break;
+    }
+  }
+  if (bullets.length > 0) {
+    summaryBullets = '\n\n' + bullets.join('\n');
+  }
+}
+
+// Build file link via dashboard server
+const fileLink = filename ? '\n\nFull report: http://localhost:3030/' + outputFolder + '/' + filename : '';
+
+// Build full WhatsApp message
+const shortCmd = command.length > 80 ? command.substring(0, 80) + '...' : command;
+const whatsappMsg = 'ATLAS COMPLETE\nQuery: ' + shortCmd + summaryBullets + fileLink;
+
+// Send to WhatsApp
+const msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: whatsappMsg } });
+const waOpts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) } };
+await new Promise(function(r){ const req = http.request(waOpts, function(res){ res.on('data',function(){}); res.on('end',r); }); req.on('error',r); req.write(msgBody); req.end(); });
+
+// Send callback to Orchestra consolidator
+const cbBody = JSON.stringify({ agent: 'Atlas', command, summary: aidanSummary, wordCount, timestamp: new Date().toISOString() });
+const cbOpts = { hostname: 'host.docker.internal', port: 5678, path: '/webhook/aidan-callback', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(cbBody) } };
+const cbReq = http.request(cbOpts, function(res){ res.on('data',function(){}); res.on('end',function(){}); }); cbReq.on('error',function(){}); cbReq.write(cbBody); cbReq.end();
+
+return [{ json: { success: true, agent: 'Atlas', command, whatsappMsg } }];

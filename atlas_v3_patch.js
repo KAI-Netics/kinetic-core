@@ -1,0 +1,108 @@
+const fs = require('fs');
+
+// Read current Atlas workflow
+const atlas = JSON.parse(fs.readFileSync('/data/workflows/1_atlas_v2.json', 'utf8'));
+const node = atlas.nodes.find(function(n){ return n.id === 'atlas-002'; });
+if(!node){ console.log('ERROR: atlas-002 not found'); process.exit(1); }
+
+// Atlas v3 -- intent-based routing, no hardcoded command strings
+const newCode = `const fs = require('fs');
+
+let ctx = {};
+try {
+  ctx = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8').replace(/\\uFEFF/g, ''));
+} catch(e) { ctx = {}; }
+
+const raw = $input.first().json;
+const body = raw.body || raw;
+const command = String(body.command || '').trim();
+const detail = String(body.detail || '').trim();
+
+const entities = ctx.entities || {};
+const founder = ctx.founder || {};
+const verticals = ctx.verticals || {};
+const tech = ctx.technology || {};
+const dates = ctx.key_dates || {};
+const revenue = ctx.revenue_targets || {};
+const compliance = (ctx.compliance_rules || []).join('\\n- ');
+const naics = ((ctx.naics && ctx.naics.registered) || []).map(function(n){ return n.code + ' ' + n.description; }).join(', ');
+
+const deadlines = (ctx.deadlines || []).filter(function(d){
+  const st = (d.status || '').toUpperCase();
+  return st !== 'FILED' && st !== 'COMPLETE' && st !== 'EXEMPT';
+}).slice(0, 12);
+
+const verticalSummary = Object.entries(verticals).map(function(entry){
+  const k = entry[0]; const v = entry[1];
+  return k + ' -- ' + v.name + ' | Status: ' + v.status + ' | Margin: ' + (v.margin || 'TBD');
+}).join('\\n');
+
+const deadlineSummary = deadlines.map(function(d){
+  const days = Math.ceil((new Date(d.date) - new Date()) / (1000 * 60 * 60 * 24));
+  const label = days < 0 ? 'OVERDUE ' + Math.abs(days) + 'd' : days + 'd';
+  return label + ' -- ' + d.item + ' [' + (d.entity || '?') + ']';
+}).join('\\n') || 'None loaded';
+
+const companyContext = 'KAI-NETICS CONTEXT\\n' +
+  'FP: ' + (entities.FP && entities.FP.name || 'KAI-Netics') + ' | EIN: ' + (entities.FP && entities.FP.ein || '') + '\\n' +
+  'EAF: ' + (entities.EAF && entities.EAF.name || 'EAF') + ' | EIN: ' + (entities.EAF && entities.EAF.ein || '') + '\\n' +
+  'MONK LLC: ' + (entities.MONK && entities.MONK.status || 'In formation') + '\\n' +
+  'Founder: ' + (founder.name || 'Kevin Alexander Smith') + '\\n' +
+  'Credentials: ' + (founder.credentials || []).join(', ') + '\\n\\n' +
+  'VERTICALS:\\n' + verticalSummary + '\\n\\n' +
+  'TECHNOLOGY:\\n' +
+  '  MONK: ' + (tech.MONK && tech.MONK.description || '') + '\\n' +
+  '  BVLOS: ' + (tech.MONK && tech.MONK.bvlos_relevance || '') + '\\n' +
+  '  SBIR Target: ' + (tech.MONK && tech.MONK.sbir_target || '') + '\\n\\n' +
+  'NAICS: ' + naics + '\\n\\n' +
+  'REVENUE: Y1 ' + (revenue.year1_total || '') + ' | Y2 ' + (revenue.year2_total || '') + ' | Y3 ' + (revenue.year3_total || '') + '\\n\\n' +
+  'ACTIVE DEADLINES:\\n' + deadlineSummary + '\\n\\n' +
+  'COMPLIANCE:\\n- ' + compliance + '\\n\\n' +
+  'KEY DATES: MEIA ' + (dates.meia_capstone || 'N/A') + ' | OMB M-26-02 ' + (dates.omb_m2602_deadline || 'May 20 2026') + '\\n\\n' +
+  'TECHNICAL ADVISOR: Dr. Alexander Kott -- Former Chief Scientist U.S. Army Research Laboratory 20+ years. Validated MONK architecture.\\n' +
+  'REGULATORY: FAA Part 108 BVLOS final rule INCOMING -- MONK is the primary compliance solution.';
+
+const systemPrompt = 'You are Atlas, Senior Technical Architect and Strategic Intelligence Officer for KAI-Netics.\\n\\n' +
+  'You have full authority to reason about ANY request -- technical, strategic, operational, regulatory, or financial -- across all 7 verticals and both entities (FP and EAF).\\n\\n' +
+  'You do NOT follow a command menu. You read the INTENT behind every request and respond with the most useful possible output given the company context.\\n\\n' +
+  'PRINCIPLES:\\n' +
+  '1. Lead with the most actionable insight first\\n' +
+  '2. Be technically precise -- Dr. Kott will review your work\\n' +
+  '3. Connect technical facts to revenue, BD, or compliance implications\\n' +
+  '4. Flag unknowns rather than fabricating\\n' +
+  '5. Scale depth to the request -- status question gets sharp summary, SBIR draft gets full narrative\\n' +
+  '6. Always close with: ATLAS RECOMMENDATION + owner + deadline\\n\\n' +
+  'DOMAINS: SBIR/STTR narrative, FAA Part 107/108/135, MONK secure element architecture, CAKO workforce, Maryland grants (TEDCO/Lighthouse/EARN/ADVANTAGE), federal contracting (SAM/NAICS/MBE), cybersecurity (CISSP/Zero Trust/NDAA), medical delivery (Part 135/Johns Hopkins), commercialization (NSF I-Corps/AFWERX/Maryland Commerce), three-path funding strategy (I-Corps -> MD Commerce -> AFWERX).\\n\\n' +
+  companyContext;
+
+const userPrompt = command && detail ? command + '\\n\\nAdditional context: ' + detail
+  : command ? command
+  : 'Provide a full KAI-Netics platform status: active opportunities, critical deadlines, top 3 strategic priorities this week, and one recommended action for each vertical.';
+
+// File routing -- keyword-based for OUTPUT FILING ONLY, not for prompt selection
+const cmdLower = (command + ' ' + detail).toLowerCase();
+let outputFolder = 'Atlas_Outputs';
+let outputPrefix = 'Atlas';
+if(cmdLower.includes('sbir') || cmdLower.includes('sttr')){ outputFolder = 'SBIR'; outputPrefix = 'SBIR'; }
+else if(cmdLower.includes('afwerx')){ outputFolder = 'SBIR'; outputPrefix = 'AFWERX'; }
+else if(cmdLower.includes('i-corps') || cmdLower.includes('nsf')){ outputFolder = 'SBIR'; outputPrefix = 'NSF'; }
+else if(cmdLower.includes('monk')){ outputFolder = 'MONK'; outputPrefix = 'MONK'; }
+else if(cmdLower.includes('bvlos') || cmdLower.includes('part 108')){ outputFolder = 'SBIR'; outputPrefix = 'BVLOS'; }
+else if(cmdLower.includes('meia')){ outputFolder = 'SBIR'; outputPrefix = 'MEIA'; }
+
+return [{ json: {
+  command: command || 'Atlas platform brief',
+  userPrompt: userPrompt,
+  systemPrompt: systemPrompt,
+  outputFolder: outputFolder,
+  outputPrefix: outputPrefix,
+  isStatus: false,
+  timestamp: new Date().toISOString()
+}}];`;
+
+node.parameters.jsCode = newCode;
+
+fs.writeFileSync('/data/workflows/1_atlas_v2.json', JSON.stringify(atlas, null, 2), 'utf8');
+console.log('OK: Atlas v3 intent-based routing written to atlas-002');
+console.log('New code length: ' + newCode.length + ' chars');
+console.log('Node name: ' + node.name);

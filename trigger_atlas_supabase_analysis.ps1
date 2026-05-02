@@ -1,0 +1,12 @@
+$body = @{
+    command = "analyze supabase integration"
+    userPrompt = "You are being asked to perform a full architectural analysis of the KAI-Netics Core Engine Supabase integration as of May 1 2026. Here is what I know from reading the actual node code on disk:`n`n1. ATLAS (Technical Architect v3) -- FULLY WIRED. cost_log and atlas_decisions receiving writes. Uses env vars correctly.`n`n2. SCOUT (scout_supabase.js) -- Supabase node EXISTS. Writes to scout_reports table. ISSUE: Hardcoded service role key instead of env var.`n`n3. JORDAN (jordan_supabase.js) -- Supabase node EXISTS. Writes to grant_applications table. ISSUE: Hardcoded service role key instead of env var.`n`n4. IRIS (iris_brain_v3.js) -- Generates supabaseItems array in output but NO Supabase write node exists in workflow. Data never reaches compliance_items table. The write is MISSING entirely.`n`n5. AIDAN ORCHESTRATOR (orchestra_consolidator.js) -- NO Supabase write at all. Brief written to file only. ALSO: Still using deprecated model claude-sonnet-4-20250514 and hardcoded Anthropic key instead of env var.`n`n6. NOVA, PULSE, SAGE -- Integration status UNKNOWN from disk review.`n`n7. All agents with existing Supabase writes have hardcoded service role keys -- security risk, must move to env vars.`n`nAs Chief Architect your deliverable:`n1. Assess current integration state per agent with a clear status (COMPLETE / PARTIAL / MISSING / UNKNOWN)`n2. Identify all hardcoded keys that need to move to env vars -- security priority`n3. Identify all deprecated model strings that need updating`n4. Prioritize the integration work in order of platform value -- what gives the most intelligence value first`n5. For each agent needing work state exactly what changes are needed`n6. Score current platform agentic maturity 0-10 with reasoning`n7. Produce a prioritized build plan Kevin can execute today`n`nDo NOT fabricate what you do not know. Flag unknowns explicitly. This is your domain -- own it."
+    outputFolder = "Atlas_Outputs"
+    outputPrefix = "Atlas_SupabaseAnalysis"
+    timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+} | ConvertTo-Json -Depth 5
+
+Write-Host "Firing Atlas -- deep analysis mode (Opus)..."
+$response = Invoke-RestMethod -Uri "http://localhost:5678/webhook-test/atlas-architect" -Method POST -ContentType "application/json" -Body $body
+Write-Host "Atlas fired successfully."
+Write-Host $response

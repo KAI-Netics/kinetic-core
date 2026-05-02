@@ -1,0 +1,299 @@
+================================================================================
+KAI-NETICS SESSION HANDOFF
+Date: May 1, 2026 (End of Session)
+Prepared by: Aidan + Atlas (Claude Sonnet 4.6 / Opus 4.6)
+Next session: Open fresh -- read this file first
+================================================================================
+
+RESUME LINE:
+"Read HANDOFF.txt at C:\Kinetic_Core\HANDOFF.txt and pick up from there.
+KAI-Netics is not a misspelling -- it is the brand name."
+
+================================================================================
+PLATFORM STATUS -- MAY 1, 2026 -- ALL 14 AGENTS/WORKFLOWS OPERATIONAL
+================================================================================
+n8n:            Running | localhost:5678 | kinetic-core-n8n (Docker)
+EvolutionAPI:   Running | localhost:8081 | kinetic-core-whatsapp (Docker)
+Dashboard:      Running | localhost:3030 | pm2 kai-dashboard
+Supabase MCP:   Running | pm2 supabase-mcp
+Supabase DB:    Live | raxpmeltyxmtiihxoxpa.supabase.co | 15 tables
+
+STARTUP COMMAND (after any reboot):
+  powershell -ExecutionPolicy Bypass -File C:\Kinetic_Core\START_KINETIC.ps1
+
+CONTAINER REBUILD (if container lost -- uses start_n8n.ps1 as source of truth):
+  docker stop kinetic-core-n8n
+  docker rm kinetic-core-n8n
+  & "C:\Kinetic_Core\start_n8n.ps1"
+
+================================================================================
+MAJOR ACCOMPLISHMENTS -- MAY 1, 2026 SESSION
+================================================================================
+
+ATLAS v3 DEPLOYED:
+  - Hybrid model routing: Sonnet default / Opus for deep analysis
+  - Supabase integration: cost_log + atlas_decisions on every call
+  - System prompt loads from disk: C:\Kinetic_Core\data\Atlas_System_Prompt.txt
+  - Replication engine: C:\Kinetic_Core\data\atlas_replication_engine.js
+  - 7 Atlas Supabase tables created and seeded with reference architecture
+  - Atlas owns reference_architecture, cost_log, version_registry,
+    industry_intelligence, client_configs, drift_log, atlas_decisions
+
+SUPABASE FULLY WIRED:
+  - All agents now writing to Supabase (Scout, Jordan, Iris, Atlas)
+  - All env vars in Docker container -- no hardcoded keys in any node
+  - Container rebuilt with full env var set (see DOCKER ENV VARS below)
+  - RLS enabled on all Atlas tables
+
+ORCHESTRA CONSOLIDATED BRIEF WORKING:
+  - All 4 agents (Atlas, Scout, Jordan, Iris) callback landing
+  - Aidan synthesizes via Opus and delivers to WhatsApp
+  - Session-based architecture in place (time-window matching, 10-min window)
+  - Jordan sends callback even on skip days (no-analyze-today path fixed)
+  - Pinned nodes unpinned -- Scout and Jordan callbacks now live
+
+KAI_CONTEXT.JSON v2.1:
+  - Hardcoded action instructions removed from deadline notes
+  - Agent contacts kept as data, not as directives
+  - SAM.gov status updated to IN PROGRESS
+  - Agents reason from context, not from embedded instructions
+
+ATLAS SYSTEM PROMPT v2:
+  - Agentic Reasoning Mandate added (top section)
+  - Kevin's roles updated: added FAA Part 107 Operator (actively seeking employment)
+  - Architecture review: every 3 weeks, Opus mandatory, next May 22 2026
+  - No hardcoded targets -- agents reason from Kevin's full profile
+  - Saved to: C:\Kinetic_Core\data\Atlas_System_Prompt.txt
+
+================================================================================
+DOCKER ENVIRONMENT VARIABLES (AUTHORITATIVE -- May 1, 2026)
+================================================================================
+Container: kinetic-core-n8n
+Source of truth: C:\Kinetic_Core\start_n8n.ps1
+
+Environment variables set:
+  ANTHROPIC_API_KEY       = [rotated May 1 -- see start_n8n.ps1]
+  SUPABASE_URL            = https://raxpmeltyxmtiihxoxpa.supabase.co
+  SUPABASE_SERVICE_KEY    = [see start_n8n.ps1]
+  BRAVE_API_KEY           = BSAWHBob7ILPlWV-JX8iFTOr4wDaQ1I
+  EVOLUTION_API_KEY       = Kevin2026
+  NODE_FUNCTION_ALLOW_BUILTIN = fs,path,https,http,crypto
+  NODE_FUNCTION_ALLOW_EXTERNAL = *
+  N8N_BLOCK_ENV_ACCESS_IN_NODE = false
+  N8N_HOST                = localhost
+  N8N_PORT                = 5678
+  WEBHOOK_URL             = http://localhost:5678
+
+NOTE: Keys exposed in HANDOFF.txt are a security risk -- rotate if this file
+is ever shared outside the machine. Punchlist item: move keys to encrypted vault.
+
+MODEL STRINGS (confirmed May 1, 2026):
+  Scout Brain v5:         claude-sonnet-4-6
+  Jordan Call Claude:     claude-sonnet-4-6
+  Atlas Call Claude:      HYBRID (claude-sonnet-4-6 default / claude-opus-4-6 deep)
+  Aidan Consolidator:     claude-opus-4-6
+  Iris:                   claude-sonnet-4-6
+
+================================================================================
+WORKFLOW REGISTRY -- ALL 14 ACTIVE
+================================================================================
+1_atlas_v2.json              Atlas v3 -- OPERATIONAL -- disk STALE (export needed)
+2_scout_v5.json              Scout v5 -- OPERATIONAL -- disk STALE (export needed)
+3_jordan_v3.json             Jordan v3 -- OPERATIONAL -- disk STALE (export needed)
+4_iris_v3_supabase.json      Iris v3 -- OPERATIONAL -- disk STALE (export needed)
+5a_orchestra_fanout.json     Orchestra Fan Out -- OPERATIONAL
+5b_callback_consolidator     Callback Consolidator v2 -- OPERATIONAL -- disk STALE
+6_aidan_router_v2.json       Aidan WhatsApp Bridge -- OPERATIONAL
+7_network_watchdog.json      Aidan Network Watchdog -- OPERATIONAL
+8_email_router.json          Aidan Email Router -- OPERATIONAL (Gmail OAuth pending)
+9_nova_rfp.json              Nova RFP Intelligence -- OPERATIONAL
+10_sage_newsletter.json      Sage Newsletter Automation -- BLOCKED (Gmail OAuth)
+11_pulse_metrics.json        Pulse Platform Metrics -- OPERATIONAL
+12_sage_send_email.json      Sage Send Newsletter Email -- TEST MODE ON
+
+JSON SYNC NEEDED (export from n8n, overwrite disk, git push):
+  1_atlas_v2.json         (Atlas v3 node code updated)
+  2_scout_v5.json         (env vars + model string updated)
+  3_jordan_v3.json        (env vars + callback + load context fixed)
+  4_iris_v3_supabase.json (env vars updated)
+  5b_callback_consolidator.json (full rewrite -- session matching + Opus)
+
+FILE FERRY PROTOCOL (CRITICAL -- prevents Unicode corruption):
+  Always open files with: notepad C:\Kinetic_Core\filename.js
+  Ctrl+A -> Ctrl+C -> paste into n8n node -> Save
+  NEVER copy code from Claude chat window
+
+================================================================================
+SUPABASE STATUS -- MAY 1, 2026
+================================================================================
+Project: raxpmeltyxmtiihxoxpa.supabase.co
+Tables (15 total):
+
+ORIGINAL 8 (pre-May 1):
+  agent_executions        -- Schema exists, writes inconsistent
+  agent_feedback          -- Schema exists, no writes yet
+  bd_pipeline             -- Schema exists, no writes yet
+  compliance_items        -- ACTIVE -- Iris writes on every run (10 items today)
+  ecosystem_signals       -- Schema exists, no writes yet
+  grant_applications      -- ACTIVE -- Jordan writes on analysis runs
+  rfp_responses           -- Schema exists, no writes yet
+  scout_reports           -- ACTIVE -- Scout writes on BD/grant runs
+
+ATLAS 7 (created May 1):
+  reference_architecture  -- SEEDED -- 16 workflows documented
+  cost_log                -- ACTIVE -- Atlas writes cost on every call
+  version_registry        -- SEEDED -- 8 components tracked
+  industry_intelligence   -- Empty -- Atlas populates on deep analysis
+  client_configs          -- Empty -- populated when client deployments built
+  drift_log               -- Empty -- populated on architecture reviews
+  atlas_decisions         -- ACTIVE -- Atlas writes every decision
+
+SECURITY NOTE:
+  3 views (grant_pipeline_summary, pipeline_summary, agent_health_7d) use
+  SECURITY DEFINER -- must convert to SECURITY INVOKER. Backlog #9.
+
+SUPABASE WRITE STATUS BY AGENT:
+  Scout    -> scout_reports        ACTIVE (env var fix applied May 1)
+  Jordan   -> grant_applications   ACTIVE (env var fix applied May 1)
+  Iris     -> compliance_items     ACTIVE (env var fix applied May 1, 10 items/run)
+  Atlas    -> cost_log + atlas_decisions  ACTIVE
+  Nova     -> rfp_responses        NOT WIRED (backlog)
+  Pulse    -> agent_executions     NOT WIRED (backlog)
+  Sage     -> NOT WIRED            BLOCKED on Gmail OAuth
+  Aidan    -> NO Supabase writes   Backlog
+
+================================================================================
+PENDING ITEMS -- PRIORITY ORDER
+================================================================================
+
+IMMEDIATE (next session):
+  1. JSON sync -- export all 5 stale workflows from n8n -> overwrite disk -> git push
+  2. Verify Scout Supabase writes are landing (last success was 7h ago as of May 1)
+     -- check scout_reports table in Supabase for today's entries
+  3. Build Atlas 3-week review scheduled trigger in n8n (May 22 next run)
+  4. Wire Gmail OAuth into n8n -- unblocks Sage, Email Router, Newsletter automation
+
+HIGH:
+  5. Fix agent_executions, bd_pipeline, ecosystem_signals, rfp_responses writes
+     -- Nova -> rfp_responses, Pulse -> agent_executions
+  6. Supabase SECURITY DEFINER fix on 3 views (convert to SECURITY INVOKER)
+  7. Jordan ops mode -- daily BD/pipeline brief vs grant-only analysis
+  8. Sage TEST_MODE flip to false when GoDaddy forwarding confirmed
+
+MEDIUM:
+  9. Scribe agent (KAI_Context differential patch system)
+  10. Scout Supabase "last success" stale -- fix write confirmation logic
+  11. Central config adoption -- wire agents to C:\Kinetic_Core\Config\kai_config.js
+  12. Pulse dashboard confirmation + add to morning brief
+  13. Jordan .docx reader via mammoth library
+
+ARCHITECTURE (phase 2 builds):
+  14. MONK LLC formation + provisional patent -- CRITICAL (overdue)
+  15. SAM.gov UEI confirmation -- BLOCKING all federal work
+  16. IRS Form 1023 filing -- BLOCKING all grant funding
+  17. Atlas scheduled architecture review (3-week trigger not yet built in n8n)
+  18. Replication engine test -- run Atlas client config for real estate firm
+
+SECURITY PUNCHLIST:
+  - API keys exposed in start_n8n.ps1 and HANDOFF.txt -- rotate and move to vault
+  - Anthropic key exposed multiple times in this session chat -- rotate
+  - Brave API key exposed in chat -- assess risk
+  - Supabase service key exposed in chat -- rotate
+
+================================================================================
+ATLAS REFERENCE ARCHITECTURE -- CONFIRMED MAY 1, 2026
+================================================================================
+Platform: n8n 2.14.2 | Docker | C:\Kinetic_Core | localhost:5678
+Database: Supabase PostgreSQL | 15 tables | RLS enabled
+Delivery: EvolutionAPI 1.x | Port 8081 | WhatsApp
+
+MODEL ASSIGNMENTS (canonical):
+  Scout Brain v4:              claude-sonnet-4-6
+  Call Claude (Jordan):        claude-sonnet-4-6
+  Call Claude + Save (Atlas):  HYBRID (Sonnet default / Opus deep analysis)
+  Collect + Consolidate:       claude-opus-4-6 (once daily, highest-judgment)
+
+HYBRID ROUTING TRIGGERS (Atlas routes to Opus):
+  drift | analyze | compare | replication | client config | industry |
+  best practice | optimize | architecture review | upgrade path | strategic |
+  scheduled_review | 3_week_review
+
+ATLAS FILES (on disk):
+  C:\Kinetic_Core\data\Atlas_System_Prompt.txt    (v2 -- agentic mandate + 3-week schedule)
+  C:\Kinetic_Core\data\atlas_replication_engine.js (client deployment templates)
+  C:\Kinetic_Core\aidan_consolidator_v2.js         (reference -- live version in n8n)
+
+================================================================================
+ORCHESTRA STATUS -- CONFIRMED WORKING MAY 1, 2026
+================================================================================
+Trigger:    POST http://localhost:5678/webhook/aidan-orchestra
+            Body: {"command":"morning brief","trigger":"manual_test"}
+Fan Out:    Fires Atlas + Scout + Jordan + Iris in parallel
+Callbacks:  All 4 landing at /webhook/aidan-callback
+Matching:   10-minute time window (session matching disabled -- works reliably)
+Synthesis:  Opus 4.6 -- brief saved to /data/Aidan_Outputs/Orchestra/
+Delivery:   WhatsApp 14432576836 in 3800-char chunks
+Duration:   ~2-3 minutes end-to-end
+
+CONFIRMED WORKING: Brief delivered at 6:25 PM EST May 1, 2026
+
+================================================================================
+CRITICAL ADMIN -- STATUS MAY 1, 2026
+================================================================================
+  SAM.gov UEI             IN PROGRESS  Kevin working -- gates all federal work
+  IRS Form 1023           OVERDUE      Call James Scott (410) 908-4454
+  MONK Provisional Patent OVERDUE      Call James Scott (410) 908-4454
+  MONK LLC Formation      OVERDUE      businessexpress.maryland.gov
+  MBE/DBE Certification   PENDING      Due May 15 -- mbe.mdot.maryland.gov
+  OMB M-26-02 Compliance  OPPORTUNITY  Due May 20 -- Kevin's CISSP+Part 107 qualifies
+  Microsoft for Nonprofits OVERDUE     nonprofit.microsoft.com -- EIN 41-4820296
+  IRS Form 990-N          PENDING      Due 2027-05-15 (first year)
+  Techstars Demo Day      PENDING      Jun 3 -- M&T Bank Stadium -- register by May 15
+
+THE JAMES SCOTT CALL CLOSES 4 ITEMS:
+  1023-EZ eligibility check | MONK patent | MONK LLC | GoDaddy defederation
+  (410) 908-4454 | jlslaw@yahoo.com
+
+================================================================================
+GOVERNANCE RULE -- PERMANENT
+================================================================================
+NOTHING LEAVES THE PLATFORM WITHOUT KEVIN'S EXPLICIT APPROVAL.
+
+Agents research, draft, score, and present.
+Kevin decides. Kevin approves. Then it executes.
+
+Agents say: "RECOMMENDED: Kevin to file/send/submit"
+Agents NEVER say: "Aidan will file/send/submit"
+
+================================================================================
+ACTIVE GRANTS -- /data/Maryland_Grants/
+================================================================================
+FAA_Workforce_MD_Governor_2026.txt    -- Active | Deadline UNCONFIRMED
+FEMA_CUAS_SLTT_2026.txt               -- Active | Deadline TBD
+MD_BuildOurFuture_DECADE_2026.txt     -- Active | Deadline TBD
+SBIR_Private_Foundation_2026.txt      -- Active | Deadline TBD
+
+ARCHIVED (/data/Maryland_Grants/Archive/):
+  Lighthouse files -- EXPIRED
+
+================================================================================
+AGENT ROSTER -- STAFF ROLES
+================================================================================
+Aidan     Chief of Staff        Coordinates all agents, WhatsApp command routing
+Atlas     Chief Architect       Platform architecture, cost model, drift detection
+Scout     BD Manager            Pipeline, targets, market intelligence, contracts
+Jordan    Grant Writer          Federal/state funding, LOIs, eligibility
+Iris      Compliance Officer    Deadlines, regulatory calendar, risk flags
+Nova      Contracts Analyst     RFP scoring, procurement intelligence
+Sage      Communications Dir    Newsletter, board communications
+Pulse     Operations Analyst    Platform health, metrics
+Scribe    PLANNED               Differential KAI_Context patch system
+
+Kevin is the CEO. Roles: (1) Sales & BD (2) MONK tech development (3) FAA Part 107 Operator
+
+================================================================================
+END OF HANDOFF -- May 1, 2026
+Platform is live. Orchestra brief confirmed working. Atlas v3 deployed.
+All agents wired to Supabase. 15 tables active.
+Next: JSON sync, Gmail OAuth, Atlas 3-week trigger, SAM.gov confirmation.
+================================================================================

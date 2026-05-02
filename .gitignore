@@ -1,24 +1,17 @@
-# KAI-Netics Core Engine — .gitignore
-# Protects sensitive data from being pushed to GitHub
-
-# Agent output files (large, regenerated on each run)
-Aidan_Outputs/
-
-# Temporary and session files
-*.tmp
-*.log
-session_orch*.json
-
-# Environment files with secrets
-.env
+﻿# Sensitive files
+start_n8n.ps1
 *.env
+*.key
 
-# Node modules if any
-node_modules/
+# Large output folders
+Aidan_Outputs/
+Atlas_Outputs/
+SBIR/
+MONK/
+Maryland_Grants/
 
-# OS files
-.DS_Store
-Thumbs.db
+# n8n internals
+.n8n/
 
-# Archive folder is fine to push (workflow history)
-# !archive/
+# Logs
+*.log
