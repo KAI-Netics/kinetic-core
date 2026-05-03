@@ -1,5 +1,5 @@
 ﻿{
-    "updatedAt":  "2026-04-21T22:23:46.664Z",
+    "updatedAt":  "2026-05-03T01:47:40.465Z",
     "createdAt":  "2026-04-21T22:19:07.852Z",
     "id":  "jb9c1ETj3mBEOtTd",
     "name":  "Aidan - Email Router",
@@ -18,8 +18,12 @@
                                                                         }
                                                                     ]
                                                        },
+                                         "simple":  false,
                                          "filters":  {
                                                          "readStatus":  "unread"
+                                                     },
+                                         "options":  {
+
                                                      }
                                      },
                       "id":  "3a24259d-0b23-43f6-b55d-2a13be090d73",
@@ -39,7 +43,7 @@
                   },
                   {
                       "parameters":  {
-                                         "jsCode":  "const input = $input.first().json;\n\n// Extract email metadata\nconst fromHeader = input.from || input.payload \u0026\u0026 input.payload.headers \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027From\u0027; }) \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027From\u0027; }).value || \u0027\u0027;\nconst subject = input.subject || input.payload \u0026\u0026 input.payload.headers \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027Subject\u0027; }) \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027Subject\u0027; }).value || \u0027\u0027;\nconst body = input.snippet || input.body || \u0027\u0027;\nconst messageId = input.id || \u0027\u0027;\nconst fromLower = fromHeader.toLowerCase();\nconst subjectLower = subject.toLowerCase();\nconst bodyLower = body.toLowerCase();\n\n// Routing rules — order matters, first match wins\nlet route = \u0027GENERAL\u0027;\nlet agent = \u0027Aidan\u0027;\nlet priority = \u0027medium\u0027;\nlet reason = \u0027\u0027;\n\n// eMMA — Maryland state procurement\nif (fromLower.indexOf(\u0027emma\u0027) !== -1 || fromLower.indexOf(\u0027emma.maryland\u0027) !== -1 || subjectLower.indexOf(\u0027solicitation\u0027) !== -1 || subjectLower.indexOf(\u0027bpm id\u0027) !== -1 || subjectLower.indexOf(\u0027rfx\u0027) !== -1) {\n  route = \u0027NOVA\u0027;\n  agent = \u0027Nova\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027eMMA procurement notification\u0027;\n}\n// SAM.gov — federal procurement\nelse if (fromLower.indexOf(\u0027sam.gov\u0027) !== -1 || fromLower.indexOf(\u0027beta.sam.gov\u0027) !== -1 || subjectLower.indexOf(\u0027sam.gov\u0027) !== -1 || subjectLower.indexOf(\u0027uei\u0027) !== -1 || subjectLower.indexOf(\u0027cage code\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027SAM.gov registration update\u0027;\n}\n// IRS / Tax compliance\nelse if (fromLower.indexOf(\u0027irs.gov\u0027) !== -1 || fromLower.indexOf(\u0027treasury.gov\u0027) !== -1 || subjectLower.indexOf(\u0027form 1023\u0027) !== -1 || subjectLower.indexOf(\u0027990\u0027) !== -1 || subjectLower.indexOf(\u0027ein\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027IRS / tax compliance\u0027;\n}\n// Maryland state agencies — grants\nelse if (fromLower.indexOf(\u0027maryland.gov\u0027) !== -1 || fromLower.indexOf(\u0027dllr\u0027) !== -1 || fromLower.indexOf(\u0027tedco\u0027) !== -1 || subjectLower.indexOf(\u0027grant\u0027) !== -1 || subjectLower.indexOf(\u0027award\u0027) !== -1 || subjectLower.indexOf(\u0027lighthouse\u0027) !== -1 || subjectLower.indexOf(\u0027earn\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Maryland grant / state agency\u0027;\n}\n// Federal grants\nelse if (fromLower.indexOf(\u0027grants.gov\u0027) !== -1 || fromLower.indexOf(\u0027hrsa\u0027) !== -1 || fromLower.indexOf(\u0027sbir\u0027) !== -1 || subjectLower.indexOf(\u0027nofa\u0027) !== -1 || subjectLower.indexOf(\u0027notice of funding\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Federal grant notification\u0027;\n}\n// FAA / Drone regulatory\nelse if (fromLower.indexOf(\u0027faa.gov\u0027) !== -1 || subjectLower.indexOf(\u0027part 107\u0027) !== -1 || subjectLower.indexOf(\u0027part 108\u0027) !== -1 || subjectLower.indexOf(\u0027laanc\u0027) !== -1 || subjectLower.indexOf(\u0027remote id\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027FAA regulatory update\u0027;\n}\n// BD pipeline — known contacts\nelse if (fromLower.indexOf(\u0027mdot\u0027) !== -1 || fromLower.indexOf(\u0027sha.maryland\u0027) !== -1 || fromLower.indexOf(\u0027bge.com\u0027) !== -1 || fromLower.indexOf(\u0027medstar\u0027) !== -1 || fromLower.indexOf(\u0027umms\u0027) !== -1 || fromLower.indexOf(\u0027jhmi.edu\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027BD pipeline contact\u0027;\n}\n// Techstars / ecosystem\nelse if (fromLower.indexOf(\u0027techstars\u0027) !== -1 || fromLower.indexOf(\u0027tedco\u0027) !== -1 || fromLower.indexOf(\u0027meia\u0027) !== -1 || subjectLower.indexOf(\u0027accelerator\u0027) !== -1 || subjectLower.indexOf(\u0027cohort\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Ecosystem / accelerator\u0027;\n}\n\nreturn [{ json: {\n  route: route,\n  agent: agent,\n  priority: priority,\n  reason: reason,\n  from: fromHeader,\n  subject: subject,\n  body: body.substring(0, 2000),\n  messageId: messageId,\n  timestamp: new Date().toISOString()\n}}];"
+                                         "jsCode":  "const https = require(\u0027https\u0027);\nconst fs = require(\u0027fs\u0027);\n\nconst input = $input.first().json;\n\n// Handle both Simplify ON and Simplify OFF payload formats\nfunction extractHeader(input, headerName) {\n  // Simplify OFF -- headers are in payload.headers array\n  if (input.payload \u0026\u0026 input.payload.headers) {\n    const header = input.payload.headers.find(function(h) {\n      return h.name \u0026\u0026 h.name.toLowerCase() === headerName.toLowerCase();\n    });\n    return header ? header.value : \u0027\u0027;\n  }\n  // Simplify ON -- fields are at top level\n  if (headerName.toLowerCase() === \u0027from\u0027) return input.from || \u0027\u0027;\n  if (headerName.toLowerCase() === \u0027subject\u0027) return input.subject || \u0027\u0027;\n  return \u0027\u0027;\n}\n\nfunction extractBody(input) {\n  // Simplify ON\n  if (input.snippet) return input.snippet;\n  // Simplify OFF -- body is base64 encoded in payload.body.data\n  if (input.payload \u0026\u0026 input.payload.body \u0026\u0026 input.payload.body.data) {\n    try {\n      return Buffer.from(input.payload.body.data, \u0027base64\u0027).toString(\u0027utf8\u0027).substring(0, 1000);\n    } catch(e) {}\n  }\n  // Try parts for multipart emails\n  if (input.payload \u0026\u0026 input.payload.parts) {\n    for (let i = 0; i \u003c input.payload.parts.length; i++) {\n      const part = input.payload.parts[i];\n      if (part.mimeType === \u0027text/plain\u0027 \u0026\u0026 part.body \u0026\u0026 part.body.data) {\n        try {\n          return Buffer.from(part.body.data, \u0027base64\u0027).toString(\u0027utf8\u0027).substring(0, 1000);\n        } catch(e) {}\n      }\n    }\n  }\n  return \u0027\u0027;\n}\n\nconst fromHeader = extractHeader(input, \u0027from\u0027);\nconst subject = extractHeader(input, \u0027subject\u0027);\nconst body = extractBody(input);\nconst messageId = input.id || \u0027\u0027;\n\n// Basic spam filter\nconst fromLower = (typeof fromHeader === \u0027string\u0027 ? fromHeader : \u0027\u0027).toLowerCase();\nconst subjectLower = (typeof subject === \u0027string\u0027 ? subject : \u0027\u0027).toLowerCase();\nconst spamIndicators = [\u0027unsubscribe\u0027, \u0027noreply@\u0027, \u0027no-reply@\u0027, \u0027newsletter@\u0027, \u0027marketing@\u0027, \u0027donotreply@\u0027, \u0027notifications@\u0027, \u0027alert@\u0027, \u0027bounce@\u0027];\nconst isSpam = spamIndicators.some(function(s) { return fromLower.indexOf(s) !== -1; });\nconst isAutoReply = subjectLower.indexOf(\u0027out of office\u0027) !== -1 || subjectLower.indexOf(\u0027auto-reply\u0027) !== -1 || subjectLower.indexOf(\u0027automatic reply\u0027) !== -1;\n\nif (isSpam || isAutoReply) {\n  return [{ json: {\n    route: \u0027SKIP\u0027, agent: \u0027None\u0027, priority: \u0027low\u0027,\n    reason: \u0027Spam or auto-reply filtered\u0027,\n    from: fromHeader, subject: subject, body: body.substring(0, 500),\n    messageId: messageId, timestamp: new Date().toISOString(), claudeClassified: false\n  }}];\n}\n\n// Load KAI-Netics context\nlet ctx = {};\ntry {\n  ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027).replace(/^\\uFEFF/, \u0027\u0027));\n} catch(e) { ctx = {}; }\n\nconst verticals = ctx.verticals || {};\nconst verticalList = Object.entries(verticals).map(function(entry) {\n  return entry[0] + \u0027: \u0027 + (entry[1].name || \u0027\u0027);\n}).join(\u0027, \u0027);\n\nconst systemPrompt = \u0027You are Aidan, email router for KAI-Netics. Classify incoming emails and route to the correct agent.\\n\\n\u0027 +\n\u0027KAI-NETICS CONTEXT:\\n\u0027 +\n\u0027Company: KAI-Netics -- drone services, AI platform, workforce development\\n\u0027 +\n\u0027Entities: FP (Kevin Alexander International LLC dba KAI-Netics), EAF (nonprofit 501c3 pending), MONK (IP holding)\\n\u0027 +\n\u0027Founder: Kevin Alexander Smith -- CISSP, PMP, CCNA, FAA Part 107 Operator\\n\u0027 +\n\u0027Verticals: \u0027 + verticalList + \u0027\\n\\n\u0027 +\n\u0027ROUTING RULES:\\n\u0027 +\n\u0027NOVA -- RFPs, solicitations, procurement notices, contract opportunities, vendor registration requests, any email asking KAI-Netics to bid or respond to a formal opportunity\\n\u0027 +\n\u0027JORDAN -- Grants, funding opportunities, award notifications, SBIR/STTR, Maryland state grants, federal grants, nonprofit funding, LOI requests, grant deadlines\\n\u0027 +\n\u0027IRIS -- Compliance deadlines, regulatory updates, FAA notices, IRS communications, SAM.gov, Maryland state filings, legal notices, license renewals, tax matters\\n\u0027 +\n\u0027SCOUT -- BD leads, partnership inquiries, potential client outreach, conference invitations, ecosystem contacts, introductions, speaking opportunities\\n\u0027 +\n\u0027GENERAL -- Everything else that does not clearly fit the above categories\\n\u0027 +\n\u0027SKIP -- Spam, marketing, newsletters, auto-replies, promotional emails\\n\\n\u0027 +\n\u0027Respond with ONLY a JSON object, no other text:\\n\u0027 +\n\u0027{\"route\":\"NOVA|JORDAN|IRIS|SCOUT|GENERAL|SKIP\",\"priority\":\"critical|high|medium|low\",\"reason\":\"one sentence explanation\",\"confidence\":\"high|medium|low\"}\u0027;\n\nconst userMessage = \u0027Classify this email:\\n\\nFROM: \u0027 + fromHeader + \u0027\\nSUBJECT: \u0027 + subject + \u0027\\nBODY PREVIEW: \u0027 + body.substring(0, 800);\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-sonnet-4-6\u0027,\n  max_tokens: 150,\n  system: systemPrompt,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst options = {\n  hostname: \u0027api.anthropic.com\u0027, port: 443,\n  path: \u0027/v1/messages\u0027, method: \u0027POST\u0027,\n  headers: {\n    \u0027Content-Type\u0027: \u0027application/json\u0027,\n    \u0027x-api-key\u0027: $env.ANTHROPIC_API_KEY,\n    \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n    \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n  }\n};\n\nlet route = \u0027GENERAL\u0027;\nlet priority = \u0027medium\u0027;\nlet reason = \u0027Claude classification failed -- defaulting to GENERAL\u0027;\nlet confidence = \u0027low\u0027;\nlet claudeClassified = false;\n\ntry {\n  const result = await new Promise(function(resolve, reject) {\n    const req = https.request(options, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n    });\n    req.on(\u0027error\u0027, reject);\n    req.write(requestBody);\n    req.end();\n  });\n  if (result.status === 200) {\n    const parsed = JSON.parse(result.body);\n    const text = parsed.content \u0026\u0026 parsed.content[0] \u0026\u0026 parsed.content[0].text || \u0027\u0027;\n    const clean = text.replace(/```json|```/g, \u0027\u0027).trim();\n    const classification = JSON.parse(clean);\n    route = classification.route || \u0027GENERAL\u0027;\n    priority = classification.priority || \u0027medium\u0027;\n    reason = classification.reason || \u0027\u0027;\n    confidence = classification.confidence || \u0027medium\u0027;\n    claudeClassified = true;\n  }\n} catch(e) {\n  reason = \u0027Classification error: \u0027 + e.message;\n}\n\nreturn [{ json: {\n  route: route,\n  agent: route === \u0027NOVA\u0027 ? \u0027Nova\u0027 : route === \u0027JORDAN\u0027 ? \u0027Jordan\u0027 : route === \u0027IRIS\u0027 ? \u0027Iris\u0027 : route === \u0027SCOUT\u0027 ? \u0027Scout\u0027 : \u0027Aidan\u0027,\n  priority: priority,\n  reason: reason,\n  confidence: confidence,\n  claudeClassified: claudeClassified,\n  from: fromHeader,\n  subject: subject,\n  body: body.substring(0, 2000),\n  messageId: messageId,\n  timestamp: new Date().toISOString()\n}}];"
                                      },
                       "id":  "a54a5af3-f339-468f-816e-3cb4a84131e6",
                       "name":  "Route by Sender + Subject",
@@ -54,8 +58,10 @@
                       "parameters":  {
                                          "conditions":  {
                                                             "options":  {
-                                                                            "caseSensitive":  false,
-                                                                            "typeValidation":  "strict"
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
                                                                         },
                                                             "conditions":  [
                                                                                {
@@ -87,8 +93,10 @@
                       "parameters":  {
                                          "conditions":  {
                                                             "options":  {
-                                                                            "caseSensitive":  false,
-                                                                            "typeValidation":  "strict"
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
                                                                         },
                                                             "conditions":  [
                                                                                {
@@ -172,7 +180,7 @@
                       "typeVersion":  2,
                       "position":  [
                                        0,
-                                       240
+                                       160
                                    ]
                   },
                   {
@@ -185,7 +193,7 @@
                       "typeVersion":  2,
                       "position":  [
                                        0,
-                                       400
+                                       336
                                    ]
                   },
                   {
@@ -197,9 +205,58 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       0,
-                                       560
+                                       16,
+                                       464
                                    ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "b515090f-46d3-454e-90ae-810ecd8d8fa6",
+                                                                                   "leftValue":  "={{ $json.route }}",
+                                                                                   "rightValue":  "SCOUT",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals",
+                                                                                                    "name":  "filter.operator.equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       -224,
+                                       576
+                                   ],
+                      "id":  "3266dfdd-4c73-4d28-b87a-c0ca52669c9a",
+                      "name":  "Is Scout"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\nconst from = typeof input.from === \u0027string\u0027 ? input.from : \u0027\u0027;\nconst subject = typeof input.subject === \u0027string\u0027 ? input.subject : \u0027\u0027;\nconst payload = JSON.stringify({\n  command: \u0027Email BD lead: \u0027 + subject,\n  mode: \u0027bd\u0027,\n  query: subject + \u0027 from \u0027 + from,\n  source: \u0027email_router\u0027,\n  from: from,\n  subject: subject,\n  body: input.body || \u0027\u0027\n});\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/scout-research\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(payload) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); });\n  req.on(\u0027error\u0027, r); req.write(payload); req.end();\n});\nreturn [{ json: { fired: \u0027Scout\u0027, subject: subject, from: from } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       16,
+                                       608
+                                   ],
+                      "id":  "80616829-8f4d-4b97-ade9-468e9b45b110",
+                      "name":  "Fire Scout"
                   }
               ],
     "connections":  {
@@ -282,13 +339,31 @@
                                                                    ],
                                                                    [
                                                                        {
-                                                                           "node":  "Log General (No Action)",
+                                                                           "node":  "Is Scout",
                                                                            "type":  "main",
                                                                            "index":  0
                                                                        }
                                                                    ]
                                                                ]
-                                                  }
+                                                  },
+                        "Is Scout":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "Fire Scout",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ],
+                                                      [
+                                                          {
+                                                              "node":  "Log General (No Action)",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     }
                     },
     "settings":  {
                      "executionOrder":  "v1",
@@ -296,15 +371,11 @@
                  },
     "staticData":  {
                        "node:Gmail Trigger":  {
-                                                  "lastTimeChecked":  1777333714,
+                                                  "lastTimeChecked":  1777773276,
                                                   "possibleDuplicates":  [
-                                                                             "19dd1583fe04e19e",
-                                                                             "19dd15558b6003e7",
-                                                                             "19dd1555826ba887",
-                                                                             "19dd15557b033c1e",
-                                                                             "19dd15556c22ded7",
-                                                                             "19dd15554ef4a8d3",
-                                                                             "19dd155549cc7df6"
+                                                                             "19deb8b6e4ac423a",
+                                                                             "19deb8b506c617fa",
+                                                                             "19deb867659747b5"
                                                                          ]
                                               }
                    },
@@ -312,24 +383,11 @@
                  "templateCredsSetupCompleted":  true
              },
     "pinData":  {
-                    "Gmail Trigger":  [
-                                          {
-                                              "json":  {
-                                                           "name":  "First item",
-                                                           "code":  1
-                                                       }
-                                          },
-                                          {
-                                              "json":  {
-                                                           "name":  "Second item",
-                                                           "code":  2
-                                                       }
-                                          }
-                                      ]
+
                 },
-    "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
-    "activeVersionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
-    "versionCounter":  427,
+    "versionId":  "ea2324ab-b5dd-4c8e-8b4d-e4b8d2a8021c",
+    "activeVersionId":  "ea2324ab-b5dd-4c8e-8b4d-e4b8d2a8021c",
+    "versionCounter":  505,
     "triggerCount":  1,
     "shared":  [
                    {
@@ -377,9 +435,9 @@
                  }
              ],
     "activeVersion":  {
-                          "updatedAt":  "2026-04-22T03:06:34.000Z",
-                          "createdAt":  "2026-04-21T22:23:38.725Z",
-                          "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
+                          "updatedAt":  "2026-05-03T01:47:44.000Z",
+                          "createdAt":  "2026-05-03T01:47:12.241Z",
+                          "versionId":  "ea2324ab-b5dd-4c8e-8b4d-e4b8d2a8021c",
                           "workflowId":  "jb9c1ETj3mBEOtTd",
                           "nodes":  [
                                         {
@@ -393,8 +451,12 @@
                                                                                               }
                                                                                           ]
                                                                              },
+                                                               "simple":  false,
                                                                "filters":  {
                                                                                "readStatus":  "unread"
+                                                                           },
+                                                               "options":  {
+
                                                                            }
                                                            },
                                             "id":  "3a24259d-0b23-43f6-b55d-2a13be090d73",
@@ -414,7 +476,7 @@
                                         },
                                         {
                                             "parameters":  {
-                                                               "jsCode":  "const input = $input.first().json;\n\n// Extract email metadata\nconst fromHeader = input.from || input.payload \u0026\u0026 input.payload.headers \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027From\u0027; }) \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027From\u0027; }).value || \u0027\u0027;\nconst subject = input.subject || input.payload \u0026\u0026 input.payload.headers \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027Subject\u0027; }) \u0026\u0026 input.payload.headers.find(function(h) { return h.name === \u0027Subject\u0027; }).value || \u0027\u0027;\nconst body = input.snippet || input.body || \u0027\u0027;\nconst messageId = input.id || \u0027\u0027;\nconst fromLower = fromHeader.toLowerCase();\nconst subjectLower = subject.toLowerCase();\nconst bodyLower = body.toLowerCase();\n\n// Routing rules — order matters, first match wins\nlet route = \u0027GENERAL\u0027;\nlet agent = \u0027Aidan\u0027;\nlet priority = \u0027medium\u0027;\nlet reason = \u0027\u0027;\n\n// eMMA — Maryland state procurement\nif (fromLower.indexOf(\u0027emma\u0027) !== -1 || fromLower.indexOf(\u0027emma.maryland\u0027) !== -1 || subjectLower.indexOf(\u0027solicitation\u0027) !== -1 || subjectLower.indexOf(\u0027bpm id\u0027) !== -1 || subjectLower.indexOf(\u0027rfx\u0027) !== -1) {\n  route = \u0027NOVA\u0027;\n  agent = \u0027Nova\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027eMMA procurement notification\u0027;\n}\n// SAM.gov — federal procurement\nelse if (fromLower.indexOf(\u0027sam.gov\u0027) !== -1 || fromLower.indexOf(\u0027beta.sam.gov\u0027) !== -1 || subjectLower.indexOf(\u0027sam.gov\u0027) !== -1 || subjectLower.indexOf(\u0027uei\u0027) !== -1 || subjectLower.indexOf(\u0027cage code\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027SAM.gov registration update\u0027;\n}\n// IRS / Tax compliance\nelse if (fromLower.indexOf(\u0027irs.gov\u0027) !== -1 || fromLower.indexOf(\u0027treasury.gov\u0027) !== -1 || subjectLower.indexOf(\u0027form 1023\u0027) !== -1 || subjectLower.indexOf(\u0027990\u0027) !== -1 || subjectLower.indexOf(\u0027ein\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027IRS / tax compliance\u0027;\n}\n// Maryland state agencies — grants\nelse if (fromLower.indexOf(\u0027maryland.gov\u0027) !== -1 || fromLower.indexOf(\u0027dllr\u0027) !== -1 || fromLower.indexOf(\u0027tedco\u0027) !== -1 || subjectLower.indexOf(\u0027grant\u0027) !== -1 || subjectLower.indexOf(\u0027award\u0027) !== -1 || subjectLower.indexOf(\u0027lighthouse\u0027) !== -1 || subjectLower.indexOf(\u0027earn\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Maryland grant / state agency\u0027;\n}\n// Federal grants\nelse if (fromLower.indexOf(\u0027grants.gov\u0027) !== -1 || fromLower.indexOf(\u0027hrsa\u0027) !== -1 || fromLower.indexOf(\u0027sbir\u0027) !== -1 || subjectLower.indexOf(\u0027nofa\u0027) !== -1 || subjectLower.indexOf(\u0027notice of funding\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Federal grant notification\u0027;\n}\n// FAA / Drone regulatory\nelse if (fromLower.indexOf(\u0027faa.gov\u0027) !== -1 || subjectLower.indexOf(\u0027part 107\u0027) !== -1 || subjectLower.indexOf(\u0027part 108\u0027) !== -1 || subjectLower.indexOf(\u0027laanc\u0027) !== -1 || subjectLower.indexOf(\u0027remote id\u0027) !== -1) {\n  route = \u0027IRIS\u0027;\n  agent = \u0027Iris\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027FAA regulatory update\u0027;\n}\n// BD pipeline — known contacts\nelse if (fromLower.indexOf(\u0027mdot\u0027) !== -1 || fromLower.indexOf(\u0027sha.maryland\u0027) !== -1 || fromLower.indexOf(\u0027bge.com\u0027) !== -1 || fromLower.indexOf(\u0027medstar\u0027) !== -1 || fromLower.indexOf(\u0027umms\u0027) !== -1 || fromLower.indexOf(\u0027jhmi.edu\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027critical\u0027;\n  reason = \u0027BD pipeline contact\u0027;\n}\n// Techstars / ecosystem\nelse if (fromLower.indexOf(\u0027techstars\u0027) !== -1 || fromLower.indexOf(\u0027tedco\u0027) !== -1 || fromLower.indexOf(\u0027meia\u0027) !== -1 || subjectLower.indexOf(\u0027accelerator\u0027) !== -1 || subjectLower.indexOf(\u0027cohort\u0027) !== -1) {\n  route = \u0027JORDAN\u0027;\n  agent = \u0027Jordan\u0027;\n  priority = \u0027high\u0027;\n  reason = \u0027Ecosystem / accelerator\u0027;\n}\n\nreturn [{ json: {\n  route: route,\n  agent: agent,\n  priority: priority,\n  reason: reason,\n  from: fromHeader,\n  subject: subject,\n  body: body.substring(0, 2000),\n  messageId: messageId,\n  timestamp: new Date().toISOString()\n}}];"
+                                                               "jsCode":  "const https = require(\u0027https\u0027);\nconst fs = require(\u0027fs\u0027);\n\nconst input = $input.first().json;\n\n// Handle both Simplify ON and Simplify OFF payload formats\nfunction extractHeader(input, headerName) {\n  // Simplify OFF -- headers are in payload.headers array\n  if (input.payload \u0026\u0026 input.payload.headers) {\n    const header = input.payload.headers.find(function(h) {\n      return h.name \u0026\u0026 h.name.toLowerCase() === headerName.toLowerCase();\n    });\n    return header ? header.value : \u0027\u0027;\n  }\n  // Simplify ON -- fields are at top level\n  if (headerName.toLowerCase() === \u0027from\u0027) return input.from || \u0027\u0027;\n  if (headerName.toLowerCase() === \u0027subject\u0027) return input.subject || \u0027\u0027;\n  return \u0027\u0027;\n}\n\nfunction extractBody(input) {\n  // Simplify ON\n  if (input.snippet) return input.snippet;\n  // Simplify OFF -- body is base64 encoded in payload.body.data\n  if (input.payload \u0026\u0026 input.payload.body \u0026\u0026 input.payload.body.data) {\n    try {\n      return Buffer.from(input.payload.body.data, \u0027base64\u0027).toString(\u0027utf8\u0027).substring(0, 1000);\n    } catch(e) {}\n  }\n  // Try parts for multipart emails\n  if (input.payload \u0026\u0026 input.payload.parts) {\n    for (let i = 0; i \u003c input.payload.parts.length; i++) {\n      const part = input.payload.parts[i];\n      if (part.mimeType === \u0027text/plain\u0027 \u0026\u0026 part.body \u0026\u0026 part.body.data) {\n        try {\n          return Buffer.from(part.body.data, \u0027base64\u0027).toString(\u0027utf8\u0027).substring(0, 1000);\n        } catch(e) {}\n      }\n    }\n  }\n  return \u0027\u0027;\n}\n\nconst fromHeader = extractHeader(input, \u0027from\u0027);\nconst subject = extractHeader(input, \u0027subject\u0027);\nconst body = extractBody(input);\nconst messageId = input.id || \u0027\u0027;\n\n// Basic spam filter\nconst fromLower = (typeof fromHeader === \u0027string\u0027 ? fromHeader : \u0027\u0027).toLowerCase();\nconst subjectLower = (typeof subject === \u0027string\u0027 ? subject : \u0027\u0027).toLowerCase();\nconst spamIndicators = [\u0027unsubscribe\u0027, \u0027noreply@\u0027, \u0027no-reply@\u0027, \u0027newsletter@\u0027, \u0027marketing@\u0027, \u0027donotreply@\u0027, \u0027notifications@\u0027, \u0027alert@\u0027, \u0027bounce@\u0027];\nconst isSpam = spamIndicators.some(function(s) { return fromLower.indexOf(s) !== -1; });\nconst isAutoReply = subjectLower.indexOf(\u0027out of office\u0027) !== -1 || subjectLower.indexOf(\u0027auto-reply\u0027) !== -1 || subjectLower.indexOf(\u0027automatic reply\u0027) !== -1;\n\nif (isSpam || isAutoReply) {\n  return [{ json: {\n    route: \u0027SKIP\u0027, agent: \u0027None\u0027, priority: \u0027low\u0027,\n    reason: \u0027Spam or auto-reply filtered\u0027,\n    from: fromHeader, subject: subject, body: body.substring(0, 500),\n    messageId: messageId, timestamp: new Date().toISOString(), claudeClassified: false\n  }}];\n}\n\n// Load KAI-Netics context\nlet ctx = {};\ntry {\n  ctx = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027).replace(/^\\uFEFF/, \u0027\u0027));\n} catch(e) { ctx = {}; }\n\nconst verticals = ctx.verticals || {};\nconst verticalList = Object.entries(verticals).map(function(entry) {\n  return entry[0] + \u0027: \u0027 + (entry[1].name || \u0027\u0027);\n}).join(\u0027, \u0027);\n\nconst systemPrompt = \u0027You are Aidan, email router for KAI-Netics. Classify incoming emails and route to the correct agent.\\n\\n\u0027 +\n\u0027KAI-NETICS CONTEXT:\\n\u0027 +\n\u0027Company: KAI-Netics -- drone services, AI platform, workforce development\\n\u0027 +\n\u0027Entities: FP (Kevin Alexander International LLC dba KAI-Netics), EAF (nonprofit 501c3 pending), MONK (IP holding)\\n\u0027 +\n\u0027Founder: Kevin Alexander Smith -- CISSP, PMP, CCNA, FAA Part 107 Operator\\n\u0027 +\n\u0027Verticals: \u0027 + verticalList + \u0027\\n\\n\u0027 +\n\u0027ROUTING RULES:\\n\u0027 +\n\u0027NOVA -- RFPs, solicitations, procurement notices, contract opportunities, vendor registration requests, any email asking KAI-Netics to bid or respond to a formal opportunity\\n\u0027 +\n\u0027JORDAN -- Grants, funding opportunities, award notifications, SBIR/STTR, Maryland state grants, federal grants, nonprofit funding, LOI requests, grant deadlines\\n\u0027 +\n\u0027IRIS -- Compliance deadlines, regulatory updates, FAA notices, IRS communications, SAM.gov, Maryland state filings, legal notices, license renewals, tax matters\\n\u0027 +\n\u0027SCOUT -- BD leads, partnership inquiries, potential client outreach, conference invitations, ecosystem contacts, introductions, speaking opportunities\\n\u0027 +\n\u0027GENERAL -- Everything else that does not clearly fit the above categories\\n\u0027 +\n\u0027SKIP -- Spam, marketing, newsletters, auto-replies, promotional emails\\n\\n\u0027 +\n\u0027Respond with ONLY a JSON object, no other text:\\n\u0027 +\n\u0027{\"route\":\"NOVA|JORDAN|IRIS|SCOUT|GENERAL|SKIP\",\"priority\":\"critical|high|medium|low\",\"reason\":\"one sentence explanation\",\"confidence\":\"high|medium|low\"}\u0027;\n\nconst userMessage = \u0027Classify this email:\\n\\nFROM: \u0027 + fromHeader + \u0027\\nSUBJECT: \u0027 + subject + \u0027\\nBODY PREVIEW: \u0027 + body.substring(0, 800);\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-sonnet-4-6\u0027,\n  max_tokens: 150,\n  system: systemPrompt,\n  messages: [{ role: \u0027user\u0027, content: userMessage }]\n});\n\nconst options = {\n  hostname: \u0027api.anthropic.com\u0027, port: 443,\n  path: \u0027/v1/messages\u0027, method: \u0027POST\u0027,\n  headers: {\n    \u0027Content-Type\u0027: \u0027application/json\u0027,\n    \u0027x-api-key\u0027: $env.ANTHROPIC_API_KEY,\n    \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n    \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n  }\n};\n\nlet route = \u0027GENERAL\u0027;\nlet priority = \u0027medium\u0027;\nlet reason = \u0027Claude classification failed -- defaulting to GENERAL\u0027;\nlet confidence = \u0027low\u0027;\nlet claudeClassified = false;\n\ntry {\n  const result = await new Promise(function(resolve, reject) {\n    const req = https.request(options, function(res) {\n      let d = \u0027\u0027;\n      res.on(\u0027data\u0027, function(c) { d += c; });\n      res.on(\u0027end\u0027, function() { resolve({ status: res.statusCode, body: d }); });\n    });\n    req.on(\u0027error\u0027, reject);\n    req.write(requestBody);\n    req.end();\n  });\n  if (result.status === 200) {\n    const parsed = JSON.parse(result.body);\n    const text = parsed.content \u0026\u0026 parsed.content[0] \u0026\u0026 parsed.content[0].text || \u0027\u0027;\n    const clean = text.replace(/```json|```/g, \u0027\u0027).trim();\n    const classification = JSON.parse(clean);\n    route = classification.route || \u0027GENERAL\u0027;\n    priority = classification.priority || \u0027medium\u0027;\n    reason = classification.reason || \u0027\u0027;\n    confidence = classification.confidence || \u0027medium\u0027;\n    claudeClassified = true;\n  }\n} catch(e) {\n  reason = \u0027Classification error: \u0027 + e.message;\n}\n\nreturn [{ json: {\n  route: route,\n  agent: route === \u0027NOVA\u0027 ? \u0027Nova\u0027 : route === \u0027JORDAN\u0027 ? \u0027Jordan\u0027 : route === \u0027IRIS\u0027 ? \u0027Iris\u0027 : route === \u0027SCOUT\u0027 ? \u0027Scout\u0027 : \u0027Aidan\u0027,\n  priority: priority,\n  reason: reason,\n  confidence: confidence,\n  claudeClassified: claudeClassified,\n  from: fromHeader,\n  subject: subject,\n  body: body.substring(0, 2000),\n  messageId: messageId,\n  timestamp: new Date().toISOString()\n}}];"
                                                            },
                                             "id":  "a54a5af3-f339-468f-816e-3cb4a84131e6",
                                             "name":  "Route by Sender + Subject",
@@ -429,8 +491,10 @@
                                             "parameters":  {
                                                                "conditions":  {
                                                                                   "options":  {
-                                                                                                  "caseSensitive":  false,
-                                                                                                  "typeValidation":  "strict"
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  2
                                                                                               },
                                                                                   "conditions":  [
                                                                                                      {
@@ -462,8 +526,10 @@
                                             "parameters":  {
                                                                "conditions":  {
                                                                                   "options":  {
-                                                                                                  "caseSensitive":  false,
-                                                                                                  "typeValidation":  "strict"
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  2
                                                                                               },
                                                                                   "conditions":  [
                                                                                                      {
@@ -547,7 +613,7 @@
                                             "typeVersion":  2,
                                             "position":  [
                                                              0,
-                                                             240
+                                                             160
                                                          ]
                                         },
                                         {
@@ -560,7 +626,7 @@
                                             "typeVersion":  2,
                                             "position":  [
                                                              0,
-                                                             400
+                                                             336
                                                          ]
                                         },
                                         {
@@ -572,9 +638,58 @@
                                             "type":  "n8n-nodes-base.code",
                                             "typeVersion":  2,
                                             "position":  [
-                                                             0,
-                                                             560
+                                                             16,
+                                                             464
                                                          ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  3
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "b515090f-46d3-454e-90ae-810ecd8d8fa6",
+                                                                                                         "leftValue":  "={{ $json.route }}",
+                                                                                                         "rightValue":  "SCOUT",
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "string",
+                                                                                                                          "operation":  "equals",
+                                                                                                                          "name":  "filter.operator.equals"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.3,
+                                            "position":  [
+                                                             -224,
+                                                             576
+                                                         ],
+                                            "id":  "3266dfdd-4c73-4d28-b87a-c0ca52669c9a",
+                                            "name":  "Is Scout"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const http = require(\u0027http\u0027);\nconst input = $input.first().json;\nconst from = typeof input.from === \u0027string\u0027 ? input.from : \u0027\u0027;\nconst subject = typeof input.subject === \u0027string\u0027 ? input.subject : \u0027\u0027;\nconst payload = JSON.stringify({\n  command: \u0027Email BD lead: \u0027 + subject,\n  mode: \u0027bd\u0027,\n  query: subject + \u0027 from \u0027 + from,\n  source: \u0027email_router\u0027,\n  from: from,\n  subject: subject,\n  body: input.body || \u0027\u0027\n});\nconst opts = {\n  hostname: \u0027host.docker.internal\u0027, port: 5678,\n  path: \u0027/webhook/scout-research\u0027, method: \u0027POST\u0027,\n  headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(payload) }\n};\nawait new Promise(function(r) {\n  const req = http.request(opts, function(res) { res.on(\u0027data\u0027,function(){}); res.on(\u0027end\u0027,r); });\n  req.on(\u0027error\u0027, r); req.write(payload); req.end();\n});\nreturn [{ json: { fired: \u0027Scout\u0027, subject: subject, from: from } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             16,
+                                                             608
+                                                         ],
+                                            "id":  "80616829-8f4d-4b97-ade9-468e9b45b110",
+                                            "name":  "Fire Scout"
                                         }
                                     ],
                           "connections":  {
@@ -657,41 +772,43 @@
                                                                                          ],
                                                                                          [
                                                                                              {
-                                                                                                 "node":  "Log General (No Action)",
+                                                                                                 "node":  "Is Scout",
                                                                                                  "type":  "main",
                                                                                                  "index":  0
                                                                                              }
                                                                                          ]
                                                                                      ]
-                                                                        }
+                                                                        },
+                                              "Is Scout":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Fire Scout",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ],
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Log General (No Action)",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           }
                                           },
                           "authors":  "Kevin A Smith",
-                          "name":  "Version 49f65c25",
+                          "name":  "Version ea2324ab",
                           "description":  "",
                           "autosaved":  true,
                           "workflowPublishHistory":  [
                                                          {
-                                                             "createdAt":  "2026-04-22T01:07:32.905Z",
-                                                             "id":  320,
+                                                             "createdAt":  "2026-05-03T01:47:44.004Z",
+                                                             "id":  505,
                                                              "workflowId":  "jb9c1ETj3mBEOtTd",
-                                                             "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
+                                                             "versionId":  "ea2324ab-b5dd-4c8e-8b4d-e4b8d2a8021c",
                                                              "event":  "activated",
-                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
-                                                         },
-                                                         {
-                                                             "createdAt":  "2026-04-22T03:06:34.888Z",
-                                                             "id":  337,
-                                                             "workflowId":  "jb9c1ETj3mBEOtTd",
-                                                             "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
-                                                             "event":  "activated",
-                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
-                                                         },
-                                                         {
-                                                             "createdAt":  "2026-04-22T03:06:12.726Z",
-                                                             "id":  336,
-                                                             "workflowId":  "jb9c1ETj3mBEOtTd",
-                                                             "versionId":  "49f65c25-2f67-4c85-a338-95a59c81cc49",
-                                                             "event":  "deactivated",
                                                              "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
                                                          }
                                                      ]
