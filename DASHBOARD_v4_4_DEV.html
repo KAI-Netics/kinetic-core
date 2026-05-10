@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAI-Netics Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0c0f; --surface:#111318; --surface2:#181c23; --border:#1e2530;
+    --accent:#00e5ff; --accent2:#ff6b35; --warn:#ffd60a; --danger:#ff3b3b;
+    --success:#00c896; --muted:#4a5568; --text:#e2e8f0; --text2:#8899aa;
+    --eaf:#7c6af7; --fp:#00c896; --monk:#ff9f43;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .container{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:0 24px 60px;}
+
+  /* HEADER */
+  .header{padding:28px 0 20px;border-bottom:1px solid var(--border);margin-bottom:28px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .logo{font-size:10px;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:4px;opacity:.8;}
+  .header h1{font-size:28px;font-weight:800;letter-spacing:-1px;color:#fff;}
+  .header h1 span{color:var(--accent);}
+  .header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);color:var(--success);font-family:'Space Mono',monospace;font-size:9px;padding:4px 10px;border-radius:3px;letter-spacing:1px;}
+  .live-dot{width:6px;height:6px;background:var(--success);border-radius:50%;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .server-status{display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;padding:4px 10px;border-radius:3px;border:1px solid var(--border);cursor:default;transition:all .2s;}
+  .server-status.ok{border-color:rgba(0,200,150,.3);color:var(--success);background:rgba(0,200,150,.08);}
+  .server-status.err{border-color:rgba(255,59,59,.3);color:var(--danger);background:rgba(255,59,59,.08);}
+  .timestamp{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);}
+
+  /* ENTITY BAR */
+  .entity-bar{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+  .entity-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;flex:1;min-width:180px;}
+  .entity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .entity-pill .ename{font-weight:700;font-size:12px;}
+  .entity-pill .ehandle{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);}
+  .entity-pill .estatus{margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:2px;font-weight:700;letter-spacing:1px;}
+  .s-op{background:rgba(0,200,150,.15);color:var(--success);}
+  .s-ip{background:rgba(255,159,67,.15);color:var(--monk);}
+
+  /* SECTION LABEL */
+  .sl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .sl::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  /* DEADLINES */
+  .dl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:32px;}
+  .dl-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;position:relative;overflow:hidden;}
+  .dl-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+  .dlc::before{background:var(--danger);}
+  .dlw::before{background:var(--warn);}
+  .dlu::before{background:var(--muted);}
+  .dl-badge{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;padding:2px 6px;border-radius:2px;margin-bottom:6px;display:inline-block;letter-spacing:1px;}
+  .dlc .dl-badge{background:rgba(255,59,59,.15);color:var(--danger);}
+  .dlw .dl-badge{background:rgba(255,214,10,.15);color:var(--warn);}
+  .dlu .dl-badge{background:rgba(74,85,104,.3);color:var(--text2);}
+  .dl-title{font-size:12px;font-weight:700;margin-bottom:3px;line-height:1.3;}
+  .dl-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);margin-bottom:5px;}
+  .dl-tags{display:flex;gap:5px;flex-wrap:wrap;}
+  .tag{font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:2px;font-weight:700;}
+  .t-eaf{background:rgba(124,106,247,.15);color:var(--eaf);}
+  .t-fp{background:rgba(0,200,150,.12);color:var(--fp);}
+  .t-monk{background:rgba(255,159,67,.15);color:var(--monk);}
+
+  /* MAIN GRID */
+  .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:32px;}
+  @media(max-width:900px){.main-grid{grid-template-columns:1fr;}}
+
+  /* PANEL */
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .panel-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface2);}
+  .ai{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-family:'Space Mono',monospace;flex-shrink:0;}
+  .ai-s{background:rgba(0,229,255,.12);color:var(--accent);border:1px solid rgba(0,229,255,.2);}
+  .ai-j{background:rgba(124,106,247,.12);color:var(--eaf);border:1px solid rgba(124,106,247,.2);}
+  .ai-i{background:rgba(255,59,59,.1);color:var(--danger);border:1px solid rgba(255,59,59,.2);}
+  .ai-a{background:rgba(255,159,67,.1);color:var(--monk);border:1px solid rgba(255,159,67,.2);}
+  .panel-title{font-size:12px;font-weight:700;}
+  .panel-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-left:auto;}
+  .panel-body{padding:14px 16px;}
+
+  /* GRANT CARDS */
+  .gc{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px;margin-bottom:9px;cursor:pointer;transition:border-color .15s;}
+  .gc:hover{border-color:var(--accent);}
+  .gc:last-child{margin-bottom:0;}
+  .gc-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:7px;}
+  .gc-fit{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;line-height:1;min-width:40px;text-align:right;flex-shrink:0;}
+  .fh{color:var(--success);} .fm{color:var(--warn);}
+  .gc-info{flex:1;}
+  .gc-prog{font-size:11px;font-weight:700;line-height:1.3;margin-bottom:2px;}
+  .gc-fund{font-size:10px;color:var(--text2);margin-bottom:4px;}
+  .gc-meta{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+  .gc-amt{font-family:'Space Mono',monospace;font-size:9px;color:var(--success);background:rgba(0,200,150,.08);padding:2px 5px;border-radius:3px;}
+  .gc-dl{font-family:'Space Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;}
+  .dl-hot{background:rgba(255,59,59,.12);color:var(--danger);}
+  .dl-warn{background:rgba(255,214,10,.1);color:var(--warn);}
+  .dl-ok{background:rgba(74,85,104,.25);color:var(--text2);}
+  .gc-act{margin-top:6px;font-size:10px;font-weight:700;}
+  .act-now{color:var(--danger);} .act-go{color:var(--warn);} .act-watch{color:var(--text2);}
+  .gc-exp{margin-top:9px;padding-top:9px;border-top:1px solid var(--border);display:none;}
+  .gc-exp.open{display:block;}
+  .gf{margin-bottom:7px;}
+  .gfl{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:2px;text-transform:uppercase;}
+  .gfv{font-size:11px;line-height:1.5;color:var(--text);}
+  .lnk{color:var(--accent);text-decoration:none;font-size:10px;font-family:'Space Mono',monospace;}
+  .lnk:hover{text-decoration:underline;}
+  .alist li,.rlist li{font-size:10px;color:var(--text2);padding:1px 0;list-style:none;}
+  .alist li::before{content:'→ ';color:var(--accent);}
+  .rlist li::before{content:'⚠ ';color:var(--warn);}
+  .loi-box{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:10px;font-size:10px;line-height:1.6;color:var(--text2);font-family:'Space Mono',monospace;max-height:140px;overflow-y:auto;white-space:pre-wrap;}
+
+  /* COMPLIANCE */
+  .ci{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+  .ci:last-child{border-bottom:none;}
+  .ci-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+  .uc{background:var(--danger);box-shadow:0 0 5px var(--danger);} .uw{background:var(--warn);} .uu{background:var(--muted);}
+  .ci-title{font-size:11px;font-weight:700;margin-bottom:1px;}
+  .ci-det{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);}
+  .ci-r{margin-left:auto;text-align:right;flex-shrink:0;}
+  .ci-days{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;}
+  .dc{color:var(--danger);} .dw{color:var(--warn);} .du{color:var(--text2);}
+
+  /* BD PANEL */
+  .bd-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+  @media(max-width:1100px){.bd-grid{grid-template-columns:1fr 1fr;}}
+  .bdc{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px;cursor:pointer;transition:border-color .15s;}
+  .bdc:hover{border-color:var(--accent2);}
+  .bdc-top{display:flex;gap:9px;align-items:flex-start;margin-bottom:5px;}
+  .bdc-score{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;min-width:40px;text-align:right;flex-shrink:0;line-height:1;}
+  .bdc-vert{font-family:'Space Mono',monospace;font-size:8px;color:var(--accent2);background:rgba(255,107,53,.1);padding:2px 5px;border-radius:2px;display:inline-block;margin-bottom:3px;}
+  .bdc-org{font-size:11px;font-weight:700;margin-bottom:2px;}
+  .bdc-next{font-size:10px;color:var(--text2);line-height:1.4;}
+
+  /* BOTTOM GRID */
+  .bot-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:32px;}
+  @media(max-width:1100px){.bot-grid{grid-template-columns:1fr 1fr;}}
+  @media(max-width:700px){.bot-grid{grid-template-columns:1fr;}}
+  .reg-row{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .reg-row:last-child{border-bottom:none;}
+  .rs{width:18px;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}
+  .rs-ok{background:rgba(0,200,150,.15);color:var(--success);}
+  .rs-no{background:rgba(255,59,59,.12);color:var(--danger);}
+  .rs-q{background:rgba(255,214,10,.1);color:var(--warn);}
+  .rn{font-size:11px;font-weight:600;}
+  .rnote{font-size:9px;color:var(--text2);margin-top:1px;}
+  .rlink{margin-left:auto;}
+  .rlink a{font-family:'Space Mono',monospace;font-size:8px;color:var(--accent);text-decoration:none;padding:2px 5px;border:1px solid rgba(0,229,255,.2);border-radius:3px;}
+  .rlink a:hover{background:rgba(0,229,255,.08);}
+  .ag-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .ag-row:last-child{border-bottom:none;}
+  .ag-name{font-size:11px;font-weight:700;flex:1;}
+  .ag-sched{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);}
+  .ab{font-family:'Space Mono',monospace;font-size:8px;padding:2px 6px;border-radius:2px;font-weight:700;}
+  .ab-live{background:rgba(0,200,150,.12);color:var(--success);}
+  .ab-pend{background:rgba(74,85,104,.25);color:var(--text2);}
+  .rule{padding:6px 0;border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);line-height:1.5;display:flex;gap:7px;}
+  .rule:last-child{border-bottom:none;}
+  .rule::before{content:'//';color:var(--danger);font-family:'Space Mono',monospace;font-size:9px;flex-shrink:0;padding-top:1px;}
+
+  /* ═══════════════════════════════════════════
+     SCOUT LAUNCH PAD — LIVE VERSION
+  ═══════════════════════════════════════════ */
+  .launchpad{margin-bottom:32px;}
+
+  .lp-config{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .lp-url-wrap{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;flex:1;min-width:280px;}
+  .lp-url-wrap label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);white-space:nowrap;}
+  .lp-url-wrap input{flex:1;background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);}
+  .lp-url-wrap input::placeholder{color:var(--muted);}
+  .lp-server-check{font-family:'Space Mono',monospace;font-size:9px;padding:7px 12px;border-radius:6px;border:1px solid var(--border);cursor:pointer;background:var(--surface2);color:var(--text2);transition:all .15s;white-space:nowrap;}
+  .lp-server-check:hover{border-color:var(--accent);color:var(--accent);}
+
+  .sweep-groups{display:flex;flex-direction:column;gap:0;}
+  .sg-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;padding:10px 0 6px;border-top:1px solid var(--border);margin-top:4px;}
+  .sg-label:first-child{border-top:none;margin-top:0;padding-top:0;}
+  .sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:2px;}
+
+  /* SWEEP BUTTON */
+  .sb{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;color:var(--text);transition:border-color .15s,background .15s;width:100%;position:relative;}
+  .sb:hover{border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.03);}
+  .sb.firing{border-color:var(--warn);animation:sbpulse .7s ease;}
+  .sb.loaded{border-color:var(--success);background:rgba(0,200,150,.04);}
+  .sb.error{border-color:var(--danger);}
+  @keyframes sbpulse{0%{box-shadow:0 0 0 0 rgba(255,214,10,.5);}70%{box-shadow:0 0 0 8px rgba(255,214,10,0);}100%{box-shadow:none;}}
+
+  .sb-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:3px;}
+  .sb-label{font-size:11px;font-weight:700;line-height:1.3;}
+  .sb-badge{font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:2px;font-weight:700;opacity:0;transition:opacity .2s;flex-shrink:0;margin-left:6px;}
+  .sb.firing  .sb-badge{opacity:1;background:rgba(255,214,10,.15);color:var(--warn);}
+  .sb.loaded  .sb-badge{opacity:1;background:rgba(0,200,150,.15);color:var(--success);}
+  .sb.error   .sb-badge{opacity:1;background:rgba(255,59,59,.12);color:var(--danger);}
+  .sb-key{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:0;}
+
+  /* RESULT DRAWER */
+  .sb-drawer{
+    border-top:1px solid var(--border);
+    margin-top:10px;
+    padding-top:10px;
+    display:none;
+    animation:fadeUp .3s ease both;
+  }
+  .sb-drawer.open{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .dr-summary{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+  .dr-fit{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;line-height:1;}
+  .dr-action-badge{font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;letter-spacing:1px;}
+  .ab-now{background:rgba(255,59,59,.15);color:var(--danger);}
+  .ab-apply{background:rgba(255,214,10,.12);color:var(--warn);}
+  .ab-watch{background:rgba(74,85,104,.3);color:var(--text2);}
+  .dr-program{font-size:12px;font-weight:700;flex:1;}
+
+  .dr-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  @media(max-width:600px){.dr-fields{grid-template-columns:1fr;}}
+  .dr-field{background:var(--bg);border-radius:5px;padding:8px 10px;}
+  .dr-field-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:3px;text-transform:uppercase;}
+  .dr-field-val{font-size:11px;line-height:1.5;color:var(--text);}
+  .dr-field-val a{color:var(--accent);text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;}
+
+  .dr-lists{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  @media(max-width:600px){.dr-lists{grid-template-columns:1fr;}}
+  .dr-list-box{background:var(--bg);border-radius:5px;padding:8px 10px;}
+  .dr-list-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;}
+  .dr-list-box ul{list-style:none;}
+  .dr-list-box li{font-size:10px;color:var(--text2);padding:2px 0;line-height:1.4;}
+  .dr-list-box.align li::before{content:'→ ';color:var(--accent);}
+  .dr-list-box.risks  li::before{content:'⚠ ';color:var(--warn);}
+
+  .dr-loi{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:10px;font-size:9px;line-height:1.7;color:var(--text2);font-family:'Space Mono',monospace;max-height:120px;overflow-y:auto;white-space:pre-wrap;margin-bottom:8px;}
+
+  .dr-nextstep{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.15);border-radius:5px;padding:8px 10px;font-size:11px;line-height:1.5;}
+  .dr-nextstep strong{color:var(--accent);}
+
+  .dr-raw-toggle{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);cursor:pointer;margin-top:6px;display:inline-block;padding:3px 0;}
+  .dr-raw-toggle:hover{color:var(--accent);}
+  .dr-raw{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:10px;font-size:9px;line-height:1.6;color:var(--text2);font-family:'Space Mono',monospace;max-height:200px;overflow-y:auto;white-space:pre-wrap;margin-top:6px;display:none;}
+  .dr-raw.open{display:block;}
+
+  .dr-timestamp{font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);margin-top:6px;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text);z-index:9999;transform:translateY(80px);opacity:0;transition:all .25s;max-width:340px;line-height:1.5;pointer-events:none;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.ok{border-color:var(--success);}
+  .toast.err{border-color:var(--danger);}
+  .toast.info{border-color:var(--warn);}
+
+  /* FOOTER */
+  .footer{border-top:1px solid var(--border);padding-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+  .footer-l{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);}
+  .footer-r{display:flex;gap:6px;}
+  .ql{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);text-decoration:none;padding:3px 8px;border:1px solid var(--border);border-radius:3px;transition:all .15s;}
+  .ql:hover{color:var(--accent);border-color:rgba(0,229,255,.3);}
+
+  ::-webkit-scrollbar{width:3px;height:3px;}
+  ::-webkit-scrollbar-track{background:var(--surface);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="logo">KAI-Netics // Command Center</div>
+    <h1>Morning <span>Brief</span></h1>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><span class="live-dot"></span> FOUNDRY ENGINE LIVE</div>
+    <div class="server-status err" id="serverStatus" title="File server connection">⬤ SERVER OFFLINE</div>
+    <div class="timestamp" id="ts"></div>
+  </div>
+</div>
+
+<!-- ENTITY BAR -->
+<div class="entity-bar">
+  <div class="entity-pill"><div class="entity-dot" style="background:var(--fp)"></div><div><div class="ename">KAI-Netics (FP)</div><div class="ehandle">EIN 46-2432851 · Maryland LLC</div></div><div class="estatus s-op">OPERATIONAL</div></div>
+  <div class="entity-pill"><div class="entity-dot" style="background:var(--eaf)"></div><div><div class="ename">Equity & Autonomy Foundry (EAF)</div><div class="ehandle">EIN 41-4820296 · 501c3 Pending</div></div><div class="estatus s-op">ACTIVE</div></div>
+  <div class="entity-pill"><div class="entity-dot" style="background:var(--monk)"></div><div><div class="ename">MONK LLC</div><div class="ehandle">IP Holding · FP Subsidiary</div></div><div class="estatus s-ip">FORMING</div></div>
+</div>
+
+<!-- DEADLINES -->
+<div class="sl">Critical Deadlines</div>
+<div class="dl-grid">
+  <div class="dl-card dlc"><div class="dl-badge">CRITICAL</div><div class="dl-title">MEIA Capstone v13</div><div class="dl-date">April 14 — before 5PM</div><div class="dl-tags"><span class="tag t-eaf">EAF</span><span class="tag t-fp">FP</span></div></div>
+  <div class="dl-card dlc"><div class="dl-badge">CRITICAL</div><div class="dl-title">EAF Annual Report — SDAT</div><div class="dl-date">April 15 — midnight hard wall</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
+  <div class="dl-card dlc"><div class="dl-badge">15 DAYS</div><div class="dl-title">Lighthouse Upskilling Grant</div><div class="dl-date">April 24 · up to $200K</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
+  <div class="dl-card dlc"><div class="dl-badge">ROLLING NOW</div><div class="dl-title">Lighthouse AI Internship</div><div class="dl-date">First-come · up to $150K</div><div class="dl-tags"><span class="tag t-fp">FP</span><span class="tag t-eaf">EAF</span></div></div>
+  <div class="dl-card dlc"><div class="dl-badge">START TODAY</div><div class="dl-title">SAM.gov Registration</div><div class="dl-date">7–10 days processing · gates all federal</div><div class="dl-tags"><span class="tag t-fp">FP</span></div></div>
+  <div class="dl-card dlc"><div class="dl-badge">START TODAY</div><div class="dl-title">MBE/DBE Certification</div><div class="dl-date">90–120 day clock · gates MDSHA</div><div class="dl-tags"><span class="tag t-fp">FP</span></div></div>
+  <div class="dl-card dlw"><div class="dl-badge">URGENT</div><div class="dl-title">TechSoup — Google for Nonprofits gate</div><div class="dl-date">2–14 business days approval</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
+  <div class="dl-card dlw"><div class="dl-badge">22 DAYS</div><div class="dl-title">MONK LLC Formation</div><div class="dl-date">May 1 · must exist before patent</div><div class="dl-tags"><span class="tag t-monk">MONK</span></div></div>
+  <div class="dl-card dlw"><div class="dl-badge">41 DAYS</div><div class="dl-title">OMB M-26-02 Compliance</div><div class="dl-date">May 20 · revenue opportunity</div><div class="dl-tags"><span class="tag t-fp">FP</span></div></div>
+  <div class="dl-card dlu"><div class="dl-badge">53 DAYS</div><div class="dl-title">IRS Form 1023</div><div class="dl-date">June 1 target</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
+  <div class="dl-card dlu"><div class="dl-badge">83 DAYS</div><div class="dl-title">EARN Maryland Grant</div><div class="dl-date">June 30 · $50K–$500K</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
+  <div class="dl-card dlu"><div class="dl-badge">83 DAYS</div><div class="dl-title">CAKO Cohort 1 Launch</div><div class="dl-date">July 1 · 12–16 wk zero tuition</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+  <!-- GRANT INTEL -->
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-s">S</div><div><div class="panel-title">Scout · Grant Intelligence</div></div><div class="panel-sub">JORDAN ANALYZED</div></div>
+    <div class="panel-body">
+      <div class="gc" onclick="toggleGC(this)">
+        <div class="gc-row"><div class="gc-fit fh">95%</div><div class="gc-info"><div class="gc-prog">FEMA HSGP-SLTP — Counter-UAS Enhancement</div><div class="gc-fund">Federal Emergency Management Agency / DHS</div><div class="gc-meta"><span class="gc-amt">$500K–$2.5M</span><span class="gc-dl dl-warn">LOI May 15</span><span class="tag t-eaf">EAF</span></div></div></div>
+        <div class="gc-act act-now">▶ APPLY IMMEDIATELY — Contact MEMA as prime partner</div>
+        <div class="gc-exp"><div class="gf"><div class="gfl">Portal</div><div class="gfv"><a class="lnk" href="https://www.fema.gov/grants/preparedness/homeland-security" target="_blank">fema.gov/grants →</a></div></div><div class="gf"><div class="gfl">Next Step</div><div class="gfv">Call MEMA at <strong>410-517-3600</strong> — joint app, EAF as training sub</div></div><ul class="alist"><li>CAKO addresses SLTT C-UAS gaps per OMB M-26-02</li><li>Kevin TSA+CISSP = DHS mission fit</li><li>EAF nonprofit maximizes grant impact</li></ul></div>
+      </div>
+      <div class="gc" onclick="toggleGC(this)">
+        <div class="gc-row"><div class="gc-fit fh">92%</div><div class="gc-info"><div class="gc-prog">MD Lighthouse Industries Upskilling</div><div class="gc-fund">Maryland Dept of Labor — Talent Innovation Fund</div><div class="gc-meta"><span class="gc-amt">Up to $200K</span><span class="gc-dl dl-hot">Apr 24</span><span class="tag t-eaf">EAF</span></div></div></div>
+        <div class="gc-act act-now">▶ APPLY NOW — 15 days · brittney.hansen@maryland.gov</div>
+        <div class="gc-exp"><div class="gf"><div class="gfl">Contact</div><div class="gfv">Brittney Hansen · <a class="lnk" href="mailto:brittney.hansen@maryland.gov">brittney.hansen@maryland.gov</a></div></div><div class="gf"><div class="gfl">Key Req</div><div class="gfv">Must partner with 3+ employers. FP = employer #1.</div></div></div>
+      </div>
+      <div class="gc" onclick="toggleGC(this)">
+        <div class="gc-row"><div class="gc-fit fh">85%</div><div class="gc-info"><div class="gc-prog">Maryland EARN Workforce Development</div><div class="gc-fund">Maryland Department of Labor</div><div class="gc-meta"><span class="gc-amt">$50K–$500K</span><span class="gc-dl dl-ok">Jun 30</span><span class="tag t-eaf">EAF</span></div></div></div>
+        <div class="gc-act act-go">▶ APPLY — Jordan LOI draft ready ($285K ask)</div>
+        <div class="gc-exp"><div class="gf"><div class="gfl">Portal</div><div class="gfv"><a class="lnk" href="https://www.dllr.state.md.us/earn" target="_blank">dllr.state.md.us/earn →</a></div></div><div class="loi-box">$285K over 18 months · 120 participants · 4 cohorts · 85% completion + 75% employment placement · 25% match via facilities, equipment, instructor time · CAKO grads averaging $65K+</div></div>
+      </div>
+      <div class="gc" onclick="toggleGC(this)">
+        <div class="gc-row"><div class="gc-fit fh">88%</div><div class="gc-info"><div class="gc-prog">SBIR Phase I — DHS S&T / DoD</div><div class="gc-fund">Small Business Innovation Research</div><div class="gc-meta"><span class="gc-amt">~$175K</span><span class="gc-dl dl-warn">Pending reauth</span><span class="tag t-monk">MONK</span></div></div></div>
+        <div class="gc-act act-watch">◉ WATCH — MONK LLC must form first</div>
+        <div class="gc-exp"><div class="gf"><div class="gfl">Portal</div><div class="gfv"><a class="lnk" href="https://sbir.gov" target="_blank">sbir.gov →</a></div></div><div class="gf"><div class="gfl">Value</div><div class="gfv">Hardware-anchored drone trust. BVLOS safety architecture. TSA NPRM alignment.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IRIS COMPLIANCE -->
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-i">I</div><div><div class="panel-title">Iris v2 · Compliance Monitor</div></div><div class="panel-sub">LAST RUN: TODAY</div></div>
+    <div class="panel-body">
+      <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">MEIA Capstone Submission</div><div class="ci-det">EAF/FP · Owner: Kevin</div></div><div class="ci-r"><div class="ci-days dc">5d</div><div class="ci-det">Apr 14</div></div></div>
+      <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">EAF Annual Report — SDAT</div><div class="ci-det">EAF · $0 · egov.maryland.gov</div></div><div class="ci-r"><div class="ci-days dc">6d</div><div class="ci-det">Apr 15</div></div></div>
+      <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">Lighthouse Grant Proposal</div><div class="ci-det">EAF · brittney.hansen@maryland.gov</div></div><div class="ci-r"><div class="ci-days dc">15d</div><div class="ci-det">Apr 24</div></div></div>
+      <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">Microsoft for Nonprofits</div><div class="ci-det">EAF · Applied last night</div></div><div class="ci-r"><div class="ci-days dc">3d</div><div class="ci-det">Apr 12</div></div></div>
+      <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">TechSoup / Google for Nonprofits</div><div class="ci-det">EAF · 2–14 day approval</div></div><div class="ci-r"><div class="ci-days dc">3d</div><div class="ci-det">Apr 12</div></div></div>
+      <div class="ci"><div class="ci-dot uw"></div><div><div class="ci-title">MONK LLC Formation</div><div class="ci-det">MONK · &lt;$200 · egov.maryland.gov</div></div><div class="ci-r"><div class="ci-days dw">22d</div><div class="ci-det">May 1</div></div></div>
+      <div class="ci"><div class="ci-dot uw"></div><div><div class="ci-title">OMB M-26-02 Compliance</div><div class="ci-det">FP · Revenue opportunity</div></div><div class="ci-r"><div class="ci-days dw">41d</div><div class="ci-det">May 20</div></div></div>
+      <div class="ci"><div class="ci-dot uu"></div><div><div class="ci-title">IRS Form 1023 — 501(c)(3)</div><div class="ci-det">EAF · In preparation</div></div><div class="ci-r"><div class="ci-days du">53d</div><div class="ci-det">Jun 1</div></div></div>
+      <div class="ci"><div class="ci-dot uu"></div><div><div class="ci-title">EARN Maryland Application</div><div class="ci-det">EAF · Jordan tracking</div></div><div class="ci-r"><div class="ci-days du">83d</div><div class="ci-det">Jun 30</div></div></div>
+      <div class="ci"><div class="ci-dot uu"></div><div><div class="ci-title">CAKO Cohort 1 Launch</div><div class="ci-det">EAF · 12–16 wk zero tuition</div></div><div class="ci-r"><div class="ci-days du">83d</div><div class="ci-det">Jul 1</div></div></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+        <div class="sl" style="margin-bottom:6px;">Regulatory Watch</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);line-height:1.9;">⚡ FAA Part 108 BVLOS final rule INCOMING<br>⚡ FAA-2022-1258 BVLOS rulemaking active<br>⚡ OMB M-26-02 deadline May 20, 2026</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BD TARGETS -->
+<div class="panel" style="margin-bottom:32px;">
+  <div class="panel-hdr"><div class="ai ai-s">S</div><div><div class="panel-title">Scout v4 · BD Pipeline</div></div><div class="panel-sub">ALL 7 VERTICALS</div></div>
+  <div class="panel-body"><div class="bd-grid">
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--success)">92%</div><div><div class="bdc-vert">V1 INFRASTRUCTURE</div><div class="bdc-org">BGE — Transmission Inspection</div></div></div><div class="bdc-next">NERC FAC-001/003 deadline · $50K–$500K · (410) 470-3520</div><div class="gc-exp"><div class="gf"><div class="gfl">Portal</div><div class="gfv"><a class="lnk" href="https://www.exeloncorp.com/suppliers" target="_blank">exeloncorp.com/suppliers →</a></div></div><div class="gf"><div class="gfl">Hook</div><div class="gfv">11K+ miles transmission · May 2026 NERC deadline · 60–75% below helicopter</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--success)">90%</div><div><div class="bdc-vert">V3 PUBLIC SAFETY</div><div class="bdc-org">MEMA — Emergency Mgmt</div></div></div><div class="bdc-next">$2–5M · FEMA prime partner · (410) 517-3600</div><div class="gc-exp"><div class="gf"><div class="gfl">Contact</div><div class="gfv">Russell Strickland, Exec Dir · 410-517-3600</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--success)">88%</div><div><div class="bdc-vert">V1 INFRASTRUCTURE</div><div class="bdc-org">MDSHA — Bridge Inspection</div></div></div><div class="bdc-next">2,500+ bridges · SAM.gov + MBE required first</div><div class="gc-exp"><div class="gf"><div class="gfl">Blocker</div><div class="gfv">Register SAM.gov + MBE before outreach — will be screened otherwise</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--warn)">85%</div><div><div class="bdc-vert">V3 CYBERSECURITY</div><div class="bdc-org">OMB M-26-02 Federal Agencies</div></div></div><div class="bdc-next">41 days · CISSP + federal background = direct entry</div><div class="gc-exp"><div class="gf"><div class="gfl">Opportunity</div><div class="gfv">Agencies scrambling. No procurement overhead. First dollar is here.</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--warn)">82%</div><div><div class="bdc-vert">V1 TELECOM</div><div class="bdc-org">Crown Castle — Tower Inspection</div></div></div><div class="bdc-next">Mid-Atlantic portfolio · fire sweep below →</div><div class="gc-exp"><div class="gf"><div class="gfl">Action</div><div class="gfv">Launch Pad → crown_castle_telecom for full BD report</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--warn)">80%</div><div><div class="bdc-vert">V5 DELIVERY</div><div class="bdc-org">Johns Hopkins Health System</div></div></div><div class="bdc-next">Dr. Amukele · drone medical delivery · MEIA anchor</div><div class="gc-exp"><div class="gf"><div class="gfl">Contact</div><div class="gfv">Dr. Timothy Kien Amukele · hopkinsmedicine.org</div></div></div></div>
+  </div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCOUT LAUNCH PAD — LIVE WITH RESULT DRAWERS
+═══════════════════════════════════════════ -->
+<div class="sl">Scout v4 · On-Demand Launch Pad</div>
+<div class="panel launchpad">
+  <div class="panel-hdr">
+    <div class="ai ai-s">S</div>
+    <div><div class="panel-title">Fire Scout · Results Appear Below Each Button</div></div>
+    <div class="panel-sub" id="lpStatus">READY</div>
+  </div>
+  <div class="panel-body">
+
+    <div class="lp-config">
+      <div class="lp-url-wrap">
+        <label>N8N WEBHOOK</label>
+        <input type="text" id="n8nUrl" value="http://localhost:5678/webhook/scout-research" />
+      </div>
+      <button class="lp-server-check" onclick="checkServer()">⬤ Check File Server</button>
+    </div>
+
+    <div class="sweep-groups">
+
+      <div class="sg-label">🔴 Urgent — Apply Now</div>
+      <div class="sg-grid">
+        <button class="sb" id="sb-lighthouse_internship" onclick="fireSweep(this,'lighthouse_internship','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">Lighthouse AI Internship</div><div class="sb-badge" id="badge-lighthouse_internship">●</div></div>
+          <div class="sb-key">Up to $150K · rolling · first-come</div>
+          <div class="sb-drawer" id="drawer-lighthouse_internship"></div>
+        </button>
+        <button class="sb" id="sb-earn_maryland" onclick="fireSweep(this,'earn_maryland','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">EARN Maryland</div><div class="sb-badge" id="badge-earn_maryland">●</div></div>
+          <div class="sb-key">$50K–$500K · June 30 deadline</div>
+          <div class="sb-drawer" id="drawer-earn_maryland"></div>
+        </button>
+        <button class="sb" id="sb-tedco_deep" onclick="fireSweep(this,'tedco_deep','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">TEDCO Deep Scan</div><div class="sb-badge" id="badge-tedco_deep">●</div></div>
+          <div class="sb-key">Builder Fund, SBIR Lab, MII, Social Innovation</div>
+          <div class="sb-drawer" id="drawer-tedco_deep"></div>
+        </button>
+        <button class="sb" id="sb-cdbg_baltimore" onclick="fireSweep(this,'cdbg_baltimore','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">CDBG Baltimore City</div><div class="sb-badge" id="badge-cdbg_baltimore">●</div></div>
+          <div class="sb-key">Community Development Block Grant</div>
+          <div class="sb-drawer" id="drawer-cdbg_baltimore"></div>
+        </button>
+      </div>
+
+      <div class="sg-label">🟡 Maryland State</div>
+      <div class="sg-grid">
+        <button class="sb" id="sb-md_governor_press" onclick="fireSweep(this,'md_governor_press','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">MD Governor Press Sweep</div><div class="sb-badge" id="badge-md_governor_press">●</div></div>
+          <div class="sb-key">New grant announcements from governor.maryland.gov</div>
+          <div class="sb-drawer" id="drawer-md_governor_press"></div>
+        </button>
+        <button class="sb" id="sb-md_commerce_press" onclick="fireSweep(this,'md_commerce_press','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">MD Commerce Press Sweep</div><div class="sb-badge" id="badge-md_commerce_press">●</div></div>
+          <div class="sb-key">Build Our Future, DECADE Act announcements</div>
+          <div class="sb-drawer" id="drawer-md_commerce_press"></div>
+        </button>
+        <button class="sb" id="sb-workforce_dev_board" onclick="fireSweep(this,'workforce_dev_board','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">Workforce Dev Board</div><div class="sb-badge" id="badge-workforce_dev_board">●</div></div>
+          <div class="sb-key">Governor's Workforce Development Board grants</div>
+          <div class="sb-drawer" id="drawer-workforce_dev_board"></div>
+        </button>
+        <button class="sb" id="sb-lighthouse_upskilling" onclick="fireSweep(this,'lighthouse_upskilling','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">Lighthouse Upskilling Deep</div><div class="sb-badge" id="badge-lighthouse_upskilling">●</div></div>
+          <div class="sb-key">Up to $200K · Apr 24 deadline · Brittney Hansen</div>
+          <div class="sb-drawer" id="drawer-lighthouse_upskilling"></div>
+        </button>
+      </div>
+
+      <div class="sg-label">🔵 Federal Grants</div>
+      <div class="sg-grid">
+        <button class="sb" id="sb-psgp_port_security" onclick="fireSweep(this,'psgp_port_security','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">PSGP Port Security</div><div class="sb-badge" id="badge-psgp_port_security">●</div></div>
+          <div class="sb-key">$90M · Port of Baltimore angle</div>
+          <div class="sb-drawer" id="drawer-psgp_port_security"></div>
+        </button>
+        <button class="sb" id="sb-uasi_urban_security" onclick="fireSweep(this,'uasi_urban_security','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">UASI Urban Security</div><div class="sb-badge" id="badge-uasi_urban_security">●</div></div>
+          <div class="sb-key">$553M · Baltimore/DC metro</div>
+          <div class="sb-drawer" id="drawer-uasi_urban_security"></div>
+        </button>
+        <button class="sb" id="sb-dol_wioa" onclick="fireSweep(this,'dol_wioa','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">DOL WIOA</div><div class="sb-badge" id="badge-dol_wioa">●</div></div>
+          <div class="sb-key">Workforce Innovation Opportunity Act</div>
+          <div class="sb-drawer" id="drawer-dol_wioa"></div>
+        </button>
+        <button class="sb" id="sb-nsf_ate" onclick="fireSweep(this,'nsf_ate','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">NSF ATE Program</div><div class="sb-badge" id="badge-nsf_ate">●</div></div>
+          <div class="sb-key">Advanced Tech Education · CAKO curriculum angle</div>
+          <div class="sb-drawer" id="drawer-nsf_ate"></div>
+        </button>
+        <button class="sb" id="sb-grants_gov_uas" onclick="fireSweep(this,'grants_gov_uas','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">Grants.gov UAS Sweep</div><div class="sb-badge" id="badge-grants_gov_uas">●</div></div>
+          <div class="sb-key">All open UAS/autonomous solicitations</div>
+          <div class="sb-drawer" id="drawer-grants_gov_uas"></div>
+        </button>
+        <button class="sb" id="sb-shsp_state_homeland" onclick="fireSweep(this,'shsp_state_homeland','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">SHSP State Homeland</div><div class="sb-badge" id="badge-shsp_state_homeland">●</div></div>
+          <div class="sb-key">DHS state homeland security program</div>
+          <div class="sb-drawer" id="drawer-shsp_state_homeland"></div>
+        </button>
+      </div>
+
+      <div class="sg-label">🟠 Private Foundations</div>
+      <div class="sg-grid">
+        <button class="sb" id="sb-drone_deploy_foundation" onclick="fireSweep(this,'drone_deploy_foundation','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">DroneDeploy Foundation</div><div class="sb-badge" id="badge-drone_deploy_foundation">●</div></div>
+          <div class="sb-key">$10K–$20K · nonprofit · disaster recovery angle</div>
+          <div class="sb-drawer" id="drawer-drone_deploy_foundation"></div>
+        </button>
+        <button class="sb" id="sb-private_foundations" onclick="fireSweep(this,'private_foundations','Maryland_Grants')">
+          <div class="sb-top"><div class="sb-label">Private Foundations Bundle</div><div class="sb-badge" id="badge-private_foundations">●</div></div>
+          <div class="sb-key">Motorola Solutions, Honda USA, T-Mobile, Northrop</div>
+          <div class="sb-drawer" id="drawer-private_foundations"></div>
+        </button>
+      </div>
+
+      <div class="sg-label">🟢 BD by Vertical</div>
+      <div class="sg-grid">
+        <button class="sb" id="sb-crown_castle_telecom" onclick="fireSweep(this,'crown_castle_telecom','Aidan_Outputs/Scout')">
+          <div class="sb-top"><div class="sb-label">Crown Castle Telecom</div><div class="sb-badge" id="badge-crown_castle_telecom">●</div></div>
+          <div class="sb-key">V1 · tower inspection · Mid-Atlantic portfolio</div>
+          <div class="sb-drawer" id="drawer-crown_castle_telecom"></div>
+        </button>
+        <button class="sb" id="sb-insurance_surge" onclick="fireSweep(this,'insurance_surge','Aidan_Outputs/Scout')">
+          <div class="sb-top"><div class="sb-label">Insurance / CBRE / JLL</div><div class="sb-badge" id="badge-insurance_surge">●</div></div>
+          <div class="sb-key">V1 · property inspection · storm surge angle</div>
+          <div class="sb-drawer" id="drawer-insurance_surge"></div>
+        </button>
+        <button class="sb" id="sb-johns_hopkins_meia" onclick="fireSweep(this,'johns_hopkins_meia','Aidan_Outputs/Scout')">
+          <div class="sb-top"><div class="sb-label">Johns Hopkins / MEIA</div><div class="sb-badge" id="badge-johns_hopkins_meia">●</div></div>
+          <div class="sb-key">V5 · Dr. Amukele · drone medical delivery</div>
+          <div class="sb-drawer" id="drawer-johns_hopkins_meia"></div>
+        </button>
+        <button class="sb" id="sb-v4_entertainment_shows" onclick="fireSweep(this,'v4_entertainment_shows','Aidan_Outputs/Scout')">
+          <div class="sb-top"><div class="sb-label">FIFA / Entertainment</div><div class="sb-badge" id="badge-v4_entertainment_shows">●</div></div>
+          <div class="sb-key">V4 · $625M FIFA security grants · drone shows</div>
+          <div class="sb-drawer" id="drawer-v4_entertainment_shows"></div>
+        </button>
+        <button class="sb" id="sb-v5_bvlos_logistics" onclick="fireSweep(this,'v5_bvlos_logistics','Aidan_Outputs/Scout')">
+          <div class="sb-top"><div class="sb-label">BVLOS Logistics</div><div class="sb-badge" id="badge-v5_bvlos_logistics">●</div></div>
+          <div class="sb-key">V5 · FAA Part 108 rulemaking · VLOS contracts</div>
+          <div class="sb-drawer" id="drawer-v5_bvlos_logistics"></div>
+        </button>
+        <button class="sb" id="sb-v7_monk_licensing" onclick="fireSweep(this,'v7_monk_licensing','Aidan_Outputs/Scout')">
+          <div class="sb-top"><div class="sb-label">MONK OEM Licensing</div><div class="sb-badge" id="badge-v7_monk_licensing">●</div></div>
+          <div class="sb-key">V7 · DoD trusted hardware · OEM integration</div>
+          <div class="sb-drawer" id="drawer-v7_monk_licensing"></div>
+        </button>
+        <button class="sb" id="sb-cako_partnerships" onclick="fireSweep(this,'cako_partnerships','Aidan_Outputs/Scout')">
+          <div class="sb-top"><div class="sb-label">CAKO Employer Partners</div><div class="sb-badge" id="badge-cako_partnerships">●</div></div>
+          <div class="sb-key">V7 · 3+ employer pipeline for Lighthouse grant</div>
+          <div class="sb-drawer" id="drawer-cako_partnerships"></div>
+        </button>
+        <button class="sb" id="sb-mbe_certification" onclick="fireSweep(this,'mbe_certification','Aidan_Outputs/Scout')">
+          <div class="sb-top"><div class="sb-label">MBE / State Vendor Reg</div><div class="sb-badge" id="badge-mbe_certification">●</div></div>
+          <div class="sb-key">MDOT MBE · SBR · 8(a) · DC CBE intelligence</div>
+          <div class="sb-drawer" id="drawer-mbe_certification"></div>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM GRID -->
+<div class="bot-grid">
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-i">R</div><div><div class="panel-title">Registration Status</div></div></div>
+    <div class="panel-body">
+      <div class="reg-row"><div class="rs rs-no">✗</div><div><div class="rn">SAM.gov — UEI + CAGE Code</div><div class="rnote">Gates ALL federal + FHWA-funded state work</div></div><div class="rlink"><a href="https://sam.gov" target="_blank">sam.gov →</a></div></div>
+      <div class="reg-row"><div class="rs rs-no">✗</div><div><div class="rn">MBE/DBE — MDOT</div><div class="rnote">90–120 day clock · gates MDSHA + county DPW</div></div><div class="rlink"><a href="https://mbe.mdot.maryland.gov" target="_blank">mdot →</a></div></div>
+      <div class="reg-row"><div class="rs rs-q">?</div><div><div class="rn">eMMA — Maryland Marketplace</div><div class="rnote">Primary MD state solicitation portal</div></div><div class="rlink"><a href="https://emma.maryland.gov" target="_blank">emma →</a></div></div>
+      <div class="reg-row"><div class="rs rs-q">?</div><div><div class="rn">Maryland SBR Certification</div><div class="rnote">Set-asides under $500K · apply with MBE</div></div><div class="rlink"><a href="https://dgs.maryland.gov" target="_blank">dgs →</a></div></div>
+      <div class="reg-row"><div class="rs rs-q">?</div><div><div class="rn">SBA 8(a) Program</div><div class="rnote">Federal sole-source up to $4.5M</div></div><div class="rlink"><a href="https://certify.sba.gov" target="_blank">sba →</a></div></div>
+      <div class="reg-row"><div class="rs rs-q">?</div><div><div class="rn">DC CBE Certification</div><div class="rnote">Required for DC DDOT (245 bridges)</div></div><div class="rlink"><a href="https://dslbd.dc.gov" target="_blank">dc →</a></div></div>
+      <div class="reg-row"><div class="rs rs-ok">✓</div><div><div class="rn">Maryland SDAT — Good Standing</div><div class="rnote">Annual report due April 15</div></div><div class="rlink"><a href="https://egov.maryland.gov/BusinessExpress" target="_blank">sdat →</a></div></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-a">A</div><div><div class="panel-title">Agent Status</div></div></div>
+    <div class="panel-body">
+      <div class="ag-row"><div class="ai ai-s" style="width:20px;height:20px;font-size:8px;">S</div><div class="ag-name">Scout v4</div><div class="ag-sched">6AM Mon–Fri</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-j" style="width:20px;height:20px;font-size:8px;">J</div><div class="ag-name">Jordan v2</div><div class="ag-sched">7AM Mon–Fri</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-i" style="width:20px;height:20px;font-size:8px;">I</div><div class="ag-name">Iris v2</div><div class="ag-sched">8AM Mon–Fri</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-a" style="width:20px;height:20px;font-size:8px;">A</div><div class="ag-name">Atlas v2</div><div class="ag-sched">On demand</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-s" style="width:20px;height:20px;font-size:8px;">O</div><div class="ag-name">Aidan Orchestra</div><div class="ag-sched">~8:05AM</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-s" style="width:20px;height:20px;font-size:8px;">W</div><div class="ag-name">WhatsApp Bridge v2</div><div class="ag-sched">Continuous</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai" style="width:20px;height:20px;font-size:8px;background:rgba(74,85,104,.2);color:var(--muted);border:1px solid var(--border);">N</div><div class="ag-name">Nova / Sage / Pulse</div><div class="ag-sched">—</div><div class="ab ab-pend">PENDING</div></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+        <div class="sl" style="margin-bottom:6px;font-size:8px;">Week A/B Rotation</div>
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);line-height:1.9;">WK A MON · Lighthouse Upskilling<br>WK A TUE · TEDCO All Programs<br>WK A WED · Build Our Future / DECADE Act<br>WK A THU · FEMA C-UAS + FIFA<br>WK A FRI · FAA Workforce + Gov Press<br>WK B MON · V1 MDSHA + County DPW<br>WK B TUE · V1 Utility + OMB M-26-02<br>WK B WED · V2 Warehouse BD<br>WK B THU · V3 DFR + Public Safety<br>WK B FRI · SBIR + Private Foundations</div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-i">!</div><div><div class="panel-title">Hard Compliance Rules</div></div></div>
+    <div class="panel-body">
+      <div class="rule">NO funds flow FP → EAF — IRS private benefit prohibition</div>
+      <div class="rule">MONK IP belongs to MONK LLC only — never EAF or FP</div>
+      <div class="rule">NDAA fleet segregation — Green UAS never mixed with non-NDAA on gov contracts</div>
+      <div class="rule">Red team exercises require written auth + James Scott Esq. review</div>
+      <div class="rule">EAF compliance always beats FP efficiency when they conflict</div>
+      <div class="rule">DJI M350 RTK — private sector ONLY, NEVER government contract</div>
+      <div class="rule">Fleet 3 show hardware — private entertainment ONLY</div>
+      <div class="rule">Fleet 4 FPV — private EAF + contracted private-sector red team only</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-l">KAI-Netics Command Center · Aidan Chief of Staff · v3.0 · April 9 2026<br>File Server: localhost:3030 · n8n: localhost:5678 · Sources: KAI_Context.json · Scout v4 · Jordan v2 · Iris v2</div>
+  <div class="footer-r">
+    <a class="ql" href="https://egov.maryland.gov/BusinessExpress" target="_blank">SDAT →</a>
+    <a class="ql" href="https://sam.gov" target="_blank">SAM.gov →</a>
+    <a class="ql" href="https://emma.maryland.gov" target="_blank">eMMA →</a>
+    <a class="ql" href="https://mbe.mdot.maryland.gov" target="_blank">MBE →</a>
+    <a class="ql" href="http://localhost:5678" target="_blank">n8n →</a>
+    <a class="ql" href="http://localhost:3030/health" target="_blank">server →</a>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SERVER = 'http://localhost:3030';
+const POLL_INTERVAL = 8000; // check for new files every 8 seconds after firing
+
+// ─── TIMESTAMP ───────────────────────────────────────────
+const now = new Date();
+document.getElementById('ts').textContent =
+  now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) +
+  ' · ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+// ─── TOAST ────────────────────────────────────────────────
+let toastT;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 4500);
+}
+
+// ─── CARD TOGGLE ─────────────────────────────────────────
+function toggleGC(el) {
+  const exp = el.querySelector('.gc-exp');
+  if (exp) exp.classList.toggle('open');
+}
+
+// ─── SERVER CHECK ─────────────────────────────────────────
+async function checkServer() {
+  try {
+    const r = await fetch(SERVER + '/health', {signal: AbortSignal.timeout(2000)});
+    const d = await r.json();
+    if (d.ok) {
+      setServerStatus(true);
+      toast('✓ File server online · ' + d.root, 'ok');
+    } else { setServerStatus(false); }
+  } catch(e) {
+    setServerStatus(false);
+    toast('✗ File server offline. Run: node C:\\Kinetic_Core\\server.js', 'err');
+  }
+}
+
+function setServerStatus(online) {
+  const el = document.getElementById('serverStatus');
+  if (online) {
+    el.textContent = '⬤ SERVER ONLINE';
+    el.className = 'server-status ok';
+  } else {
+    el.textContent = '⬤ SERVER OFFLINE';
+    el.className = 'server-status err';
+  }
+}
+
+// Auto-check server on load
+checkServer();
+
+// ─── PARSE SCOUT v4 OUTPUT ────────────────────────────────
+function parseScoutOutput(raw) {
+  const get = (key, multiline=false) => {
+    const patterns = [
+      new RegExp(key + '[:\\s*\\*]+([^\\n]+)', 'i'),
+    ];
+    for (const p of patterns) {
+      const m = raw.match(p);
+      if (m) return m[1].trim().replace(/\*\*/g,'');
+    }
+    return null;
+  };
+
+  const getBlock = (key) => {
+    const m = raw.match(new RegExp(key + '[:\\s*\\*]+([\\s\\S]*?)(?=\\n[A-Z][A-Z\\s]+:|\\n##|$)', 'i'));
+    return m ? m[1].trim() : null;
+  };
+
+  const getList = (startKey, stopKey) => {
+    const m = raw.match(new RegExp(startKey + '[:\\s\\S]*?\\n((?:\\d+\\..*\\n?)+)', 'i'));
+    if (!m) return [];
+    return m[1].split('\n').filter(l => l.match(/^\d+\./)).map(l => l.replace(/^\d+\.\s*\*?\*?/,'').replace(/\*\*/g,'').trim()).filter(Boolean);
+  };
+
+  // Try to extract fit score
+  const fitMatch = raw.match(/(?:EAF FIT SCORE|FIT SCORE)[:\s*\*]*\s*\*?\*?(\d+)/i);
+  const fpFitMatch = raw.match(/FP FIT SCORE[:\s*\*]*\s*\*?\*?(\d+)/i);
+  const fitScore = fitMatch ? fitMatch[1] : null;
+  const fpFit = fpFitMatch ? fpFitMatch[1] : null;
+
+  const action = get('RECOMMENDED ACTION');
+  const funder = get('FUNDER');
+  const program = get('PROGRAM');
+  const deadline = get('DEADLINE');
+  const award = get('AWARD RANGE') || get('AWARD');
+  const portal = get('PORTAL') || get('PORTAL / CONTACT') || get('PORTAL/CONTACT');
+  const eligibility = get('ELIGIBILITY');
+  const nextStep = get('NEXT STEP') || get('NEXT ACTION');
+  const competing = get('COMPETING APPLICANTS');
+  const rationale = get('FIT RATIONALE') || get('RATIONALE');
+
+  // Get alignment points
+  const alignMatch = raw.match(/TOP 3 ALIGNMENT[^:]*:\s*([\s\S]*?)(?=TOP 2 RISKS|RECOMMENDED|$)/i);
+  const alignItems = alignMatch
+    ? alignMatch[1].split('\n').filter(l => l.match(/^\d+\./)).map(l => l.replace(/^\d+\.\s*/,'').replace(/\*\*/g,'').trim()).filter(Boolean)
+    : [];
+
+  // Get risks
+  const riskMatch = raw.match(/TOP 2 RISKS[^:]*:\s*([\s\S]*?)(?=RECOMMENDED|COMPETING|$)/i);
+  const riskItems = riskMatch
+    ? riskMatch[1].split('\n').filter(l => l.match(/^\d+\./)).map(l => l.replace(/^\d+\.\s*/,'').replace(/\*\*/g,'').trim()).filter(Boolean)
+    : [];
+
+  // Get LOI
+  const loiMatch = raw.match(/LOI DRAFT[^:]*:\s*([\s\S]*?)(?=---|\n#{1,3} |$)/i);
+  const loi = loiMatch ? loiMatch[1].trim() : null;
+
+  // Mode from header
+  const modeMatch = raw.match(/^Mode: (.+)$/im);
+  const mode = modeMatch ? modeMatch[1].trim() : 'GRANT';
+
+  // For BD reports, try different fields
+  const bdFitMatch = raw.match(/FIT SCORE[:\s]*(\d+)/i);
+  const bdScore = fitScore || (bdFitMatch ? bdFitMatch[1] : null);
+
+  return { fitScore: bdScore, fpFit, action, funder, program, deadline, award, portal, eligibility, nextStep, competing, rationale, alignItems, riskItems, loi, mode, raw };
+}
+
+// ─── RENDER DRAWER ────────────────────────────────────────
+function renderDrawer(drawerEl, parsed, filename, dir) {
+  const { fitScore, fpFit, action, funder, program, deadline, award, portal, eligibility, nextStep, competing, rationale, alignItems, riskItems, loi, mode, raw } = parsed;
+
+  const fitColor = fitScore
+    ? (parseInt(fitScore) >= 80 ? 'var(--success)' : parseInt(fitScore) >= 60 ? 'var(--warn)' : 'var(--danger)')
+    : 'var(--text2)';
+
+  const actionClass = action
+    ? (action.toLowerCase().includes('immediately') || action.toLowerCase().includes('apply immedia') ? 'ab-now'
+      : action.toLowerCase().includes('apply') ? 'ab-apply'
+      : 'ab-watch')
+    : 'ab-watch';
+
+  const actionLabel = action
+    ? (action.toLowerCase().includes('immediately') ? '▶ APPLY IMMEDIATELY'
+      : action.toLowerCase().includes('apply') ? '▶ APPLY'
+      : action.toLowerCase().includes('watch') ? '◉ WATCH'
+      : action.toUpperCase())
+    : 'REVIEW';
+
+  let html = `<div class="dr-summary">`;
+  if (fitScore) html += `<div class="dr-fit" style="color:${fitColor}">${fitScore}%</div>`;
+  if (fpFit) html += `<div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);">FP: ${fpFit}%</div>`;
+  html += `<div class="dr-action-badge ${actionClass}">${actionLabel}</div>`;
+  if (program || funder) html += `<div class="dr-program">${program || funder || ''}</div>`;
+  html += `</div>`;
+
+  // Key fields grid
+  const fields = [
+    funder     && {label:'Funder',    val:funder},
+    deadline   && {label:'Deadline',  val:`<strong style="color:var(--warn)">${deadline}</strong>`},
+    award      && {label:'Award',     val:`<span style="color:var(--success)">${award}</span>`},
+    eligibility && {label:'Eligible', val:eligibility},
+    portal     && {label:'Portal',    val:`<a href="${portal.startsWith('http') ? portal : '#'}" target="_blank" style="color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;">${portal.length > 60 ? portal.substring(0,60)+'…' : portal}</a>`},
+    competing  && {label:'Competition', val:competing},
+  ].filter(Boolean);
+
+  if (fields.length) {
+    html += `<div class="dr-fields">`;
+    fields.forEach(f => {
+      html += `<div class="dr-field"><div class="dr-field-label">${f.label}</div><div class="dr-field-val">${f.val}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Alignment + risks
+  if (alignItems.length || riskItems.length) {
+    html += `<div class="dr-lists">`;
+    if (alignItems.length) {
+      html += `<div class="dr-list-box align"><div class="dr-list-label">Top Alignment</div><ul>`;
+      alignItems.forEach(i => html += `<li>${i}</li>`);
+      html += `</ul></div>`;
+    }
+    if (riskItems.length) {
+      html += `<div class="dr-list-box risks"><div class="dr-list-label">Risks</div><ul>`;
+      riskItems.forEach(i => html += `<li>${i}</li>`);
+      html += `</ul></div>`;
+    }
+    html += `</div>`;
+  }
+
+  // LOI
+  if (loi) {
+    html += `<div class="dr-field-label" style="margin-bottom:4px;">LOI DRAFT</div>`;
+    html += `<div class="dr-loi">${loi.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  }
+
+  // Next step
+  if (nextStep) {
+    html += `<div class="dr-nextstep"><strong>→ Next Step:</strong> ${nextStep}</div>`;
+  }
+
+  // Raw toggle
+  html += `<div class="dr-raw-toggle" onclick="toggleRaw(this)">▸ view raw output</div>`;
+  html += `<div class="dr-raw">${raw.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+
+  // Timestamp
+  html += `<div class="dr-timestamp">File: ${filename} · ${dir}</div>`;
+
+  drawerEl.innerHTML = html;
+}
+
+function toggleRaw(el) {
+  const raw = el.nextElementSibling;
+  raw.classList.toggle('open');
+  el.textContent = raw.classList.contains('open') ? '▾ hide raw output' : '▸ view raw output';
+}
+
+// ─── FIRE SWEEP ───────────────────────────────────────────
+const activePollers = {};
+
+async function fireSweep(btn, sweepKey, outputDir) {
+  const n8nUrl = document.getElementById('n8nUrl').value.trim();
+  if (!n8nUrl) { toast('Set your n8n webhook URL', 'err'); return; }
+
+  const badge  = document.getElementById('badge-' + sweepKey);
+  const drawer = document.getElementById('drawer-' + sweepKey);
+  const status = document.getElementById('lpStatus');
+
+  // Mark firing
+  btn.className = 'sb firing';
+  if (badge)  { badge.textContent = 'FIRING'; }
+  if (drawer) { drawer.classList.remove('open'); }
+  status.textContent = 'FIRING: ' + sweepKey;
+  toast('⚡ Firing: ' + sweepKey + '\nPolling for results every 8 seconds…', 'info');
+
+  // Note time before firing so we can detect new files
+  const firedAt = Date.now();
+
+  // Fire the webhook
+  let fired = false;
+  try {
+    const res = await fetch(n8nUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({sweep: sweepKey})
+    });
+    fired = res.ok;
+    if (!fired) throw new Error('HTTP ' + res.status);
+  } catch(e) {
+    btn.className = 'sb error';
+    if (badge) badge.textContent = '✗ ERR';
+    status.textContent = 'ERROR: ' + sweepKey;
+    toast('✗ Webhook failed: ' + e.message + '\nIs n8n running on localhost:5678?', 'err');
+    return;
+  }
+
+  // Start polling for result
+  if (activePollers[sweepKey]) clearInterval(activePollers[sweepKey]);
+
+  let attempts = 0;
+  const maxAttempts = 18; // ~2.5 minutes
+
+  activePollers[sweepKey] = setInterval(async () => {
+    attempts++;
+    if (attempts > maxAttempts) {
+      clearInterval(activePollers[sweepKey]);
+      btn.className = 'sb error';
+      if (badge) badge.textContent = '✗ TIMEOUT';
+      status.textContent = 'TIMEOUT: ' + sweepKey;
+      toast('⚠ No result after 2.5 min for ' + sweepKey + '\nCheck n8n execution log', 'err');
+      return;
+    }
+
+    try {
+      const r = await fetch(`${SERVER}/poll?dir=${encodeURIComponent(outputDir)}&since=${new Date(firedAt - 5000).toISOString()}`, {
+        signal: AbortSignal.timeout(3000)
+      });
+      const data = await r.json();
+
+      if (data.newFiles && data.newFiles.length > 0) {
+        // Pick the most recently modified new file
+        const newest = data.newFiles[0];
+
+        // Read the file
+        const fr = await fetch(`${SERVER}/file?path=${encodeURIComponent(newest.path)}`, {
+          signal: AbortSignal.timeout(5000)
+        });
+        const fd = await fr.json();
+
+        if (fd.content) {
+          clearInterval(activePollers[sweepKey]);
+
+          const parsed = parseScoutOutput(fd.content);
+
+          // Update button state
+          btn.className = 'sb loaded';
+          const fitTxt = parsed.fitScore ? parsed.fitScore + '% FIT' : 'DONE';
+          if (badge) badge.textContent = fitTxt;
+          status.textContent = 'LOADED: ' + sweepKey;
+
+          // Open drawer with results
+          if (drawer) {
+            renderDrawer(drawer, parsed, newest.name, outputDir);
+            drawer.classList.add('open');
+          }
+
+          const actionSummary = parsed.action
+            ? ' · ' + parsed.action.toUpperCase().substring(0,20)
+            : '';
+          const fitSummary = parsed.fitScore ? parsed.fitScore + '% fit' : '';
+          toast(`✓ ${sweepKey} complete\n${fitSummary}${actionSummary}\nResults shown below the button`, 'ok');
+
+          setServerStatus(true);
+        }
+      }
+    } catch(e) {
+      // Server might be offline — don't crash, just keep trying
+      setServerStatus(false);
+    }
+  }, POLL_INTERVAL);
+}
+
+// ─── LOAD EXISTING RESULTS ON PAGE LOAD ──────────────────
+// If files already exist from previous runs, load them into drawers
+async function loadExistingResults() {
+  const dirsToCheck = [
+    { dir: 'Maryland_Grants', sweeps: ['lighthouse_internship','lighthouse_upskilling','earn_maryland','tedco_deep','cdbg_baltimore','md_governor_press','md_commerce_press','workforce_dev_board','psgp_port_security','uasi_urban_security','dol_wioa','nsf_ate','grants_gov_uas','shsp_state_homeland','drone_deploy_foundation','private_foundations'] },
+    { dir: 'Aidan_Outputs/Scout', sweeps: ['crown_castle_telecom','insurance_surge','johns_hopkins_meia','v4_entertainment_shows','v5_bvlos_logistics','v7_monk_licensing','cako_partnerships','mbe_certification'] }
+  ];
+
+  for (const { dir, sweeps } of dirsToCheck) {
+    try {
+      const r = await fetch(`${SERVER}/files?dir=${encodeURIComponent(dir)}`, {signal: AbortSignal.timeout(2000)});
+      const data = await r.json();
+      if (!data.files) continue;
+
+      for (const sweep of sweeps) {
+        // Look for a file matching this sweep key
+        const matchKey = sweep.replace(/_/g, '').toLowerCase();
+        const match = data.files.find(f => {
+          const fn = f.name.replace(/_/g,'').replace(/-/g,'').toLowerCase();
+          return fn.includes(matchKey.substring(0, Math.min(12, matchKey.length)));
+        });
+
+        if (match) {
+          try {
+            const fr = await fetch(`${SERVER}/file?path=${encodeURIComponent(match.path)}`, {signal: AbortSignal.timeout(3000)});
+            const fd = await fr.json();
+            if (!fd.content) continue;
+
+            const parsed = parseScoutOutput(fd.content);
+            const drawer = document.getElementById('drawer-' + sweep);
+            const badge  = document.getElementById('badge-' + sweep);
+            const btn    = document.getElementById('sb-' + sweep);
+
+            if (drawer && btn) {
+              renderDrawer(drawer, parsed, match.name, dir);
+              btn.classList.add('loaded');
+              if (badge && parsed.fitScore) badge.textContent = parsed.fitScore + '% FIT';
+              else if (badge) badge.textContent = 'PREV';
+            }
+          } catch(e) { /* skip */ }
+        }
+      }
+      setServerStatus(true);
+    } catch(e) { /* server offline — silent fail */ }
+  }
+}
+
+// Run on load
+loadExistingResults();
+</script>
+</body>
+</html>
