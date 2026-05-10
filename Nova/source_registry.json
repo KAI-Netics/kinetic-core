@@ -1,0 +1,217 @@
+{
+  "meta": {
+    "version": "1.1",
+    "created": "2026-05-03",
+    "updated": "2026-05-03",
+    "owner": "Nova",
+    "description": "Living beachhead-derived opportunity source registry. Nova reasons new sources in. Scout sweeps active ones. Never hardcoded — always reasoned from beachhead position, regulatory triggers, and capability unlocks.",
+    "changelog": "v1.1 -- Brave Search API key added to .env (BRAVE_SEARCH_API_KEY). All active_pending_api_key sources promoted to active. Open web tier now fully live across all 7 beachheads."
+  },
+
+  "api_keys": {
+    "brave_search": "configured in C:\\Kinetic_Core\\.env as BRAVE_SEARCH_API_KEY",
+    "brave_search_status": "LIVE",
+    "perplexity_sonar": "pending -- api.perplexity.ai free tier",
+    "perplexity_status": "PENDING"
+  },
+
+  "registry_reasoning_framework": {
+    "question_1_regulatory_trigger": "What new law, regulation, or mandate just created a compliance requirement or funding pool that KAI-Netics credentials can fulfill?",
+    "question_2_follow_the_money": "Who just got funded to buy what KAI-Netics sells? Follow appropriations, grant awards, capital budgets.",
+    "question_3_vertical_expansion": "What new use case does an emerging capability, certification, or regulation unlock?",
+    "question_4_ecosystem_mapping": "Who are the primes, buyers, and partners already operating in spaces KAI-Netics is entering? Their procurement surfaces are our surfaces.",
+    "question_5_geography_activation": "DMV is the core. What adjacent geographies activate as the platform scales, CAKO graduates deploy, and Part 135 is obtained?",
+    "question_6_safer_skies_trigger": "Safer Skies Act creates funded mandates for public safety drone programs. Which agencies in DMV receive funding and when do procurement cycles open?",
+    "question_7_bvlos_unlock": "Part 108 BVLOS final rule unlocks medical delivery, logistics corridors, and MONK as a compliance architecture. What new buyer categories activate the day it passes?",
+    "question_8_3pl_expansion": "3PL drone logistics requires operators, aircraft, route authority, and trust layer. Which 3PL operators in DMV are positioned for drone logistics partnerships?"
+  },
+
+  "beachhead_sources": {
+
+    "BH1_infrastructure_inspection": {
+      "beachhead": "Infrastructure Inspection — DMV",
+      "status": "ACTIVE — Day 1 revenue beachhead",
+      "sources": [
+        { "name": "MDSHA Procurement", "url": "https://mdot.maryland.gov/OFFICE/Procurement", "type": "state_procurement", "frequency": "daily", "rationale": "2500+ state bridges, biennial FHWA inspection mandate, direct buyer", "status": "active" },
+        { "name": "eMaryland Marketplace", "url": "https://emaryland.buyspeed.com", "type": "state_procurement", "frequency": "daily", "rationale": "All 24 MD county DPW solicitations in one portal", "status": "active" },
+        { "name": "Anne Arundel County Procurement", "url": "https://www.aacounty.org/departments/central-services/procurement", "type": "county_procurement", "frequency": "daily", "rationale": "High-value county infrastructure buyer, DFR opportunity also", "status": "active" },
+        { "name": "Howard County Procurement", "url": "https://www.howardcountymd.gov/finance/procurement", "type": "county_procurement", "frequency": "daily", "rationale": "Affluent county, progressive tech adoption, bridge and utility inspection", "status": "active" },
+        { "name": "Baltimore City DPW Procurement", "url": "https://www.baltimorecity.gov/procurement", "type": "city_procurement", "frequency": "daily", "rationale": "Largest city infrastructure buyer in MD, aging bridge stock", "status": "active" },
+        { "name": "DC DDOT Procurement", "url": "https://ddot.dc.gov/service/procurement", "type": "dc_procurement", "frequency": "daily", "rationale": "245 DC bridges, federal compliance requirements, high visibility contracts", "status": "active" },
+        { "name": "BGE Supplier Portal", "url": "https://www.bge.com/suppliers", "type": "utility_vendor", "frequency": "weekly", "rationale": "BGE NERC FAC-001/003 compliance, transmission line inspection, major DMV utility", "status": "active" },
+        { "name": "Pepco Supplier Portal", "url": "https://www.pepco.com/suppliers", "type": "utility_vendor", "frequency": "weekly", "rationale": "DC and MD service territory, powerline inspection, storm damage assessment", "status": "active" },
+        { "name": "Dominion Energy Vendor Portal", "url": "https://www.dominionenergy.com/company/suppliers", "type": "utility_vendor", "frequency": "weekly", "rationale": "Northern VA territory, large transmission infrastructure", "status": "active" },
+        { "name": "Crown Castle Vendor Portal", "url": "https://www.crowncastle.com/work-with-us", "type": "telecom_vendor", "frequency": "weekly", "rationale": "Tower inspection, DMV presence, recurring maintenance contract potential", "status": "active" },
+        { "name": "American Tower Vendor Portal", "url": "https://www.americantower.com/vendors", "type": "telecom_vendor", "frequency": "weekly", "rationale": "Tower inspection managed service opportunity", "status": "active" },
+        { "name": "CSX Supplier Registration", "url": "https://www.csx.com/index.cfm/working-with-csx/suppliers", "type": "rail_vendor", "frequency": "weekly", "rationale": "FRA 49 CFR 213 inspection requirements, right-of-way aerial survey", "status": "active" },
+        { "name": "WMATA Procurement", "url": "https://www.wmata.com/business/procurement", "type": "transit_vendor", "frequency": "weekly", "rationale": "Metro system infrastructure, tunnel inspection, facility survey", "status": "active" },
+        { "name": "Army Corps of Engineers USACE Procurement", "url": "https://www.usace.army.mil/Business-With-Us", "type": "federal_procurement", "frequency": "weekly", "rationale": "Dam safety, waterway infrastructure, levee inspection — all Part 107 executable", "status": "active" },
+        { "name": "State Farm Insurance Vendor", "url": "https://www.statefarm.com/agent/contact-us/vendor-information", "type": "insurance_vendor", "frequency": "monthly", "status": "watch" },
+        { "name": "Allstate Insurance Vendor", "url": "https://www.allstate.com/agents/preferred-vendor", "type": "insurance_vendor", "frequency": "monthly", "status": "watch" },
+        { "name": "CBRE Vendor Registration", "url": "https://www.cbre.com/about-cbre/suppliers", "type": "commercial_real_estate", "frequency": "monthly", "status": "watch" },
+        { "name": "SAM.gov Infrastructure RFPs", "url": "https://sam.gov", "type": "federal_procurement", "frequency": "daily", "rationale": "NAICS 488190 and 541330 — infrastructure and engineering inspection solicitations", "status": "active" },
+        { "name": "Brave Search — Infrastructure Inspection DMV", "type": "open_web", "api": "BRAVE_SEARCH_API_KEY", "query_template": "drone UAS infrastructure inspection contract DMV Maryland Virginia DC {year}", "frequency": "3x_weekly", "status": "active" }
+      ]
+    },
+
+    "BH2_warehouse_3pl_autonomous": {
+      "beachhead": "Warehouse Autonomous Inventory + 3PL Drone Logistics",
+      "status": "ACTIVE — Month 4 target, Medline insider advantage",
+      "note": "Phase 1 = autonomous inventory scanning managed service. Phase 2 = 3PL drone logistics staffing as CAKO graduates deploy.",
+      "sources": [
+        { "name": "UMMS Procurement Portal", "url": "https://www.umms.org/ummc/health-services/supply-chain/suppliers", "type": "health_system_vendor", "frequency": "daily", "rationale": "415K sq ft Sparrows Point, 11 hospitals, Pat Vizzard direct contact — warm lead", "status": "active", "contact": "Pat Vizzard, VP Supply Chain" },
+        { "name": "Johns Hopkins Supply Chain", "url": "https://procurement.jhu.edu/suppliers", "type": "health_system_vendor", "frequency": "daily", "rationale": "Dr. Amukele connection, medical delivery pioneer", "status": "active", "contact": "Dr. Timothy Kien Amukele, tamukele@jhmi.edu" },
+        { "name": "MedStar Health Supplier Portal", "url": "https://www.medstarhealth.org/suppliers", "type": "health_system_vendor", "frequency": "weekly", "status": "active" },
+        { "name": "Cardinal Health Supplier Portal", "url": "https://www.cardinalhealth.com/suppliers", "type": "pharma_distributor", "frequency": "weekly", "status": "active" },
+        { "name": "McKesson Supplier Portal", "url": "https://www.mckesson.com/suppliers", "type": "pharma_distributor", "frequency": "weekly", "status": "active" },
+        { "name": "Sysco Baltimore Vendor Portal", "url": "https://www.sysco.com/suppliers", "type": "food_distribution", "frequency": "weekly", "status": "watch" },
+        { "name": "Amazon Fulfillment Vendor", "url": "https://sellercentral.amazon.com/gp/help/suppliers", "type": "ecommerce_3pl", "frequency": "monthly", "status": "watch" },
+        { "name": "IWLA — International Warehouse Logistics Assoc", "url": "https://www.iwla.com/membership/suppliers", "type": "industry_association", "frequency": "monthly", "status": "active" },
+        { "name": "MHI — Material Handling Industry", "url": "https://www.mhi.org/solutions/drone-robotics", "type": "industry_association", "frequency": "monthly", "status": "active" },
+        { "name": "EARN Maryland Grant", "url": "https://www.dllr.state.md.us/earn", "type": "state_grant", "frequency": "weekly", "status": "active", "deadline": "2026-06-30" },
+        { "name": "DOL WIOA Competitive Grants", "url": "https://www.dol.gov/agencies/eta/wioa", "type": "federal_grant", "frequency": "monthly", "status": "active" },
+        { "name": "3PL Central Industry Portal", "url": "https://www.3plcentral.com", "type": "industry_portal", "frequency": "weekly", "status": "watch" },
+        { "name": "Brave Search — Warehouse Drone 3PL DMV", "type": "open_web", "api": "BRAVE_SEARCH_API_KEY", "query_template": "warehouse drone inventory scanning 3PL logistics Maryland Baltimore {year}", "frequency": "3x_weekly", "status": "active" }
+      ]
+    },
+
+    "BH3_dfr_public_safety_safer_skies": {
+      "beachhead": "DFR / Public Safety / Safer Skies Act / C-UAS / Crowd Control",
+      "status": "ACTIVE — FEMA C-UAS $250M and UASI $553M already flowing",
+      "safer_skies_positioning": {
+        "whitelist_redlist_advantage": "Fleet 1 (Skydio + Freefly) and Fleet 2 (IF800 Tomcat) are NDAA compliant. Grant-funded agencies can only buy NDAA-compliant hardware. Sell the compliance pathway explicitly.",
+        "complete_program_sale": "NDAA aircraft + CISSP-secured comms + CAKO operators + CONOPS + SOPs + privacy policy + FAA coordination + maintenance. Nobody else sells the full stack in DMV.",
+        "crowd_control_capability": "AKMS swarm + DFR deployment + aerial monitoring = Safer Skies Act crowd control use case. Position explicitly.",
+        "unlock_events": ["Safer Skies Act passage = every DMV public safety agency becomes funded buyer", "FEMA C-UAS SLTT $250M active now", "FIFA World Cup 2026 = event security RFP mid-2026", "DHS UASI $553M flowing now"]
+      },
+      "sources": [
+        { "name": "Baltimore City Police Procurement", "url": "https://www.baltimorecity.gov/procurement", "type": "city_public_safety", "frequency": "daily", "status": "active" },
+        { "name": "Anne Arundel County Police Procurement", "url": "https://www.aacounty.org/procurement", "type": "county_public_safety", "frequency": "daily", "status": "active" },
+        { "name": "Howard County Emergency Mgmt", "url": "https://www.howardcountymd.gov/emergency", "type": "county_emergency_mgmt", "frequency": "weekly", "status": "active" },
+        { "name": "Maryland Emergency Management Agency MEMA", "url": "https://mema.maryland.gov", "type": "state_emergency_mgmt", "frequency": "daily", "status": "active" },
+        { "name": "DC HSEMA Procurement", "url": "https://hsema.dc.gov/page/procurement-opportunities", "type": "dc_emergency_mgmt", "frequency": "daily", "status": "active" },
+        { "name": "Virginia VDEM Procurement", "url": "https://www.vaemergency.gov/about/procurement", "type": "state_emergency_mgmt", "frequency": "weekly", "status": "active" },
+        { "name": "Prince George's County Emergency Mgmt", "url": "https://www.princegeorgescountymd.gov/procurement", "type": "county_public_safety", "frequency": "weekly", "status": "active" },
+        { "name": "FEMA C-UAS SLTT Program", "url": "https://www.fema.gov/emergency-managers/practitioners/counterterrorism/counter-uas", "type": "federal_grant", "frequency": "daily", "rationale": "$250M obligated FY2026, NDAA compliance required — KAI-Netics whitelist advantage", "status": "active" },
+        { "name": "FEMA BRIC Grant Program", "url": "https://www.fema.gov/grants/mitigation/building-resilient-infrastructure-communities", "type": "federal_grant", "frequency": "weekly", "status": "active" },
+        { "name": "DHS UASI — Baltimore and DC", "url": "https://www.fema.gov/grants/preparedness/urban-areas-security-initiative", "type": "federal_grant", "frequency": "weekly", "rationale": "$553M FY2025, active now", "status": "active" },
+        { "name": "FEMA PSGP Port Security Grant", "url": "https://www.fema.gov/grants/preparedness/port-security", "type": "federal_grant", "frequency": "weekly", "rationale": "$90M FY2025, Port of Baltimore", "status": "active" },
+        { "name": "DOJ COPS Technology Program", "url": "https://cops.usdoj.gov/tech", "type": "federal_grant", "frequency": "monthly", "status": "active" },
+        { "name": "FIFA World Cup 2026 Baltimore Security", "url": "https://www.baltimoremd.gov/2026worldcup", "type": "event_security", "frequency": "weekly", "rationale": "$625M host city security allocation", "status": "active" },
+        { "name": "Safer Skies Act Implementation Watch", "type": "regulatory_signal", "api": "BRAVE_SEARCH_API_KEY", "query_template": "Safer Skies Act implementation DHS FEMA funding agency guidance {year}", "frequency": "weekly", "status": "active" },
+        { "name": "ALEA — Airborne Law Enforcement Assoc", "url": "https://www.alea.org/vendors", "type": "industry_association", "frequency": "monthly", "status": "active" },
+        { "name": "IACP Vendor Program", "url": "https://www.iacp.org/vendor-information", "type": "industry_association", "frequency": "monthly", "status": "watch" },
+        { "name": "Brave Search — DFR Public Safety DMV Grants", "type": "open_web", "api": "BRAVE_SEARCH_API_KEY", "query_template": "drone first responder DFR Safer Skies C-UAS Maryland Virginia DC public safety grant {year}", "frequency": "3x_weekly", "status": "active" }
+      ]
+    },
+
+    "BH4_sbir_monk_federal_rd": {
+      "beachhead": "Federal R&D / SBIR / MONK Technology Commercialization",
+      "status": "ACTIVE — Long money, non-dilutive, gates OEM licensing",
+      "sources": [
+        { "name": "SBIR.gov All Agencies", "url": "https://www.sbir.gov/solicitations", "type": "federal_rd", "frequency": "daily", "status": "active" },
+        { "name": "DoD OUSD R&E BAA Portal", "url": "https://www.acq.osd.mil/research/", "type": "federal_rd", "frequency": "weekly", "status": "active" },
+        { "name": "DHS Science and Technology Solicitations", "url": "https://www.dhs.gov/science-and-technology/solicitations", "type": "federal_rd", "frequency": "weekly", "status": "active" },
+        { "name": "AFWERX Open Calls", "url": "https://afwerx.com/calls", "type": "federal_rd", "frequency": "weekly", "status": "active" },
+        { "name": "DIU Defense Innovation Unit", "url": "https://www.diu.mil/work-with-us", "type": "federal_rd", "frequency": "weekly", "status": "active" },
+        { "name": "Army xTechSearch", "url": "https://www.xtechsearch.army.mil", "type": "federal_rd", "frequency": "monthly", "status": "active" },
+        { "name": "NavalX Tech Bridges", "url": "https://www.navalx.navy.mil", "type": "federal_rd", "frequency": "monthly", "status": "watch" },
+        { "name": "NSF SBIR STTR Seed Fund", "url": "https://seedfund.nsf.gov", "type": "federal_rd", "frequency": "weekly", "status": "active" },
+        { "name": "TEDCO Maryland Innovation Initiative", "url": "https://www.tedco.md/program/maryland-innovation-initiative", "type": "state_rd", "frequency": "monthly", "status": "active" },
+        { "name": "Build Our Future DECADE Act MD", "url": "https://commerce.maryland.gov/fund/build-our-future", "type": "state_grant", "frequency": "weekly", "status": "active" },
+        { "name": "Inspired Flight OEM Partnership", "url": "https://inspiredflight.com/partners", "type": "oem_partnership", "frequency": "monthly", "status": "watch" },
+        { "name": "Skydio Government Partners", "url": "https://www.skydio.com/government", "type": "oem_partnership", "frequency": "monthly", "status": "watch" },
+        { "name": "Brave Search — SBIR MONK Autonomous Trust", "type": "open_web", "api": "BRAVE_SEARCH_API_KEY", "query_template": "SBIR UAS autonomous trust hardware authentication drone security federal {year}", "frequency": "weekly", "status": "active" }
+      ]
+    },
+
+    "BH5_workforce_cako_talent_pipeline": {
+      "beachhead": "Workforce Pipeline / CAKO / Talent Supply Chain",
+      "status": "ACTIVE — EAF mandate, gates 3PL scale",
+      "sources": [
+        { "name": "EARN Maryland", "url": "https://www.dllr.state.md.us/earn", "type": "state_grant", "frequency": "daily", "status": "active", "deadline": "2026-06-30" },
+        { "name": "Maryland Lighthouse AI Internship", "url": "https://commerce.maryland.gov/fund/ai-internship", "type": "state_grant", "frequency": "weekly", "status": "active" },
+        { "name": "DOL WIOA Competitive Grants", "url": "https://www.dol.gov/agencies/eta/wioa", "type": "federal_grant", "frequency": "monthly", "status": "active" },
+        { "name": "NSF ATE Advanced Technological Education", "url": "https://www.nsf.gov/funding/pgm_summ.jsp?pims_id=5464", "type": "federal_grant", "frequency": "monthly", "status": "active" },
+        { "name": "Annie E. Casey Foundation", "url": "https://www.aecf.org/grants", "type": "foundation_grant", "frequency": "monthly", "status": "active" },
+        { "name": "Abell Foundation", "url": "https://www.abell.org/grants", "type": "foundation_grant", "frequency": "monthly", "status": "active" },
+        { "name": "JPMorgan Chase Workforce Innovation", "url": "https://www.jpmorganchase.com/impact/workforce-development", "type": "corporate_grant", "frequency": "monthly", "status": "active" },
+        { "name": "UROC UMGC Research Opportunity", "url": "https://www.umgc.edu/research/uroc", "type": "academic_partnership", "frequency": "monthly", "status": "active", "contact": "John Slaughter, UROC/CURN Director" },
+        { "name": "Maryland Workforce Development Board", "url": "https://www.dllr.state.md.us/workforce", "type": "state_workforce", "frequency": "monthly", "status": "active" },
+        { "name": "AUVSI Career Center", "url": "https://www.auvsi.org/careers", "type": "industry_job_board", "frequency": "weekly", "status": "active" },
+        { "name": "T. Rowe Price Foundation", "url": "https://www.troweprice.com/corporate/en/about-t-rowe-price/t-rowe-price-foundation.html", "type": "foundation_grant", "frequency": "monthly", "status": "watch" },
+        { "name": "Community College of Baltimore County Workforce", "url": "https://www.ccbcmd.edu/workforce", "type": "academic_partnership", "frequency": "monthly", "status": "watch" },
+        { "name": "Brave Search — Drone Operator Jobs DMV", "type": "open_web", "api": "BRAVE_SEARCH_API_KEY", "query_template": "drone operator UAS pilot jobs Maryland Virginia DC Baltimore hiring {year}", "frequency": "3x_weekly", "status": "active" }
+      ]
+    },
+
+    "BH6_medical_delivery_bvlos": {
+      "beachhead": "Medical Delivery / BVLOS Logistics Corridor — CURN Baltimore",
+      "status": "WATCH — Activates when Part 108 passes. Build relationships now.",
+      "part108_trigger": "FAA docket FAA-2022-1258. Final rule publication = immediate BH6 activation. Fleet 2 deploys, CURN corridor activates, Dr. Amukele conversation becomes procurement.",
+      "sources": [
+        { "name": "FAA BVLOS Rulemaking Docket FAA-2022-1258", "url": "https://www.regulations.gov/docket/FAA-2022-1258", "type": "regulatory_signal", "frequency": "daily", "rationale": "BEACHHEAD UNLOCK TRIGGER — monitor daily", "status": "active_monitor" },
+        { "name": "UMMS Supply Chain Sparrows Point", "url": "https://www.umms.org/ummc/health-services/supply-chain/suppliers", "type": "health_system_vendor", "frequency": "weekly", "status": "active", "contact": "Pat Vizzard, VP Supply Chain" },
+        { "name": "Johns Hopkins Health System Procurement", "url": "https://procurement.jhu.edu/suppliers", "type": "health_system_vendor", "frequency": "weekly", "status": "active", "contact": "Dr. Timothy Kien Amukele, tamukele@jhmi.edu" },
+        { "name": "HRSA Rural Health Program", "url": "https://www.hrsa.gov/grants", "type": "federal_grant", "frequency": "monthly", "rationale": "Rural drone lab specimen transport Part 107 eligible now", "status": "active" },
+        { "name": "NIH STRIDES Program", "url": "https://cloud.nih.gov/strides", "type": "federal_program", "frequency": "monthly", "status": "watch_bvlos_trigger" },
+        { "name": "CMS Innovation Center", "url": "https://innovation.cms.gov/innovation-models", "type": "federal_program", "frequency": "monthly", "status": "watch_bvlos_trigger" },
+        { "name": "USPS Drone Delivery Pilots", "url": "https://about.usps.com/who/corporate/innovation", "type": "federal_partner", "frequency": "monthly", "status": "watch_bvlos_trigger" },
+        { "name": "Brave Search — Medical Drone Delivery BVLOS", "type": "open_web", "api": "BRAVE_SEARCH_API_KEY", "query_template": "medical drone delivery BVLOS hospital laboratory Maryland {year}", "frequency": "weekly", "status": "active" }
+      ]
+    },
+
+    "BH7_entertainment_events_shows": {
+      "beachhead": "Drone Entertainment / Shows / Events",
+      "status": "WATCH — Month 6 Fleet 3 required. FIFA 2026 anchor.",
+      "sources": [
+        { "name": "FIFA World Cup 2026 Baltimore Host Committee", "url": "https://www.baltimoremd.gov/2026worldcup", "type": "event_procurement", "frequency": "daily", "rationale": "$625M host city security + entertainment", "status": "active" },
+        { "name": "Maryland Stadium Authority Events", "url": "https://www.mdstad.com/procurement", "type": "venue_procurement", "frequency": "monthly", "status": "watch" },
+        { "name": "CFG Bank Arena Events", "url": "https://www.cfgbankarena.com", "type": "venue_procurement", "frequency": "monthly", "status": "watch" },
+        { "name": "ILEA Intl Live Events Assoc", "url": "https://www.ileahub.com/vendors", "type": "industry_association", "frequency": "monthly", "status": "watch" },
+        { "name": "Brave Search — Drone Show Events Mid-Atlantic", "type": "open_web", "api": "BRAVE_SEARCH_API_KEY", "query_template": "drone light show event entertainment Maryland Virginia DC 2026 permit RFP", "frequency": "weekly", "status": "active" }
+      ]
+    }
+  },
+
+  "global_signal_sources": {
+    "description": "Cross-beachhead intelligence. Nova monitors these for triggers that open or expand any beachhead.",
+    "sources": [
+      { "name": "FAA Regulatory Docket All", "url": "https://www.regulations.gov/agency/FAA", "type": "regulatory_signal", "frequency": "daily", "status": "active" },
+      { "name": "FedScoop StateScoop", "url": "https://fedscoop.com", "type": "news_signal", "frequency": "daily", "status": "active" },
+      { "name": "sUAS News", "url": "https://www.suasnews.com", "type": "industry_news", "frequency": "daily", "status": "active" },
+      { "name": "AUVSI News", "url": "https://www.auvsi.org/news", "type": "industry_news", "frequency": "daily", "status": "active" },
+      { "name": "Baltimore Business Journal", "url": "https://www.bizjournals.com/baltimore", "type": "local_business_news", "frequency": "daily", "status": "active" },
+      { "name": "Washington Business Journal", "url": "https://www.bizjournals.com/washington", "type": "local_business_news", "frequency": "daily", "status": "active" },
+      { "name": "Maryland Matters", "url": "https://www.marylandmatters.org", "type": "state_policy_news", "frequency": "daily", "status": "active" },
+      { "name": "USASpending.gov Drone Contract Awards", "url": "https://www.usaspending.gov", "type": "federal_awards_intelligence", "frequency": "weekly", "rationale": "Reverse-engineer who is already buying drone services and from whom", "status": "active" },
+      { "name": "Congress.gov Appropriations Watch", "url": "https://www.congress.gov/appropriations", "type": "legislative_signal", "frequency": "weekly", "status": "active" },
+      { "name": "Grants.gov All Agencies", "url": "https://www.grants.gov", "type": "federal_grants", "frequency": "daily", "status": "active" },
+      { "name": "SAM.gov All Solicitations", "url": "https://sam.gov", "type": "federal_procurement", "frequency": "daily", "status": "active" },
+      { "name": "Perplexity Sonar Weekly Brief", "type": "ai_research", "query_template": "drone UAS autonomous services Maryland DMV federal opportunities contracts grants {week} {year}", "frequency": "weekly", "status": "active_free_tier" },
+      { "name": "Brave Search Weekly Sweep", "type": "open_web", "api": "BRAVE_SEARCH_API_KEY", "query_template": "drone UAS contract RFP grant opportunity Maryland Virginia DC {week} {year}", "frequency": "3x_weekly", "status": "active" }
+    ]
+  },
+
+  "pending_api_keys": [
+    { "service": "Perplexity Sonar", "url": "https://www.perplexity.ai/api", "priority": "HIGH — research synthesis layer", "cost": "Free tier available" }
+  ],
+
+  "nova_reasoning_log": [
+    {
+      "date": "2026-05-03",
+      "session": "Beachhead architecture and source registry build",
+      "reasoning": "Full 7-beachhead source registry built from first principles. Safer Skies Act underserved — whitelist/redlist fleet advantage added as explicit sales positioning. Crowd control and event security added as capabilities. Part 108 BVLOS identified as single unlock event for BH6 — FAA docket added as daily monitored signal. 3PL expansion framed as Phase 2 of BH2. USASpending.gov added to reverse-engineer buyer map.",
+      "sources_added": 75,
+      "beachheads_covered": 7,
+      "key_insight": "KAI-Netics is not a compliance consultant. It is a full-stack autonomous services platform."
+    },
+    {
+      "date": "2026-05-03",
+      "session": "Brave Search API key added",
+      "reasoning": "BRAVE_SEARCH_API_KEY configured in .env. All active_pending_api_key sources promoted to active. Open web tier fully live across all 7 beachheads and global signals. Perplexity Sonar remains pending.",
+      "sources_activated": 12,
+      "api_keys_added": ["BRAVE_SEARCH_API_KEY"]
+    }
+  ]
+}

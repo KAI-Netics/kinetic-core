@@ -1,0 +1,199 @@
+{
+  "name": "Jordan - Grant Reader v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jordan-grant-reader",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "jgr-001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "kai-jordan-grant-reader"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 0 9 * * 1-5" }]
+        }
+      },
+      "id": "jgr-002",
+      "name": "Daily 9AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── JORDAN GRANT READER v1 — Node 1: Scan Grant_Inbox ──\nconst fs   = require('fs');\nconst path = require('path');\n\nconst INBOX      = '/data/Data/Grant_Inbox';\nconst PROCESSED  = '/data/Data/Grant_Inbox/.processed';\nconst raw        = $input.first().json;\nconst body       = raw.body || raw;\n\nlet processedFiles = [];\ntry {\n  const logRaw = fs.readFileSync(PROCESSED, 'utf8');\n  processedFiles = logRaw.split('\\n').filter(Boolean);\n} catch(e) {}\n\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8')); } catch(e) {}\nconst entities  = ctx.entities  || {};\nconst founder   = ctx.founder   || {};\nconst deadlines = (ctx.deadlines || []).filter(d => {\n  const st = (d.status || '').toUpperCase();\n  return st !== 'FILED' && st !== 'COMPLETE' && st !== 'EXEMPT';\n});\n\nconst eafProfile = [\n  'ORGANIZATION: ' + ((entities.EAF || {}).name || 'KAI-Netics Equity & Autonomy Foundry'),\n  'EIN: ' + ((entities.EAF || {}).ein || '41-4820296'),\n  'TYPE: Maryland Nonstock Corp 501c3 pending',\n  'PROGRAMS: CAKO 12-16 week drone operator certification | MONK tech access | Talent Pipeline Agreement',\n  'FOUNDER: ' + (founder.name || 'Kevin Alexander Smith') + ' | ' + (founder.credentials || []).join(', '),\n  'SERVICE AREA: Maryland, DC Metro, Northern Virginia',\n  'ACTIVE DEADLINES: ' + deadlines.slice(0,5).map(d => d.item + ' → ' + d.date).join(' | ')\n].join('\\n');\n\nconst fpProfile = [\n  'COMPANY: Kevin Alexander International LLC dba KAI-Netics',\n  'EIN: 46-2432851 | Maryland LLC For-Profit',\n  'CAPABILITIES: FAA Part 107 drone ops | Infrastructure inspection | CISSP cybersecurity consulting | Warehouse autonomous scanning | DFR/public safety',\n  'NAICS: 488190, 541519, 541690',\n  'FOUNDER CREDENTIALS: ' + (founder.credentials || []).join(', ')\n].join('\\n');\n\nlet targetFile = null;\nlet targetPath = null;\nlet isManual   = false;\n\nif (body.filePath) {\n  targetPath = body.filePath;\n  targetFile = path.basename(body.filePath);\n  isManual   = true;\n} else {\n  let files = [];\n  try {\n    files = fs.readdirSync(INBOX)\n      .filter(f => !f.startsWith('.') && (f.endsWith('.txt') || f.endsWith('.md') || f.endsWith('.pdf') || f.endsWith('.docx')))\n      .filter(f => !processedFiles.includes(f))\n      .map(f => ({ name: f, mtime: fs.statSync(path.join(INBOX, f)).mtimeMs }))\n      .sort((a, b) => b.mtime - a.mtime);\n  } catch(e) { files = []; }\n\n  if (files.length === 0) {\n    return [{ json: { noFiles: true, message: 'Grant_Inbox is empty or all files already processed.', inbox: INBOX, eafProfile, fpProfile } }];\n  }\n  targetFile = files[0].name;\n  targetPath = path.join(INBOX, targetFile);\n}\n\nlet content = '';\ntry {\n  if (targetPath.endsWith('.pdf')) {\n    content = '[PDF_CONVERSION_NEEDED: ' + targetFile + ' — convert to .txt and re-drop into Grant_Inbox]';\n  } else {\n    content = fs.readFileSync(targetPath, 'utf8');\n  }\n} catch(e) {\n  content = 'Could not read file: ' + e.message;\n}\n\nreturn [{ json: { noFiles: false, targetFile, targetPath, content, isManual, eafProfile, fpProfile, processedCount: processedFiles.length, inbox: INBOX } }];"
+      },
+      "id": "jgr-003",
+      "name": "Scan Grant Inbox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "id": "has-files",
+              "leftValue": "={{ $json.noFiles }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "jgr-004",
+      "name": "Has Files?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {},
+      "id": "jgr-005",
+      "name": "No New Files — Exit",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [660, -100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Node 3: Build Jordan Analysis Prompt ──\nconst input = $input.first().json;\n\nconst systemMessage = `You are Jordan, Grant Writer for KAI-Netics.\nAnalyze the attached grant document and return a structured analysis.\n\nRULES:\n- Be specific — extract exact dollar amounts, exact deadlines, exact eligibility language\n- FIT SCORE is for EAF (nonprofit 501c3 pending) unless document is clearly a commercial contract\n- Flag any 501c3 requirement as BLOCKED (EAF 501c3 pending, ~191 day processing)\n- Flag any SAM.gov/UEI requirement as BLOCKED (submitted Apr 17, confirming)\n- If fit score >= 60%, draft a Letter of Intent\n- Always end with a CALENDAR EVENT block formatted exactly as specified`;\n\nconst userMessage = `GRANT DOCUMENT: ${input.targetFile}\n\n--- DOCUMENT CONTENT ---\n${input.content}\n--- END DOCUMENT ---\n\nEAF PROFILE:\n${input.eafProfile}\n\nFP PROFILE:\n${input.fpProfile}\n\nAnalyze and return in this EXACT format:\n\nFUNDER: [agency/organization name]\nPROGRAM: [program name]\nDEADLINE: [exact date or UNCONFIRMED]\nAWARD RANGE: [dollar range or N/A]\nELIGIBILITY: [1 sentence]\nENTITY FIT: [EAF or FP]\nFIT SCORE: [0-100]%\nFIT RATIONALE: [2-3 sentences]\nSTRATEGIC ALIGNMENT: [1 sentence]\nRELATIONSHIP OVERLAPS: [any existing contacts or NONE]\nBLOCKERS: [list blockers or NONE]\nRECOMMENDED ACTION: [APPLY IMMEDIATELY / APPLY / WATCH / PASS]\nNEXT STEP: [single most important action]\n\nLOI DRAFT:\n[If fit score >= 60%, write a 300-400 word Letter of Intent here. Otherwise write: BELOW THRESHOLD]\n\nCALENDAR EVENT:\nTITLE: Jordan Deadline — [Program Name]\nDATE: [YYYY-MM-DD or SKIP if unconfirmed]\nDESCRIPTION: Grant: [PROGRAM] | Funder: [FUNDER] | Award: [AWARD RANGE] | Fit: [FIT SCORE]% | File: /data/Data/Grant_Inbox/${input.targetFile} | Action: [RECOMMENDED ACTION] | Next Step: [NEXT STEP]\nREMINDER: 14 days before`;\n\nreturn [{ json: { systemMessage, userMessage, targetFile: input.targetFile, targetPath: input.targetPath, eafProfile: input.eafProfile, fpProfile: input.fpProfile, isManual: input.isManual, inbox: input.inbox } }];"
+      },
+      "id": "jgr-006",
+      "name": "Build Analysis Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const https = require('https');\nconst input = $input.first().json;\n\nconst requestBody = JSON.stringify({\n  model:      'claude-sonnet-4-20250514',\n  max_tokens: 4096,\n  system:     input.systemMessage,\n  messages:   [{ role: 'user', content: input.userMessage }]\n});\n\nconst result = await new Promise((resolve, reject) => {\n  const req = https.request({\n    hostname: 'api.anthropic.com', port: 443,\n    path: '/v1/messages', method: 'POST',\n    headers: {\n      'Content-Type': 'application/json',\n      'x-api-key': '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',\n      'anthropic-version': '2023-06-01',\n      'Content-Length': Buffer.byteLength(requestBody)\n    }\n  }, (res) => { let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d })); });\n  req.on('error', reject);\n  req.write(requestBody);\n  req.end();\n});\n\nlet aiOutput = '';\ntry { aiOutput = JSON.parse(result.body).content[0].text || 'No response.'; }\ncatch(e) { aiOutput = result.body.substring(0, 500); }\n\nreturn [{ json: Object.assign({}, input, { aiOutput, apiStatus: result.status }) }];"
+      },
+      "id": "jgr-007",
+      "name": "Call Claude — Jordan Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Node 5: Parse Output + Save Report + Mark Processed ──\nconst fs        = require('fs');\nconst path      = require('path');\nconst input     = $input.first().json;\nconst aiOutput  = input.aiOutput || '';\nconst timestamp = new Date().toISOString();\n\nconst get = (key) => {\n  const m = aiOutput.match(new RegExp(key + '[:\\\\s*\\\\*]+([^\\\\n]+)', 'i'));\n  return m ? m[1].trim().replace(/\\*\\*/g, '') : null;\n};\n\nconst funder       = get('FUNDER');\nconst program      = get('PROGRAM');\nconst deadline     = get('DEADLINE');\nconst awardRange   = get('AWARD RANGE');\nconst entityFit    = get('ENTITY FIT') || 'EAF';\nconst fitScoreRaw  = get('FIT SCORE');\nconst fitScore     = fitScoreRaw ? parseInt(fitScoreRaw) : null;\nconst fitRationale = get('FIT RATIONALE');\nconst alignment    = get('STRATEGIC ALIGNMENT');\nconst overlaps     = get('RELATIONSHIP OVERLAPS');\nconst blockers     = get('BLOCKERS');\nconst recAction    = get('RECOMMENDED ACTION');\nconst nextStep     = get('NEXT STEP');\n\nconst calMatch = aiOutput.match(/CALENDAR EVENT:[\\s\\S]*?(?=\\n\\n\\n|$)/i);\nconst calBlock  = calMatch ? calMatch[0] : null;\nconst calSkip   = !calBlock || calBlock.includes('SKIP');\n\nlet calTitle = null, calDate = null, calDesc = null;\nif (!calSkip && calBlock) {\n  const getC = (key) => { const m = calBlock.match(new RegExp(key + '[:\\\\s]+([^\\\\n]+)', 'i')); return m ? m[1].trim() : null; };\n  calTitle = getC('TITLE');\n  calDate  = getC('DATE');\n  calDesc  = getC('DESCRIPTION');\n}\n\nconst validCalDate = calDate && /^\\d{4}-\\d{2}-\\d{2}$/.test(calDate) && calDate !== 'SKIP' && calDate !== 'UNCONFIRMED';\n\nconst safeTime   = timestamp.replace(/[:.]/g, '-');\nconst safeName   = (input.targetFile || 'grant').replace(/[^a-zA-Z0-9]/g, '_').substring(0, 40);\nconst reportPath = '/data/Aidan_Outputs/Jordan/GrantReader_' + safeTime + '_' + safeName + '.txt';\nfs.mkdirSync('/data/Aidan_Outputs/Jordan', { recursive: true });\n\nconst reportHeader = [\n  'JORDAN GRANT READER v1',\n  'File:      ' + input.targetFile,\n  'Processed: ' + timestamp,\n  'Funder:    ' + (funder    || 'See analysis'),\n  'Program:   ' + (program   || 'See analysis'),\n  'Deadline:  ' + (deadline  || 'UNCONFIRMED'),\n  'Award:     ' + (awardRange|| 'N/A'),\n  'Fit Score: ' + (fitScore  !== null ? fitScore + '%' : 'See analysis'),\n  'Entity:    ' + entityFit,\n  'Action:    ' + (recAction || 'REVIEW'),\n  'Calendar:  ' + (validCalDate ? 'EVENT CREATED — ' + calDate : 'SKIPPED — ' + (calDate || 'no date extracted')),\n  '',\n  '─'.repeat(60),\n  ''\n].join('\\n');\n\nfs.writeFileSync(reportPath, reportHeader + aiOutput, 'utf8');\n\nconst PROCESSED = '/data/Data/Grant_Inbox/.processed';\ntry {\n  const existing = fs.existsSync(PROCESSED) ? fs.readFileSync(PROCESSED, 'utf8') : '';\n  if (!existing.includes(input.targetFile)) {\n    fs.writeFileSync(PROCESSED, existing + input.targetFile + '\\n', 'utf8');\n  }\n} catch(e) {}\n\nreturn [{ json: Object.assign({}, input, {\n  funder, program, deadline, awardRange, entityFit,\n  fitScore, fitRationale, alignment, overlaps, blockers,\n  recAction, nextStep, reportPath,\n  calTitle, calDate: validCalDate ? calDate : null,\n  calDesc, calSkip: !validCalDate, timestamp\n}) }];"
+      },
+      "id": "jgr-008",
+      "name": "Parse + Save + Mark Processed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 80]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "id": "has-cal-date",
+              "leftValue": "={{ $json.calSkip }}",
+              "rightValue": false,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "jgr-009",
+      "name": "Valid Deadline Date?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1320, 80]
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "list",
+          "cachedResultName": "Primary Calendar (kas42869@gmail.com)"
+        },
+        "start": "={{ $json.calDate }}T09:00:00",
+        "end":   "={{ $json.calDate }}T09:30:00",
+        "additionalFields": {
+          "summary":     "={{ $json.calTitle || 'Jordan Grant Deadline — ' + $json.program }}",
+          "description": "={{ $json.calDesc || 'Grant: ' + $json.program + ' | Funder: ' + $json.funder + ' | Fit: ' + $json.fitScore + '% | File: /data/Data/Grant_Inbox/' + $json.targetFile }}",
+          "reminders": {
+            "useDefault": false,
+            "overrides": [
+              { "method": "email",  "minutes": 20160 },
+              { "method": "popup",  "minutes": 10080 }
+            ]
+          }
+        }
+      },
+      "id": "jgr-010",
+      "name": "Create Calendar Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [1540, 0],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "HHX4i0JSgZJIGyWm",
+          "name": "Google Calendar (KAI-Netics)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Node 7: WhatsApp Delivery + Aidan Callback ──\nconst http  = require('http');\nconst input = $input.first().json;\n\nconst fitColor  = input.fitScore >= 80 ? '🟢' : input.fitScore >= 60 ? '🟡' : input.fitScore ? '🔴' : '⚪';\nconst calStatus = input.calSkip ? '📅 No deadline extracted' : '📅 Calendar event created — ' + input.calDate;\nconst blocker   = input.blockers && input.blockers.toUpperCase() !== 'NONE' ? '⚠ BLOCKERS: ' + input.blockers : '';\n\nconst msgLines = [\n  'JORDAN GRANT READER v1',\n  '─────────────────────────',\n  '📄 ' + input.targetFile,\n  '',\n  'Funder:   ' + (input.funder   || 'See report'),\n  'Program:  ' + (input.program  || 'See report'),\n  'Deadline: ' + (input.deadline || 'UNCONFIRMED'),\n  'Award:    ' + (input.awardRange || 'N/A'),\n  'Entity:   ' + (input.entityFit || 'EAF'),\n  '',\n  fitColor + ' Fit: ' + (input.fitScore !== null ? input.fitScore + '%' : 'See report'),\n  blocker,\n  '→ ' + (input.recAction || 'REVIEW'),\n  '→ Next: ' + (input.nextStep || 'See report'),\n  '',\n  calStatus,\n  'Report: ' + input.reportPath\n].filter(l => l !== null && l !== '').join('\\n');\n\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: msgLines } });\ntry {\n  await new Promise((resolve) => {\n    const req = http.request({\n      hostname: 'host.docker.internal', port: 8081,\n      path: '/message/sendText/Aidan', method: 'POST',\n      headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) }\n    }, (res) => { res.on('data', () => {}); res.on('end', resolve); });\n    req.on('error', resolve);\n    req.write(msgBody);\n    req.end();\n  });\n} catch(e) {}\n\nconst cbBody = JSON.stringify({ agent: 'Jordan-GrantReader', summary: 'Grant Reader processed: ' + input.targetFile + ' | Fit: ' + (input.fitScore || '?') + '% | Action: ' + (input.recAction || 'REVIEW'), fitScore: input.fitScore, action: input.recAction, calCreated: !input.calSkip, calDate: input.calDate || null, timestamp: input.timestamp });\ntry {\n  const cbReq = http.request({ hostname: 'host.docker.internal', port: 5678, path: '/webhook/aidan-callback', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(cbBody) } }, (res) => { res.on('data', () => {}); res.on('end', () => {}); });\n  cbReq.on('error', () => {});\n  cbReq.write(cbBody);\n  cbReq.end();\n} catch(e) {}\n\nreturn [{ json: { success: true, agent: 'Jordan-GrantReader', version: 'v1', file: input.targetFile, fitScore: input.fitScore, action: input.recAction, calCreated: !input.calSkip, reportPath: input.reportPath } }];"
+      },
+      "id": "jgr-011",
+      "name": "WhatsApp + Aidan Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 80]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger":               { "main": [[{ "node": "Scan Grant Inbox",             "type": "main", "index": 0 }]] },
+    "Daily 9AM Trigger":             { "main": [[{ "node": "Scan Grant Inbox",             "type": "main", "index": 0 }]] },
+    "Scan Grant Inbox":              { "main": [[{ "node": "Has Files?",                   "type": "main", "index": 0 }]] },
+    "Has Files?": {
+      "main": [
+        [{ "node": "No New Files — Exit",        "type": "main", "index": 0 }],
+        [{ "node": "Build Analysis Prompt",       "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Analysis Prompt":         { "main": [[{ "node": "Call Claude — Jordan Analysis","type": "main", "index": 0 }]] },
+    "Call Claude — Jordan Analysis": { "main": [[{ "node": "Parse + Save + Mark Processed","type": "main", "index": 0 }]] },
+    "Parse + Save + Mark Processed": { "main": [[{ "node": "Valid Deadline Date?",         "type": "main", "index": 0 }]] },
+    "Valid Deadline Date?": {
+      "main": [
+        [{ "node": "Create Calendar Event",      "type": "main", "index": 0 }],
+        [{ "node": "WhatsApp + Aidan Callback",  "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Calendar Event":         { "main": [[{ "node": "WhatsApp + Aidan Callback",   "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "availableInMCP": true
+  },
+  "tags": [
+    { "name": "KAI-Netics" },
+    { "name": "Jordan" },
+    { "name": "Grant Reader" },
+    { "name": "EAF" }
+  ]
+}

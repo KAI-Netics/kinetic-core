@@ -1,0 +1,49 @@
+{
+    "name": "Scribe - ECL Directive Sync",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "ecl-directive",
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2.1,
+            "position": [0, 0],
+            "id": "ecl-webhook-001",
+            "name": "ECL Webhook",
+            "webhookId": "ecl-directive-sync-v1"
+        },
+        {
+            "parameters": {
+                "jsCode": "const input = $input.first().json;\nconst body = input.body || input;\nconst type = body.type || 'directive';\nconst AGENT_WORKFLOW_MAP = {\n  'aidan': 'lRTWOdnwTl9S4uDz', 'scout': 'E42nCnCDMNyqXBUa',\n  'jordan': 'GDEkrPv1ShL9biXJ', 'iris': 'VSMBeuQeSBUiETNf',\n  'atlas': 'uWar6a3rBK9yUZHt', 'nova': 'SVzmB2AzqiyGtsJF', 'sage': 'Un0wx8dCSVcgvOv5'\n};\nconst N8N_API_KEY = process.env.N8N_API_KEY;\nconst SUPABASE_URL = process.env.SUPABASE_URL;\nconst SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;\nconst fs = require('fs');\nconst http = require('http');\nconst https = require('https');\nconst n8nGet = (path) => new Promise((resolve, reject) => {\n  const opts = { hostname: 'host.docker.internal', port: 5678, path: '/api/v1/' + path, method: 'GET', headers: { 'X-N8N-API-KEY': N8N_API_KEY } };\n  let b = ''; const req = http.request(opts, res => { res.on('data', c => b += c); res.on('end', () => resolve(JSON.parse(b || '{}'))); }); req.on('error', reject); req.end();\n});\nconst n8nPut = (path, payload) => new Promise((resolve, reject) => {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: 'host.docker.internal', port: 5678, path: '/api/v1/' + path, method: 'PUT', headers: { 'X-N8N-API-KEY': N8N_API_KEY, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bodyStr) } };\n  let resp = ''; const req = http.request(opts, res => { res.on('data', c => resp += c); res.on('end', () => resolve({ status: res.statusCode })); }); req.on('error', reject); req.write(bodyStr); req.end();\n});\nconst supabasePost = (table, payload) => new Promise((resolve, reject) => {\n  const bodyStr = JSON.stringify(payload);\n  const url = new URL(SUPABASE_URL + '/rest/v1/' + table);\n  const opts = { hostname: url.hostname, path: url.pathname, method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal', 'Content-Length': Buffer.byteLength(bodyStr) } };\n  const req = https.request(opts, res => { let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode })); }); req.on('error', reject); req.write(bodyStr); req.end();\n});\nconst results = [];\nif (type === 'directive' || type === 'directives') {\n  const directives = body.directives || {};\n  if (body.agent && body.directive) directives[body.agent] = body.directive;\n  for (const [agentName, directiveText] of Object.entries(directives)) {\n    const workflowId = AGENT_WORKFLOW_MAP[agentName.toLowerCase()];\n    if (!workflowId || !directiveText) { results.push({ agent: agentName, status: 'skipped' }); continue; }\n    try {\n      const wf = await n8nGet('workflows/' + workflowId);\n      if (!wf.nodes) { results.push({ agent: agentName, status: 'workflow not found' }); continue; }\n      const targetNode = wf.nodes.find(n => n.type && (n.type.includes('Anthropic') || n.type.includes('anthropic') || n.type.includes('lmChat'))) ||\n        wf.nodes.find(n => n.type === 'n8n-nodes-base.code' && (n.name.toLowerCase().includes('brain') || n.name.toLowerCase().includes('claude') || n.name.toLowerCase().includes('call')));\n      if (!targetNode) { results.push({ agent: agentName, status: 'no Claude node found' }); continue; }\n      if (targetNode.parameters?.options?.systemMessage !== undefined) {\n        targetNode.parameters.options.systemMessage = directiveText;\n      } else if (targetNode.parameters?.systemPromptTemplate !== undefined) {\n        targetNode.parameters.systemPromptTemplate = directiveText;\n      } else if (targetNode.parameters?.jsCode !== undefined) {\n        const existing = targetNode.parameters.jsCode;\n        const marker = '// [ECL-DIRECTIVE]';\n        const markerEnd = '// [/ECL-DIRECTIVE]';\n        const block = marker + '\\n// ' + directiveText.replace(/\\n/g,'\\n// ') + '\\n' + markerEnd + '\\n';\n        targetNode.parameters.jsCode = existing.includes(marker) ? existing.replace(new RegExp(marker + '[\\\\s\\\\S]*?' + markerEnd + '\\\\n'), block) : block + existing;\n      }\n      const pr = await n8nPut('workflows/' + workflowId, { name: wf.name, nodes: wf.nodes, connections: wf.connections, settings: wf.settings, staticData: wf.staticData });\n      results.push({ agent: agentName, workflowId, nodeUpdated: targetNode.name, status: pr.status === 200 ? 'updated' : 'http_' + pr.status });\n    } catch(e) { results.push({ agent: agentName, status: 'error: ' + e.message }); }\n  }\n}\nif (type === 'deadlines') {\n  try {\n    const ctxPath = '/data/KAI_Context.json';\n    const ctx = JSON.parse(fs.readFileSync(ctxPath, 'utf8'));\n    const deadlines = body.deadlines || [];\n    deadlines.forEach(dl => {\n      const existing = ctx.deadlines?.find(d => d.item?.toLowerCase().includes((dl.id || dl.name || '').toLowerCase().substring(0,10)));\n      if (existing) { if (dl.status) existing.status = dl.status; if (dl.date) existing.date = dl.date; if (dl.notes) existing.notes = dl.notes; }\n    });\n    ctx.meta.updated = new Date().toISOString().split('T')[0];\n    fs.writeFileSync(ctxPath, JSON.stringify(ctx, null, 2));\n    results.push({ type: 'deadlines', status: 'patched', count: deadlines.length });\n  } catch(e) { results.push({ type: 'deadlines', status: 'error: ' + e.message }); }\n}\nif (type === 'context') {\n  try {\n    const ctxPath = '/data/KAI_Context.json';\n    const ctx = JSON.parse(fs.readFileSync(ctxPath, 'utf8'));\n    const merge = (t, s) => { for (const k of Object.keys(s)) { if (typeof s[k]==='object'&&!Array.isArray(s[k])&&t[k]) merge(t[k],s[k]); else t[k]=s[k]; } };\n    merge(ctx, body.patch || {});\n    ctx.meta.updated = new Date().toISOString().split('T')[0];\n    fs.writeFileSync(ctxPath, JSON.stringify(ctx, null, 2));\n    await supabasePost('agent_executions', { agent: 'Scribe', trigger_type: 'ecl_portal', status: 'success', notes: 'KAI_Context.json patched via ECL portal' });\n    results.push({ type: 'context', status: 'patched' });\n  } catch(e) { results.push({ type: 'context', status: 'error: ' + e.message }); }\n}\nif (type === 'bd') {\n  let written = 0;\n  for (const entry of (body.entries || [])) {\n    try { await supabasePost('bd_pipeline', { organization: entry.org, opportunity: entry.opp, vertical: entry.vert, fit_score: parseInt(entry.fit)||null, stage: entry.stage, notes: entry.notes, source: 'ecl_portal' }); written++; } catch(e) {}\n  }\n  results.push({ type: 'bd', status: 'written', count: written });\n}\nreturn [{ json: { success: true, results, timestamp: new Date().toISOString() } }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [224, 0],
+            "id": "ecl-processor-001",
+            "name": "ECL Processor"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ JSON.stringify($json) }}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.5,
+            "position": [448, 0],
+            "id": "ecl-respond-001",
+            "name": "Respond"
+        }
+    ],
+    "connections": {
+        "ECL Webhook": { "main": [[{ "node": "ECL Processor", "type": "main", "index": 0 }]] },
+        "ECL Processor": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" },
+    "staticData": null,
+    "meta": null,
+    "pinData": {}
+}

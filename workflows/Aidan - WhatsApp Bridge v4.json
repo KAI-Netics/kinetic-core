@@ -1,0 +1,112 @@
+{
+  "name": "Aidan - WhatsApp Bridge v4",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-inbound",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "wa-v4-webhook",
+      "name": "Webhook Trigger",
+      "webhookId": "f86fc97a-7826-4982-b3b9-69227ce28999"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst event = raw.event || raw.body?.event || 'no-event';\nconst data = raw.data || raw.body?.data || {};\nconst msgText = data.message?.conversation || data.message?.extendedTextMessage?.text || '';\nconst t = msgText.toLowerCase().trim();\nconst original = msgText.trim();\nif (event !== 'messages.upsert') return [{ json: { reply: 'skip', phoneNumber: '14432576836@s.whatsapp.net', skip: true } }];\nif (t.includes('bot reply:')) return [{ json: { reply: 'skip', phoneNumber: '14432576836@s.whatsapp.net', skip: true } }];\nconst from = data.key?.remoteJid || data.remoteJid || '14432576836@s.whatsapp.net';\nconst feedbackPatterns = [/^(y|yes|good|correct|accurate|useful|approved)\\b/i, /^(n|no|wrong|incorrect|bad|useless|skip|ignore|reject)\\b/i, /^feedback[:\\s]/i];\nconst isFeedback = feedbackPatterns.some(p => p.test(t));\nif (isFeedback) {\n  const SUPABASE_URL = $env.SUPABASE_URL;\n  const SUPABASE_KEY = $env.SUPABASE_SERVICE_KEY;\n  let decision = 'noted';\n  if (/^(y|yes|good|correct|accurate|useful|approved)\\b/i.test(t)) decision = 'approved';\n  if (/^(n|no|wrong|incorrect|bad|useless|skip|ignore|reject)\\b/i.test(t)) decision = 'rejected';\n  const noteMatch = original.match(/^\\S+\\s+(.*)$/s);\n  const note = noteMatch ? noteMatch[1].trim() : '';\n  const https = require('https');\n  const supabaseGet = (query) => new Promise((resolve, reject) => {\n    const url = new URL(SUPABASE_URL + '/rest/v1/' + query);\n    const opts = { hostname: url.hostname, path: url.pathname + url.search, method: 'GET', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } };\n    let b = ''; const req = https.request(opts, res => { res.on('data', c => b += c); res.on('end', () => resolve(JSON.parse(b || '[]'))); }); req.on('error', reject); req.end();\n  });\n  const supabasePost = (table, payload) => new Promise((resolve, reject) => {\n    const bodyStr = JSON.stringify(payload);\n    const url = new URL(SUPABASE_URL + '/rest/v1/' + table);\n    const opts = { hostname: url.hostname, path: url.pathname, method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal', 'Content-Length': Buffer.byteLength(bodyStr) } };\n    const req = https.request(opts, res => { let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode })); }); req.on('error', reject); req.write(bodyStr); req.end();\n  });\n  let lastAgent = 'unknown'; let lastExecId = null;\n  try { const execs = await supabaseGet('agent_executions?select=id,agent&order=created_at.desc&limit=1'); if (execs[0]) { lastAgent = execs[0].agent; lastExecId = execs[0].id; } } catch(e) {}\n  let writeStatus = 'unknown';\n  try { const r = await supabasePost('agent_feedback', { agent: lastAgent, action_type: 'whatsapp_feedback', reference_id: lastExecId, reference_table: 'agent_executions', kevin_decision: decision, notes: note || null, content_type: 'execution_output' }); writeStatus = r.status === 201 ? 'saved' : 'error_' + r.status; } catch(e) { writeStatus = 'error: ' + e.message; }\n  return [{ json: { reply: 'Bot reply: \\u2713 Feedback recorded\\nAgent: ' + lastAgent + '\\nDecision: ' + decision + (note ? '\\nNote: ' + note : '') + '\\nStatus: ' + writeStatus, phoneNumber: from, skip: false } }];\n}\nconst agents = ['aidan','jordan','scout','iris','atlas','nova','sage','pulse','orchestra'];\nif (!t || !agents.some(a => t.startsWith(a))) return [{ json: { reply: 'skip', phoneNumber: '14432576836@s.whatsapp.net', skip: true } }];\nlet reply = '';\nconst http = require('http');\nconst fireWebhook = async (path, payload) => {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: 'host.docker.internal', port: 5678, path, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bodyStr) } };\n  await new Promise(r => { const req = http.request(opts, res => { res.on('data',()=>{}); res.on('end',r); }); req.on('error',r); req.write(bodyStr); req.end(); });\n};\nif (t.startsWith('orchestra')) {\n  const query = t.replace(/^orchestra[,\\s]*/i,'').trim() || 'Full platform status';\n  await fireWebhook('/webhook/aidan-orchestra', { query, from });\n  reply = 'Bot reply: \\uD83C\\uDFBC ORCHESTRA INITIATED\\nFiring: Atlas + Scout + Jordan + Iris\\nQuery: ' + query.substring(0,80) + '\\n\\nConsolidated brief incoming ~90 seconds.';\n} else if (t.startsWith('aidan')) {\n  const cmd = t.replace(/^aidan[,\\s]*/i,'').trim();\n  if (cmd === 'help' || cmd === '?') {\n    reply = 'Bot reply: AIDAN v4 Commands\\n\\nAgents:\\n- Atlas [query]\\n- Scout [target]\\n- Jordan grant\\n- Iris deadlines\\n- Orchestra [query]\\n\\nFeedback (reply after any output):\\n- Y [note] — mark useful\\n- N [note] — mark wrong\\n\\nBriefings:\\n- Aidan brief | Aidan status';\n  } else if (cmd.includes('brief') || cmd.includes('status') || cmd.includes('morning')) {\n    reply = 'Bot reply: ' + new Date().toLocaleString('en-US',{timeZone:'America/New_York'}) + ' EST\\nAidan v4 online. Feedback: ACTIVE \\u2705\\nOrchestra ready.';\n  } else { reply = 'Bot reply: Aidan received: ' + cmd + '\\nSay Aidan help for full command menu.'; }\n} else if (t.startsWith('jordan')) {\n  const cmd = t.replace(/^jordan[,\\s]*/i,'').trim();\n  if (cmd.includes('grant detail') || cmd.includes('grant report')) {\n    const fs = require('fs');\n    try {\n      const files = fs.readdirSync('/data/Aidan_Outputs/Jordan/').filter(f=>f.startsWith('Grant_Report')).sort().reverse();\n      if (files.length > 0) { const rpt = fs.readFileSync('/data/Aidan_Outputs/Jordan/' + files[0], 'utf8'); reply = 'Bot reply: ' + rpt.substring(0,3500); }\n      else reply = 'Bot reply: No grant reports found.';\n    } catch(e) { reply = 'Bot reply: Error: ' + e.message; }\n  } else { await fireWebhook('/webhook/grant-writer', { trigger: 'whatsapp', from }); reply = 'Bot reply: Jordan running. Report ready ~45 seconds.'; }\n} else if (t.startsWith('scout')) {\n  const cmd = t.replace(/^scout[,\\s]*/i,'').trim() || 'Maryland drone infrastructure inspection contracts 2026';\n  await fireWebhook('/webhook/scout-research', { query: cmd });\n  reply = 'Bot reply: Scout running: ' + cmd.substring(0,60) + '\\nReport ready ~60 seconds.';\n} else if (t.startsWith('iris')) {\n  await fireWebhook('/webhook/iris-monitor', { trigger: 'whatsapp', from });\n  reply = 'Bot reply: Iris running... ~15 seconds.';\n} else if (t.startsWith('atlas')) {\n  const cmd = t.replace(/^atlas[,\\s]*/i,'').trim();\n  const validCmds = ['sbir','meia','monk','bvlos','kott prep','status','v1','v2','v3','v4','v5','v6','v7'];\n  const matched = validCmds.find(c => cmd.toLowerCase().startsWith(c));\n  const atlasCmd = 'Atlas ' + (matched ? matched.toUpperCase() : cmd || 'status');\n  await fireWebhook('/webhook/atlas-architect', { command: atlasCmd, detail: cmd });\n  reply = 'Bot reply: Atlas running: ' + atlasCmd + '\\nReport ready ~45 seconds.';\n} else {\n  const name = t.split(/\\s/)[0];\n  reply = 'Bot reply: ' + name.charAt(0).toUpperCase()+name.slice(1) + ' — say Orchestra to fire all, or Aidan help for menu.';\n}\nreturn [{ json: { reply, phoneNumber: from, skip: false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "wa-v4-router",
+      "name": "Intent Router v4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nif (input.skip || !input.reply || input.reply === 'skip') return [{ json: { success: true, skipped: true } }];\nconst number = (input.phoneNumber || '14432576836@s.whatsapp.net').includes('@lid') ? '14432576836@s.whatsapp.net' : (input.phoneNumber || '14432576836@s.whatsapp.net');\nconst body = JSON.stringify({ number, textMessage: { text: input.reply } });\nconst opts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(body) } };\nconst result = await new Promise((resolve, reject) => {\n  const http = require('http');\n  const req = http.request(opts, res => { let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode })); });\n  req.on('error', reject); req.write(body); req.end();\n});\nreturn [{ json: { success: true, result } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "wa-v4-sender",
+      "name": "WhatsApp Sender"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "wa-v4-respond",
+      "name": "Respond"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Intent Router v4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Router v4": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Sender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Sender": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "a6015d9a-f358-4ae2-a265-06890313b03c",
+  "meta": {
+    "instanceId": "7912e0e7adcd7343a625bb37c874985a5d34dd3aa3c039277d1df96852bff0ff"
+  },
+  "id": "xaudETlzVkcZPvCQ",
+  "tags": []
+}

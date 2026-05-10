@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAI-Netics Core MVP</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0c0f; --surface:#111318; --surface2:#181c23; --border:#1e2530;
+    --accent:#00e5ff; --accent2:#ff6b35; --warn:#ffd60a; --danger:#ff3b3b;
+    --success:#00c896; --muted:#4a5568; --text:#e2e8f0; --text2:#8899aa;
+    --eaf:#7c6af7; --fp:#00c896; --monk:#ff9f43;
+    --ecl-gold:#e8c547; --ecl-dim:rgba(232,197,71,.08);
+    --nova:#00e5ff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .view-bar{position:sticky;top:0;z-index:200;display:flex;align-items:center;background:rgba(10,12,15,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:0 24px;gap:0;}
+  .view-brand{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;padding:12px 0;margin-right:20px;white-space:nowrap;opacity:.7;}
+  .view-tab{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:14px 16px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;background:none;border-left:none;border-right:none;border-top:none;}
+  .view-tab:hover{color:var(--text);}
+  .view-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .view-tab.ecl-tab-top.active{color:var(--ecl-gold);border-bottom-color:var(--ecl-gold);}
+  .view-tab.ops-tab-top.active{color:var(--nova);border-bottom-color:var(--nova);}
+  .view-pane{display:none;}
+  .view-pane.active{display:block;}
+  .container{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:0 24px 60px;}
+  .header{padding:28px 0 20px;border-bottom:1px solid var(--border);margin-bottom:28px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .logo{font-size:10px;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:4px;opacity:.8;}
+  .header h1{font-size:28px;font-weight:800;letter-spacing:-1px;color:#fff;}
+  .header h1 span{color:var(--accent);}
+  .header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);color:var(--success);font-family:'Space Mono',monospace;font-size:9px;padding:4px 10px;border-radius:3px;letter-spacing:1px;}
+  .live-dot{width:6px;height:6px;background:var(--success);border-radius:50%;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .server-status{display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;padding:4px 10px;border-radius:3px;border:1px solid var(--border);cursor:default;transition:all .2s;}
+  .server-status.ok{border-color:rgba(0,200,150,.3);color:var(--success);background:rgba(0,200,150,.08);}
+  .server-status.err{border-color:rgba(255,59,59,.3);color:var(--danger);background:rgba(255,59,59,.08);}
+  .timestamp{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);}
+  .entity-bar{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+  .entity-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;flex:1;min-width:180px;}
+  .entity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .entity-pill .ename{font-weight:700;font-size:12px;}
+  .entity-pill .ehandle{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);}
+  .entity-pill .estatus{margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:2px;font-weight:700;letter-spacing:1px;}
+  .s-op{background:rgba(0,200,150,.15);color:var(--success);}
+  .s-ip{background:rgba(255,159,67,.15);color:var(--monk);}
+  .sl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .sl::after{content:'';flex:1;height:1px;background:var(--border);}
+  .dl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:32px;}
+  .dl-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;position:relative;overflow:hidden;}
+  .dl-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+  .dlc::before{background:var(--danger);}
+  .dlw::before{background:var(--warn);}
+  .dlu::before{background:var(--muted);}
+  .dl-badge{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;padding:2px 6px;border-radius:2px;margin-bottom:6px;display:inline-block;letter-spacing:1px;}
+  .dlc .dl-badge{background:rgba(255,59,59,.15);color:var(--danger);}
+  .dlw .dl-badge{background:rgba(255,214,10,.15);color:var(--warn);}
+  .dlu .dl-badge{background:rgba(74,85,104,.3);color:var(--text2);}
+  .dl-title{font-size:12px;font-weight:700;margin-bottom:3px;line-height:1.3;}
+  .dl-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);margin-bottom:5px;}
+  .dl-tags{display:flex;gap:5px;flex-wrap:wrap;}
+  .tag{font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:2px;font-weight:700;}
+  .t-eaf{background:rgba(124,106,247,.15);color:var(--eaf);}
+  .t-fp{background:rgba(0,200,150,.12);color:var(--fp);}
+  .t-monk{background:rgba(255,159,67,.15);color:var(--monk);}
+  .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:32px;}
+  @media(max-width:900px){.main-grid{grid-template-columns:1fr;}}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .panel-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface2);}
+  .ai{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-family:'Space Mono',monospace;flex-shrink:0;}
+  .ai-s{background:rgba(0,229,255,.12);color:var(--accent);border:1px solid rgba(0,229,255,.2);}
+  .ai-j{background:rgba(124,106,247,.12);color:var(--eaf);border:1px solid rgba(124,106,247,.2);}
+  .ai-i{background:rgba(255,59,59,.1);color:var(--danger);border:1px solid rgba(255,59,59,.2);}
+  .ai-a{background:rgba(255,159,67,.1);color:var(--monk);border:1px solid rgba(255,159,67,.2);}
+  .panel-title{font-size:12px;font-weight:700;}
+  .panel-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-left:auto;}
+  .panel-body{padding:14px 16px;}
+  .gc{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px;margin-bottom:9px;cursor:pointer;transition:border-color .15s;}
+  .gc:hover{border-color:var(--accent);}
+  .gc:last-child{margin-bottom:0;}
+  .gc-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:7px;}
+  .gc-fit{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;line-height:1;min-width:40px;text-align:right;flex-shrink:0;}
+  .fh{color:var(--success);}.fm{color:var(--warn);}
+  .gc-info{flex:1;}
+  .gc-prog{font-size:11px;font-weight:700;line-height:1.3;margin-bottom:2px;}
+  .gc-fund{font-size:10px;color:var(--text2);margin-bottom:4px;}
+  .gc-meta{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+  .gc-amt{font-family:'Space Mono',monospace;font-size:9px;color:var(--success);background:rgba(0,200,150,.08);padding:2px 5px;border-radius:3px;}
+  .gc-dl{font-family:'Space Mono',monospace;font-size:9px;padding:2px 5px;border-radius:3px;}
+  .dl-hot{background:rgba(255,59,59,.12);color:var(--danger);}
+  .dl-warn{background:rgba(255,214,10,.1);color:var(--warn);}
+  .dl-ok{background:rgba(74,85,104,.25);color:var(--text2);}
+  .gc-act{margin-top:6px;font-size:10px;font-weight:700;}
+  .act-now{color:var(--danger);}.act-go{color:var(--warn);}.act-watch{color:var(--text2);}
+  .gc-exp{margin-top:9px;padding-top:9px;border-top:1px solid var(--border);display:none;}
+  .gc-exp.open{display:block;}
+  .gf{margin-bottom:7px;}
+  .gfl{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:2px;text-transform:uppercase;}
+  .gfv{font-size:11px;line-height:1.5;color:var(--text);}
+  .lnk{color:var(--accent);text-decoration:none;font-size:10px;font-family:'Space Mono',monospace;}
+  .lnk:hover{text-decoration:underline;}
+  .alist li,.rlist li{font-size:10px;color:var(--text2);padding:1px 0;list-style:none;}
+  .alist li::before{content:'→ ';color:var(--accent);}
+  .rlist li::before{content:'⚠ ';color:var(--warn);}
+  .loi-box{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:10px;font-size:10px;line-height:1.6;color:var(--text2);font-family:'Space Mono',monospace;max-height:140px;overflow-y:auto;white-space:pre-wrap;}
+  .ci{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+  .ci:last-child{border-bottom:none;}
+  .ci-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+  .uc{background:var(--danger);box-shadow:0 0 5px var(--danger);}.uw{background:var(--warn);}.uu{background:var(--muted);}
+  .ci-title{font-size:11px;font-weight:700;margin-bottom:1px;}
+  .ci-det{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);}
+  .ci-r{margin-left:auto;text-align:right;flex-shrink:0;}
+  .ci-days{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;}
+  .dc{color:var(--danger);}.dw{color:var(--warn);}.du{color:var(--text2);}
+  .bd-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+  @media(max-width:1100px){.bd-grid{grid-template-columns:1fr 1fr;}}
+  .bdc{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px;cursor:pointer;transition:border-color .15s;}
+  .bdc:hover{border-color:var(--accent2);}
+  .bdc-top{display:flex;gap:9px;align-items:flex-start;margin-bottom:5px;}
+  .bdc-score{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;min-width:40px;text-align:right;flex-shrink:0;line-height:1;}
+  .bdc-vert{font-family:'Space Mono',monospace;font-size:8px;color:var(--accent2);background:rgba(255,107,53,.1);padding:2px 5px;border-radius:2px;display:inline-block;margin-bottom:3px;}
+  .bdc-org{font-size:11px;font-weight:700;margin-bottom:2px;}
+  .bdc-next{font-size:10px;color:var(--text2);line-height:1.4;}
+  .bot-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:32px;}
+  @media(max-width:1100px){.bot-grid{grid-template-columns:1fr 1fr;}}
+  @media(max-width:700px){.bot-grid{grid-template-columns:1fr;}}
+  .reg-row{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .reg-row:last-child{border-bottom:none;}
+  .rs{width:18px;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}
+  .rs-ok{background:rgba(0,200,150,.15);color:var(--success);}
+  .rs-no{background:rgba(255,59,59,.12);color:var(--danger);}
+  .rs-q{background:rgba(255,214,10,.1);color:var(--warn);}
+  .rn{font-size:11px;font-weight:600;}
+  .rnote{font-size:9px;color:var(--text2);margin-top:1px;}
+  .rlink{margin-left:auto;}
+  .rlink a{font-family:'Space Mono',monospace;font-size:8px;color:var(--accent);text-decoration:none;padding:2px 5px;border:1px solid rgba(0,229,255,.2);border-radius:3px;}
+  .rlink a:hover{background:rgba(0,229,255,.08);}
+  .ag-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .ag-row:last-child{border-bottom:none;}
+  .ag-name{font-size:11px;font-weight:700;flex:1;}
+  .ag-sched{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);}
+  .ab{font-family:'Space Mono',monospace;font-size:8px;padding:2px 6px;border-radius:2px;font-weight:700;}
+  .ab-live{background:rgba(0,200,150,.12);color:var(--success);}
+  .ab-pend{background:rgba(74,85,104,.25);color:var(--text2);}
+  .rule{padding:6px 0;border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);line-height:1.5;display:flex;gap:7px;}
+  .rule:last-child{border-bottom:none;}
+  .rule::before{content:'//';color:var(--danger);font-family:'Space Mono',monospace;font-size:9px;flex-shrink:0;padding-top:1px;}
+  .launchpad{margin-bottom:32px;}
+  .lp-config{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .lp-url-wrap{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;flex:1;min-width:280px;}
+  .lp-url-wrap label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);white-space:nowrap;}
+  .lp-url-wrap input{flex:1;background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);}
+  .lp-url-wrap input::placeholder{color:var(--muted);}
+  .lp-server-check{font-family:'Space Mono',monospace;font-size:9px;padding:7px 12px;border-radius:6px;border:1px solid var(--border);cursor:pointer;background:var(--surface2);color:var(--text2);transition:all .15s;white-space:nowrap;}
+  .lp-server-check:hover{border-color:var(--accent);color:var(--accent);}
+  .sweep-groups{display:flex;flex-direction:column;gap:0;}
+  .sg-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;padding:10px 0 6px;border-top:1px solid var(--border);margin-top:4px;}
+  .sg-label:first-child{border-top:none;margin-top:0;padding-top:0;}
+  .sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:2px;}
+  .sb{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px 14px;cursor:pointer;text-align:left;font-family:inherit;color:var(--text);transition:border-color .15s,background .15s;width:100%;position:relative;}
+  .sb:hover{border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.03);}
+  .sb.firing{border-color:var(--warn);animation:sbpulse .7s ease;}
+  .sb.loaded{border-color:var(--success);background:rgba(0,200,150,.04);}
+  .sb.error{border-color:var(--danger);}
+  @keyframes sbpulse{0%{box-shadow:0 0 0 0 rgba(255,214,10,.5);}70%{box-shadow:0 0 0 8px rgba(255,214,10,0);}100%{box-shadow:none;}}
+  .sb-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:3px;}
+  .sb-label{font-size:11px;font-weight:700;line-height:1.3;}
+  .sb-badge{font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border-radius:2px;font-weight:700;opacity:0;transition:opacity .2s;flex-shrink:0;margin-left:6px;}
+  .sb.firing .sb-badge{opacity:1;background:rgba(255,214,10,.15);color:var(--warn);}
+  .sb.loaded .sb-badge{opacity:1;background:rgba(0,200,150,.15);color:var(--success);}
+  .sb.error .sb-badge{opacity:1;background:rgba(255,59,59,.12);color:var(--danger);}
+  .sb-key{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:0;}
+  .sb-drawer{border-top:1px solid var(--border);margin-top:10px;padding-top:10px;display:none;animation:fadeUp .3s ease both;}
+  .sb-drawer.open{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .dr-summary{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+  .dr-fit{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;line-height:1;}
+  .dr-action-badge{font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;letter-spacing:1px;}
+  .ab-now{background:rgba(255,59,59,.15);color:var(--danger);}
+  .ab-apply{background:rgba(255,214,10,.12);color:var(--warn);}
+  .ab-watch{background:rgba(74,85,104,.3);color:var(--text2);}
+  .dr-program{font-size:12px;font-weight:700;flex:1;}
+  .dr-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  @media(max-width:600px){.dr-fields{grid-template-columns:1fr;}}
+  .dr-field{background:var(--bg);border-radius:5px;padding:8px 10px;}
+  .dr-field-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:3px;text-transform:uppercase;}
+  .dr-field-val{font-size:11px;line-height:1.5;color:var(--text);}
+  .dr-field-val a{color:var(--accent);text-decoration:none;font-family:'Space Mono',monospace;font-size:10px;}
+  .dr-lists{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  @media(max-width:600px){.dr-lists{grid-template-columns:1fr;}}
+  .dr-list-box{background:var(--bg);border-radius:5px;padding:8px 10px;}
+  .dr-list-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;}
+  .dr-list-box ul{list-style:none;}
+  .dr-list-box li{font-size:10px;color:var(--text2);padding:2px 0;line-height:1.4;}
+  .dr-list-box.align li::before{content:'→ ';color:var(--accent);}
+  .dr-list-box.risks li::before{content:'⚠ ';color:var(--warn);}
+  .dr-loi{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:10px;font-size:9px;line-height:1.7;color:var(--text2);font-family:'Space Mono',monospace;max-height:120px;overflow-y:auto;white-space:pre-wrap;margin-bottom:8px;}
+  .dr-nextstep{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.15);border-radius:5px;padding:8px 10px;font-size:11px;line-height:1.5;}
+  .dr-nextstep strong{color:var(--accent);}
+  .dr-raw-toggle{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);cursor:pointer;margin-top:6px;display:inline-block;padding:3px 0;}
+  .dr-raw-toggle:hover{color:var(--accent);}
+  .dr-raw{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:10px;font-size:9px;line-height:1.6;color:var(--text2);font-family:'Space Mono',monospace;max-height:200px;overflow-y:auto;white-space:pre-wrap;margin-top:6px;display:none;}
+  .dr-raw.open{display:block;}
+  .dr-timestamp{font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);margin-top:6px;}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text);z-index:9999;transform:translateY(80px);opacity:0;transition:all .25s;max-width:340px;line-height:1.5;pointer-events:none;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.ok{border-color:var(--success);}
+  .toast.err{border-color:var(--danger);}
+  .toast.info{border-color:var(--warn);}
+  .footer{border-top:1px solid var(--border);padding-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+  .footer-l{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);}
+  .footer-r{display:flex;gap:6px;}
+  .ql{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);text-decoration:none;padding:3px 8px;border:1px solid var(--border);border-radius:3px;transition:all .15s;}
+  .ql:hover{color:var(--accent);border-color:rgba(0,229,255,.3);}
+  ::-webkit-scrollbar{width:3px;height:3px;}
+  ::-webkit-scrollbar-track{background:var(--surface);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  /* ── PLATFORM OPS STYLES ── */
+  .ops-container{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:24px 24px 60px;}
+  .ops-header{padding:0 0 20px;border-bottom:1px solid var(--border);margin-bottom:28px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .ops-fire-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:28px;}
+  .fire-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 14px;cursor:pointer;text-align:left;font-family:inherit;color:var(--text);transition:all .2s;position:relative;overflow:hidden;}
+  .fire-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;}
+  .fire-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.3);}
+  .fire-btn.firing{animation:firepulse .8s ease infinite;}
+  .fire-btn.done{border-color:var(--success);}
+  .fire-btn.error{border-color:var(--danger);}
+  @keyframes firepulse{0%,100%{box-shadow:none;}50%{box-shadow:0 0 0 3px rgba(255,214,10,.3);}}
+  .fire-btn .fb-icon{font-size:22px;margin-bottom:8px;display:block;}
+  .fire-btn .fb-name{font-size:13px;font-weight:800;margin-bottom:3px;}
+  .fire-btn .fb-desc{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);line-height:1.5;}
+  .fire-btn .fb-status{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;margin-top:8px;padding:3px 6px;border-radius:3px;display:inline-block;letter-spacing:1px;}
+  .fb-s-ready{background:rgba(74,85,104,.2);color:var(--text2);}
+  .fb-s-firing{background:rgba(255,214,10,.15);color:var(--warn);}
+  .fb-s-done{background:rgba(0,200,150,.12);color:var(--success);}
+  .fb-s-error{background:rgba(255,59,59,.12);color:var(--danger);}
+  /* Nova accent */
+  .fire-btn.nova-btn{border-color:rgba(0,229,255,.2);}
+  .fire-btn.nova-btn:hover{border-color:var(--nova);background:rgba(0,229,255,.03);}
+  /* Jordan */
+  .fire-btn.jordan-btn:hover{border-color:var(--eaf);background:rgba(124,106,247,.03);}
+  /* Scout */
+  .fire-btn.scout-btn:hover{border-color:var(--accent);background:rgba(0,229,255,.03);}
+  /* Iris */
+  .fire-btn.iris-btn:hover{border-color:var(--danger);background:rgba(255,59,59,.03);}
+  /* Atlas */
+  .fire-btn.atlas-btn:hover{border-color:var(--monk);background:rgba(255,159,67,.03);}
+  /* Orchestra */
+  .fire-btn.orch-btn:hover{border-color:var(--ecl-gold);background:rgba(232,197,71,.03);}
+  /* Pursue */
+  .fire-btn.pursue-btn:hover{border-color:var(--success);background:rgba(0,200,150,.03);}
+
+  .nova-brief-panel{background:var(--surface);border:1px solid rgba(0,229,255,.2);border-radius:10px;overflow:hidden;margin-bottom:28px;}
+  .nova-brief-hdr{padding:14px 18px;background:rgba(0,229,255,.04);border-bottom:1px solid rgba(0,229,255,.1);display:flex;align-items:center;gap:12px;}
+  .nova-brief-hdr .nb-title{font-size:13px;font-weight:800;color:var(--nova);}
+  .nova-brief-hdr .nb-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-left:auto;}
+  .nova-brief-body{padding:18px;}
+  .nova-brief-text{font-family:'Space Mono',monospace;font-size:10px;line-height:1.9;color:var(--text2);white-space:pre-wrap;max-height:500px;overflow-y:auto;}
+  .nova-brief-text .t1-line{color:var(--success);font-weight:700;}
+  .nova-brief-text .warn-line{color:var(--warn);}
+  .nova-brief-text .insight-line{color:var(--text);}
+  .nova-brief-placeholder{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);line-height:1.8;text-align:center;padding:40px 20px;}
+
+  .pursue-form{background:var(--surface);border:1px solid rgba(0,200,150,.2);border-radius:10px;padding:18px;margin-bottom:28px;}
+  .pursue-form-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--success);text-transform:uppercase;margin-bottom:14px;}
+  .pursue-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end;margin-bottom:10px;}
+  @media(max-width:700px){.pursue-row{grid-template-columns:1fr;}}
+  .pursue-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;padding:10px 12px;outline:none;transition:border-color .15s;}
+  .pursue-input:focus{border-color:var(--success);}
+  .pursue-entity-sel{background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:10px 12px;outline:none;cursor:pointer;}
+  .pursue-fire-btn{background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);color:var(--success);font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:10px 18px;border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .pursue-fire-btn:hover{background:rgba(0,200,150,.18);border-color:var(--success);}
+  .pursue-fire-btn.firing{opacity:.6;cursor:default;}
+
+  .pipeline-list{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:28px;}
+  .pipeline-hdr{padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .pipeline-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);}
+  .pipeline-item:last-child{border-bottom:none;}
+  .pi-entity{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;padding:2px 6px;border-radius:2px;letter-spacing:1px;flex-shrink:0;}
+  .pi-eaf{background:rgba(124,106,247,.15);color:var(--eaf);}
+  .pi-fp{background:rgba(0,200,150,.12);color:var(--fp);}
+  .pi-monk{background:rgba(255,159,67,.15);color:var(--monk);}
+  .pi-title{font-size:11px;font-weight:700;flex:1;}
+  .pi-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);}
+  .pi-status{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;padding:2px 6px;border-radius:2px;flex-shrink:0;}
+  .pi-pursuing{background:rgba(0,229,255,.1);color:var(--accent);}
+  .pi-applied{background:rgba(255,214,10,.1);color:var(--warn);}
+  .pi-won{background:rgba(0,200,150,.12);color:var(--success);}
+
+  .ops-rescan-bar{display:flex;align-items:center;gap:10px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:12px 16px;margin-bottom:28px;flex-wrap:wrap;}
+  .ops-rescan-bar .orb-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);flex:1;}
+  .ops-rescan-btn{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);color:var(--nova);font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:8px 16px;border-radius:4px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .ops-rescan-btn:hover{background:rgba(0,229,255,.18);border-color:var(--nova);}
+  .ops-focused-input{flex:1;min-width:200px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:8px 12px;outline:none;transition:border-color .15s;}
+  .ops-focused-input:focus{border-color:var(--nova);}
+
+  /* ECL STYLES */
+  .ecl-header{border-bottom:1px solid var(--border);padding:32px 32px 20px;margin-bottom:0;background:linear-gradient(180deg,rgba(232,197,71,.04) 0%,transparent 100%);}
+  .ecl-eyebrow{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--ecl-gold);text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+  .ecl-title{font-size:26px;font-weight:800;letter-spacing:-1px;color:#fff;margin-bottom:8px;}
+  .ecl-title span{color:var(--ecl-gold);}
+  .ecl-vision{font-size:11px;color:var(--text2);line-height:1.7;max-width:820px;border-left:2px solid var(--ecl-gold);padding-left:14px;margin-top:12px;font-style:italic;opacity:.85;}
+  .ecl-nav{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 32px;background:var(--surface);position:sticky;top:49px;z-index:100;}
+  .ecl-tab{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:14px 18px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+  .ecl-tab:hover{color:var(--text);}
+  .ecl-tab.active{color:var(--ecl-gold);border-bottom-color:var(--ecl-gold);}
+  .ecl-pane{display:none;padding:28px 32px;}
+  .ecl-pane.active{display:block;}
+  .save-btn{display:inline-flex;align-items:center;gap:7px;background:rgba(232,197,71,.1);border:1px solid rgba(232,197,71,.3);color:var(--ecl-gold);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:8px 16px;border-radius:4px;cursor:pointer;transition:all .15s;}
+  .save-btn:hover{background:rgba(232,197,71,.18);border-color:var(--ecl-gold);}
+  .save-btn.saving{opacity:.5;cursor:default;}
+  .save-btn.saved{background:rgba(0,200,150,.1);border-color:var(--success);color:var(--success);}
+  .ecl-field{margin-bottom:16px;}
+  .ecl-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:8px;}
+  .ecl-label .hint{font-size:8px;color:var(--muted);letter-spacing:0;text-transform:none;font-style:italic;}
+  .ecl-input,.ecl-textarea,.ecl-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;padding:9px 12px;outline:none;transition:border-color .15s;resize:vertical;}
+  .ecl-input:focus,.ecl-textarea:focus,.ecl-select:focus{border-color:var(--ecl-gold);box-shadow:0 0 0 2px rgba(232,197,71,.08);}
+  .ecl-textarea{min-height:90px;line-height:1.6;}
+  .ecl-select option{background:var(--surface2);}
+  .card-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .card-row.three{grid-template-columns:1fr 1fr 1fr;}
+  .card-row.four{grid-template-columns:1fr 1fr 1fr 1fr;}
+  @media(max-width:900px){.card-row,.card-row.three,.card-row.four{grid-template-columns:1fr 1fr;}}
+  @media(max-width:600px){.card-row,.card-row.three,.card-row.four{grid-template-columns:1fr;}}
+  .item-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .15s;}
+  .item-card:hover{border-color:rgba(232,197,71,.25);}
+  .item-card .card-hdr{padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .card-hdr .chip{font-family:'Space Mono',monospace;font-size:7px;font-weight:700;padding:2px 6px;border-radius:2px;letter-spacing:1px;}
+  .chip-eaf{background:rgba(124,106,247,.15);color:var(--eaf);}
+  .chip-fp{background:rgba(0,200,150,.12);color:var(--fp);}
+  .chip-monk{background:rgba(255,159,67,.15);color:var(--monk);}
+  .card-hdr .card-name{font-size:11px;font-weight:700;flex:1;}
+  .item-card .card-body{padding:12px 14px;}
+  .status-select{appearance:none;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;padding:3px 22px 3px 7px;letter-spacing:1px;cursor:pointer;outline:none;transition:all .15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238899aa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+  .status-select:focus{border-color:var(--ecl-gold);}
+  .status-select.s-done{border-color:rgba(0,200,150,.4);color:var(--success);}
+  .status-select.s-overdue{border-color:rgba(255,59,59,.4);color:var(--danger);}
+  .status-select.s-progress{border-color:rgba(255,214,10,.4);color:var(--warn);}
+  .status-select.s-pending{border-color:var(--border);color:var(--text2);}
+  .status-select.s-blocked{border-color:rgba(255,107,53,.4);color:var(--accent2);}
+  .dl-item{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;transition:border-color .15s;}
+  .dl-item:hover{border-color:rgba(232,197,71,.2);}
+  .dl-item .dl-name{font-size:12px;font-weight:700;}
+  .dl-item .dl-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px;}
+  .dl-item .dl-date-input{background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:4px 8px;outline:none;width:120px;}
+  .dl-item .dl-date-input:focus{border-color:var(--ecl-gold);}
+  .dl-item .dl-notes-btn{background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text2);font-family:'Space Mono',monospace;font-size:8px;padding:4px 8px;cursor:pointer;transition:all .15s;}
+  .dl-item .dl-notes-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .dl-notes-drawer{display:none;padding:10px 14px 14px;border-top:1px solid var(--border);background:var(--surface2);}
+  .dl-notes-drawer.open{display:block;}
+  .agent-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;}
+  .agent-hdr{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
+  .agent-hdr:hover{background:rgba(232,197,71,.05);}
+  .agent-icon{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;flex-shrink:0;}
+  .agent-meta{flex:1;}
+  .agent-name{font-size:13px;font-weight:800;}
+  .agent-role{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-top:1px;}
+  .agent-expand{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);}
+  .agent-body{display:none;padding:18px;}
+  .agent-body.open{display:block;}
+  .directive-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--ecl-gold);text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;}
+  .directive-help{font-size:9px;color:var(--text2);line-height:1.6;margin-bottom:8px;font-style:italic;letter-spacing:0;text-transform:none;}
+  .directive-textarea{width:100%;background:rgba(232,197,71,.03);border:1px solid rgba(232,197,71,.2);border-radius:5px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:10px 12px;outline:none;resize:vertical;min-height:100px;line-height:1.7;transition:border-color .15s;}
+  .directive-textarea:focus{border-color:var(--ecl-gold);box-shadow:0 0 0 2px rgba(232,197,71,.06);}
+  .token-count{font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);text-align:right;margin-top:4px;}
+  .bd-form-grid{display:grid;grid-template-columns:1fr 1fr 1fr 80px 120px auto;gap:8px;align-items:end;margin-bottom:10px;}
+  @media(max-width:1000px){.bd-form-grid{grid-template-columns:1fr 1fr;}}
+  .bd-entry{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto auto auto auto;gap:10px;align-items:center;transition:border-color .15s;}
+  .bd-entry:hover{border-color:rgba(255,107,53,.25);}
+  .bd-entry .bd-org{font-size:12px;font-weight:700;}
+  .bd-entry .bd-opp{font-size:10px;color:var(--text2);margin-top:1px;}
+  .bd-score{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;min-width:42px;text-align:right;}
+  .bd-vert-tag{font-family:'Space Mono',monospace;font-size:8px;padding:2px 6px;border-radius:2px;background:rgba(255,107,53,.1);color:var(--accent2);font-weight:700;white-space:nowrap;}
+  .bd-notes-inline{font-size:9px;color:var(--text2);font-style:italic;margin-top:4px;padding-top:4px;border-top:1px solid var(--border);grid-column:1/-1;display:none;}
+  .bd-notes-inline.show{display:block;}
+  .mrr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
+  .mrr-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;}
+  .mrr-card .mrr-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:8px;}
+  .mrr-card .mrr-val{font-size:26px;font-weight:800;letter-spacing:-1px;color:var(--ecl-gold);margin-bottom:4px;}
+  .mrr-card .mrr-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);}
+  .mrr-input-wrap{display:flex;align-items:center;gap:6px;margin-top:8px;}
+  .mrr-input-wrap span{font-family:'Space Mono',monospace;font-size:12px;color:var(--text2);}
+  .mrr-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:'Space Mono',monospace;font-size:13px;font-weight:700;padding:4px 8px;outline:none;text-align:center;transition:border-color .15s;}
+  .mrr-input:focus{border-color:var(--ecl-gold);}
+  .progress-wrap{margin-top:6px;}
+  .progress-bar-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:3px;}
+  .progress-bar-fill{height:100%;border-radius:2px;background:var(--ecl-gold);transition:width .4s ease;}
+  .progress-pct{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);text-align:right;}
+  .ctx-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .ctx-hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);cursor:pointer;}
+  .ctx-hdr:hover{background:rgba(0,229,255,.03);}
+  .ctx-icon{width:24px;height:24px;border-radius:4px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+  .ctx-name{font-size:12px;font-weight:700;flex:1;}
+  .ctx-desc{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);}
+  .ctx-body{display:none;padding:16px;}
+  .ctx-body.open{display:block;}
+  .ctx-impact{font-family:'Space Mono',monospace;font-size:8px;background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.1);border-radius:3px;padding:6px 10px;color:var(--accent);margin-bottom:10px;line-height:1.6;}
+  .add-form{background:rgba(232,197,71,.04);border:1px dashed rgba(232,197,71,.25);border-radius:7px;padding:14px;margin-bottom:16px;}
+  .add-form-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--ecl-gold);text-transform:uppercase;margin-bottom:12px;}
+  .add-btn{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-family:'Space Mono',monospace;font-size:9px;padding:7px 12px;cursor:pointer;transition:all .15s;}
+  .add-btn:hover{border-color:var(--ecl-gold);color:var(--ecl-gold);}
+  .del-btn{background:transparent;border:1px solid transparent;color:var(--muted);font-family:'Space Mono',monospace;font-size:9px;padding:3px 6px;cursor:pointer;border-radius:3px;transition:all .15s;}
+  .del-btn:hover{border-color:var(--danger);color:var(--danger);}
+  .ecl-toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--ecl-gold);border-radius:6px;padding:10px 16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text);z-index:9999;transform:translateY(60px);opacity:0;transition:all .25s;pointer-events:none;max-width:320px;line-height:1.5;}
+  .ecl-toast.show{transform:translateY(0);opacity:1;}
+  .ecl-toast.ok{border-color:var(--success);}
+  .ecl-toast.err{border-color:var(--danger);}
+</style>
+</head>
+<body>
+
+<div class="view-bar">
+  <div class="view-brand">KAI-NETICS</div>
+  <button class="view-tab active" onclick="switchView('brief', this)">Morning Brief</button>
+  <button class="view-tab ops-tab-top" onclick="switchView('ops', this)">⚡ Platform Ops</button>
+  <button class="view-tab" onclick="switchView('inspect', this)" id="inspect-tab">🔍 Inspection</button>
+  <button class="view-tab ecl-tab-top" onclick="switchView('command', this)">⬡ Command</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     VIEW: MORNING BRIEF
+═══════════════════════════════════════════════════════ -->
+<div class="view-pane active" id="view-brief">
+<div class="container">
+<div class="header">
+  <div>
+    <div class="logo">KAI-Netics // Command Center</div>
+    <h1>Morning <span>Brief</span></h1>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><span class="live-dot"></span> FOUNDRY ENGINE LIVE</div>
+    <div class="server-status err" id="serverStatus">⬤ SERVER OFFLINE</div>
+    <div class="timestamp" id="ts"></div>
+  </div>
+</div>
+<div class="entity-bar">
+  <div class="entity-pill"><div class="entity-dot" style="background:var(--fp)"></div><div><div class="ename">KAI-Netics (FP)</div><div class="ehandle">EIN 46-2432851 · Maryland LLC</div></div><div class="estatus s-op">OPERATIONAL</div></div>
+  <div class="entity-pill"><div class="entity-dot" style="background:var(--eaf)"></div><div><div class="ename">Equity &amp; Autonomy Foundry (EAF)</div><div class="ehandle">EIN 41-4820296 · 501(c)(3) Active</div></div><div class="estatus s-op">ACTIVE</div></div>
+  <div class="entity-pill"><div class="entity-dot" style="background:var(--monk)"></div><div><div class="ename">MONK LLC</div><div class="ehandle">IP Holding · FP Subsidiary</div></div><div class="estatus s-ip">FORMING</div></div>
+</div>
+<div class="sl">Critical Deadlines</div>
+<div class="dl-grid">
+  <div class="dl-card dlc"><div class="dl-badge">OVERDUE</div><div class="dl-title">Form 1023-EZ Eligibility Check</div><div class="dl-date">Apr 25 · James Scott</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
+  <div class="dl-card dlc"><div class="dl-badge">OVERDUE</div><div class="dl-title">MONK LLC Formation</div><div class="dl-date">May 1 · businessexpress.maryland.gov</div><div class="dl-tags"><span class="tag t-monk">MONK</span></div></div>
+  <div class="dl-card dlc"><div class="dl-badge">OVERDUE</div><div class="dl-title">IRS Form 1023 — EAF 501(c)(3)</div><div class="dl-date">May 1 · pay.gov · blocks all grants</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
+  <div class="dl-card dlc"><div class="dl-badge">OVERDUE</div><div class="dl-title">MONK Provisional Patent</div><div class="dl-date">Apr 30 · James Scott · IP at risk</div><div class="dl-tags"><span class="tag t-monk">MONK</span></div></div>
+  <div class="dl-card dlw"><div class="dl-badge">12 DAYS</div><div class="dl-title">MBE/DBE Certification — MDOT</div><div class="dl-date">May 15 · 90-120 day clock · gates MDSHA</div><div class="dl-tags"><span class="tag t-fp">FP</span></div></div>
+  <div class="dl-card dlw"><div class="dl-badge">17 DAYS</div><div class="dl-title">OMB M-26-02 Compliance</div><div class="dl-date">May 20 · FIRST DOLLAR · no drone needed</div><div class="dl-tags"><span class="tag t-fp">FP</span></div></div>
+  <div class="dl-card dlu"><div class="dl-badge">31 DAYS</div><div class="dl-title">Techstars Demo Day</div><div class="dl-date">Jun 3 · Register by May 15</div><div class="dl-tags"><span class="tag t-fp">FP</span></div></div>
+  <div class="dl-card dlu"><div class="dl-badge">58 DAYS</div><div class="dl-title">EARN Maryland Grant</div><div class="dl-date">Jun 30 · $50K–$500K · CAKO anchor</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
+</div>
+<div class="main-grid">
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-s">S</div><div><div class="panel-title">Scout v5 · Grant Intelligence</div></div><div class="panel-sub">JORDAN ANALYZED</div></div>
+    <div class="panel-body">
+      <div class="gc" onclick="toggleGC(this)"><div class="gc-row"><div class="gc-fit fh">95%</div><div class="gc-info"><div class="gc-prog">FEMA HSGP-SLTP — Counter-UAS Enhancement</div><div class="gc-fund">Federal Emergency Management Agency / DHS</div><div class="gc-meta"><span class="gc-amt">$500K–$2.5M</span><span class="gc-dl dl-warn">LOI May 15</span><span class="tag t-eaf">EAF</span></div></div></div><div class="gc-act act-now">▶ APPLY IMMEDIATELY — Contact MEMA as prime partner</div><div class="gc-exp"><div class="gf"><div class="gfl">Next Step</div><div class="gfv">Call MEMA at <strong>410-517-3600</strong> — joint app, EAF as training sub</div></div></div></div>
+      <div class="gc" onclick="toggleGC(this)"><div class="gc-row"><div class="gc-fit fh">88%</div><div class="gc-info"><div class="gc-prog">SBIR Phase I — DHS S&amp;T / DoD</div><div class="gc-fund">Small Business Innovation Research</div><div class="gc-meta"><span class="gc-amt">~$175K</span><span class="gc-dl dl-warn">Pending reauth</span><span class="tag t-monk">MONK</span></div></div></div><div class="gc-act act-watch">◉ WATCH — MONK LLC must form first</div><div class="gc-exp"><div class="gf"><div class="gfl">Portal</div><div class="gfv"><a class="lnk" href="https://sbir.gov" target="_blank">sbir.gov →</a></div></div></div></div>
+      <div class="gc" onclick="toggleGC(this)"><div class="gc-row"><div class="gc-fit fh">85%</div><div class="gc-info"><div class="gc-prog">Maryland EARN Workforce Development</div><div class="gc-fund">Maryland Department of Labor</div><div class="gc-meta"><span class="gc-amt">$50K–$500K</span><span class="gc-dl dl-ok">Jun 30</span><span class="tag t-eaf">EAF</span></div></div></div><div class="gc-act act-go">▶ APPLY — Jordan LOI draft ready ($285K ask)</div><div class="gc-exp"><div class="gf"><div class="gfl">Portal</div><div class="gfv"><a class="lnk" href="https://www.dllr.state.md.us/earn" target="_blank">dllr.state.md.us/earn →</a></div></div></div></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-i">I</div><div><div class="panel-title">Iris v4 · Compliance Monitor</div></div><div class="panel-sub">LAST RUN: TODAY</div></div>
+    <div class="panel-body">
+      <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">Form 1023-EZ Eligibility Check</div><div class="ci-det">EAF · Owner: James Scott · 8d overdue</div></div><div class="ci-r"><div class="ci-days dc">OVERDUE</div></div></div>
+      <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">MONK Provisional Patent Filing</div><div class="ci-det">MONK · Owner: James Scott · IP at risk</div></div><div class="ci-r"><div class="ci-days dc">OVERDUE</div></div></div>
+      <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">MONK LLC Formation</div><div class="ci-det">MONK · businessexpress.maryland.gov</div></div><div class="ci-r"><div class="ci-days dc">OVERDUE</div></div></div>
+      <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">IRS Form 1023 — EAF 501(c)(3)</div><div class="ci-det">EAF · Blocks all grant funding</div></div><div class="ci-r"><div class="ci-days dc">OVERDUE</div></div></div>
+      <div class="ci"><div class="ci-dot uw"></div><div><div class="ci-title">MBE/DBE Certification — MDOT</div><div class="ci-det">FP · mbe.mdot.maryland.gov</div></div><div class="ci-r"><div class="ci-days dw">12d</div><div class="ci-det">May 15</div></div></div>
+      <div class="ci"><div class="ci-dot uw"></div><div><div class="ci-title">OMB M-26-02 — FIRST DOLLAR</div><div class="ci-det">FP · CISSP + Part 107 · no drone needed</div></div><div class="ci-r"><div class="ci-days dw">17d</div><div class="ci-det">May 20</div></div></div>
+      <div class="ci"><div class="ci-dot uu"></div><div><div class="ci-title">Techstars Demo Day Registration</div><div class="ci-det">FP · Register by May 15</div></div><div class="ci-r"><div class="ci-days du">31d</div><div class="ci-det">Jun 3</div></div></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);line-height:1.9;">⚡ FAA Part 108 BVLOS final rule INCOMING<br>⚡ OMB M-26-02 deadline May 20 — 17 days<br>⚡ SAM.gov UEI submitted Apr 17 — confirm status<br>⬡ Feedback loop: ACTIVE — reply Y/N after any output</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="panel" style="margin-bottom:32px;">
+  <div class="panel-hdr"><div class="ai ai-s">S</div><div><div class="panel-title">Scout v5 · BD Pipeline</div></div><div class="panel-sub">ALL 7 VERTICALS</div></div>
+  <div class="panel-body"><div class="bd-grid">
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--success)">92%</div><div><div class="bdc-vert">V1 INFRASTRUCTURE</div><div class="bdc-org">BGE — Transmission Inspection</div></div></div><div class="bdc-next">NERC FAC-001/003 · $50K–$500K · (410) 470-3520</div><div class="gc-exp"><div class="gf"><div class="gfl">Hook</div><div class="gfv">11K+ miles · May 2026 NERC deadline · 60-75% below helicopter</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--success)">90%</div><div><div class="bdc-vert">V5 MEDICAL</div><div class="bdc-org">UMMS Sparrows Point</div></div></div><div class="bdc-next">415K sq ft · 11 hospitals · Pat Vizzard VP Supply Chain</div><div class="gc-exp"><div class="gf"><div class="gfl">Contact</div><div class="gfv">Pat Vizzard, VP Supply Chain</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--success)">88%</div><div><div class="bdc-vert">V5 MEDICAL</div><div class="bdc-org">Johns Hopkins — Dr. Amukele</div></div></div><div class="bdc-next">tamukele@jhmi.edu · drone medical delivery pioneer</div><div class="gc-exp"><div class="gf"><div class="gfl">Contact</div><div class="gfv">tamukele@jhmi.edu</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--warn)">85%</div><div><div class="bdc-vert">V6 COMPLIANCE</div><div class="bdc-org">OMB M-26-02 Federal Agencies</div></div></div><div class="bdc-next">17 days · CISSP + Part 107 · first dollar no drone</div><div class="gc-exp"><div class="gf"><div class="gfl">Rate</div><div class="gfv">$150-250/hr or $5K-15K fixed · agencies scrambling</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--warn)">82%</div><div><div class="bdc-vert">V1 INFRASTRUCTURE</div><div class="bdc-org">MDSHA — Bridge Inspection</div></div></div><div class="bdc-next">2,500+ bridges · blocked on SAM.gov + MBE first</div><div class="gc-exp"><div class="gf"><div class="gfl">Blocker</div><div class="gfv">Register SAM.gov + MBE before outreach</div></div></div></div>
+    <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--warn)">80%</div><div><div class="bdc-vert">V3 PUBLIC SAFETY</div><div class="bdc-org">MEMA — Emergency Mgmt</div></div></div><div class="bdc-next">$2-5M · FEMA prime partner · (410) 517-3600</div><div class="gc-exp"><div class="gf"><div class="gfl">Contact</div><div class="gfv">Russell Strickland, Exec Dir · 410-517-3600</div></div></div></div>
+  </div></div>
+</div>
+<div class="sl">Scout v5 · On-Demand Launch Pad</div>
+<div class="panel launchpad">
+  <div class="panel-hdr"><div class="ai ai-s">S</div><div><div class="panel-title">Fire Scout · Results Appear Below Each Button</div></div><div class="panel-sub" id="lpStatus">READY</div></div>
+  <div class="panel-body">
+    <div class="lp-config">
+      <div class="lp-url-wrap"><label>N8N WEBHOOK</label><input type="text" id="n8nUrl" value="http://localhost:5678/webhook/scout-research" /></div>
+      <button class="lp-server-check" onclick="checkServer()">⬤ Check File Server</button>
+    </div>
+    <div class="sweep-groups">
+      <div class="sg-label">🔴 Urgent</div>
+      <div class="sg-grid">
+        <button class="sb" id="sb-earn_maryland" onclick="fireSweep(this,'earn_maryland','Maryland_Grants')"><div class="sb-top"><div class="sb-label">EARN Maryland</div><div class="sb-badge" id="badge-earn_maryland">●</div></div><div class="sb-key">$50K–$500K · June 30</div><div class="sb-drawer" id="drawer-earn_maryland"></div></button>
+        <button class="sb" id="sb-fema_cuas" onclick="fireSweep(this,'fema_cuas','Maryland_Grants')"><div class="sb-top"><div class="sb-label">FEMA C-UAS SLTT</div><div class="sb-badge" id="badge-fema_cuas">●</div></div><div class="sb-key">Counter-UAS · EAF/FP</div><div class="sb-drawer" id="drawer-fema_cuas"></div></button>
+        <button class="sb" id="sb-tedco_deep" onclick="fireSweep(this,'tedco_deep','Maryland_Grants')"><div class="sb-top"><div class="sb-label">TEDCO Deep Scan</div><div class="sb-badge" id="badge-tedco_deep">●</div></div><div class="sb-key">Builder Fund, SBIR Lab, MII</div><div class="sb-drawer" id="drawer-tedco_deep"></div></button>
+        <button class="sb" id="sb-lighthouse_internship" onclick="fireSweep(this,'lighthouse_internship','Maryland_Grants')"><div class="sb-top"><div class="sb-label">Lighthouse AI Internship</div><div class="sb-badge" id="badge-lighthouse_internship">●</div></div><div class="sb-key">Up to $150K · rolling</div><div class="sb-drawer" id="drawer-lighthouse_internship"></div></button>
+      </div>
+      <div class="sg-label">🔵 Federal / SBIR</div>
+      <div class="sg-grid">
+        <button class="sb" id="sb-sbir_gov_uas" onclick="fireSweep(this,'sbir_gov_uas','Aidan_Outputs/Scout')"><div class="sb-top"><div class="sb-label">SBIR.gov UAS Sweep</div><div class="sb-badge" id="badge-sbir_gov_uas">●</div></div><div class="sb-key">DoD + DHS active solicitations</div><div class="sb-drawer" id="drawer-sbir_gov_uas"></div></button>
+        <button class="sb" id="sb-nsf_seedfund" onclick="fireSweep(this,'nsf_seedfund','Aidan_Outputs/Scout')"><div class="sb-top"><div class="sb-label">NSF Seed Fund</div><div class="sb-badge" id="badge-nsf_seedfund">●</div></div><div class="sb-key">America's Seed Fund · MONK tech</div><div class="sb-drawer" id="drawer-nsf_seedfund"></div></button>
+        <button class="sb" id="sb-grants_gov_uas" onclick="fireSweep(this,'grants_gov_uas','Maryland_Grants')"><div class="sb-top"><div class="sb-label">Grants.gov UAS Sweep</div><div class="sb-badge" id="badge-grants_gov_uas">●</div></div><div class="sb-key">All open UAS solicitations</div><div class="sb-drawer" id="drawer-grants_gov_uas"></div></button>
+        <button class="sb" id="sb-psgp_port_security" onclick="fireSweep(this,'psgp_port_security','Maryland_Grants')"><div class="sb-top"><div class="sb-label">PSGP Port Security</div><div class="sb-badge" id="badge-psgp_port_security">●</div></div><div class="sb-key">$90M · Port of Baltimore</div><div class="sb-drawer" id="drawer-psgp_port_security"></div></button>
+        <button class="sb" id="sb-dol_wioa" onclick="fireSweep(this,'dol_wioa','Maryland_Grants')"><div class="sb-top"><div class="sb-label">DOL WIOA</div><div class="sb-badge" id="badge-dol_wioa">●</div></div><div class="sb-key">Workforce Innovation Act</div><div class="sb-drawer" id="drawer-dol_wioa"></div></button>
+      </div>
+      <div class="sg-label">🟡 Maryland State</div>
+      <div class="sg-grid">
+        <button class="sb" id="sb-md_governor_press" onclick="fireSweep(this,'md_governor_press','Maryland_Grants')"><div class="sb-top"><div class="sb-label">MD Governor Press Sweep</div><div class="sb-badge" id="badge-md_governor_press">●</div></div><div class="sb-key">governor.maryland.gov announcements</div><div class="sb-drawer" id="drawer-md_governor_press"></div></button>
+        <button class="sb" id="sb-md_commerce_press" onclick="fireSweep(this,'md_commerce_press','Maryland_Grants')"><div class="sb-top"><div class="sb-label">MD Commerce Press Sweep</div><div class="sb-badge" id="badge-md_commerce_press">●</div></div><div class="sb-key">Build Our Future, DECADE Act</div><div class="sb-drawer" id="drawer-md_commerce_press"></div></button>
+        <button class="sb" id="sb-workforce_dev_board" onclick="fireSweep(this,'workforce_dev_board','Maryland_Grants')"><div class="sb-top"><div class="sb-label">Workforce Dev Board</div><div class="sb-badge" id="badge-workforce_dev_board">●</div></div><div class="sb-key">Governor's WDB grants</div><div class="sb-drawer" id="drawer-workforce_dev_board"></div></button>
+      </div>
+      <div class="sg-label">🟢 BD by Vertical</div>
+      <div class="sg-grid">
+        <button class="sb" id="sb-johns_hopkins_meia" onclick="fireSweep(this,'johns_hopkins_meia','Aidan_Outputs/Scout')"><div class="sb-top"><div class="sb-label">Johns Hopkins / MEIA</div><div class="sb-badge" id="badge-johns_hopkins_meia">●</div></div><div class="sb-key">V5 · Dr. Amukele · medical delivery</div><div class="sb-drawer" id="drawer-johns_hopkins_meia"></div></button>
+        <button class="sb" id="sb-crown_castle_telecom" onclick="fireSweep(this,'crown_castle_telecom','Aidan_Outputs/Scout')"><div class="sb-top"><div class="sb-label">Crown Castle Telecom</div><div class="sb-badge" id="badge-crown_castle_telecom">●</div></div><div class="sb-key">V1 · tower inspection · Mid-Atlantic</div><div class="sb-drawer" id="drawer-crown_castle_telecom"></div></button>
+        <button class="sb" id="sb-v7_monk_licensing" onclick="fireSweep(this,'v7_monk_licensing','Aidan_Outputs/Scout')"><div class="sb-top"><div class="sb-label">MONK OEM Licensing</div><div class="sb-badge" id="badge-v7_monk_licensing">●</div></div><div class="sb-key">V7 · DoD trusted hardware</div><div class="sb-drawer" id="drawer-v7_monk_licensing"></div></button>
+        <button class="sb" id="sb-cako_partnerships" onclick="fireSweep(this,'cako_partnerships','Aidan_Outputs/Scout')"><div class="sb-top"><div class="sb-label">CAKO Employer Partners</div><div class="sb-badge" id="badge-cako_partnerships">●</div></div><div class="sb-key">V7 · 3+ employer pipeline</div><div class="sb-drawer" id="drawer-cako_partnerships"></div></button>
+        <button class="sb" id="sb-mbe_certification" onclick="fireSweep(this,'mbe_certification','Aidan_Outputs/Scout')"><div class="sb-top"><div class="sb-label">MBE / State Vendor Reg</div><div class="sb-badge" id="badge-mbe_certification">●</div></div><div class="sb-key">MDOT MBE · SBR · 8(a) · DC CBE</div><div class="sb-drawer" id="drawer-mbe_certification"></div></button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="bot-grid">
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-i">R</div><div><div class="panel-title">Registration Status</div></div></div>
+    <div class="panel-body">
+      <div class="reg-row"><div class="rs rs-q">?</div><div><div class="rn">SAM.gov — UEI + CAGE Code</div><div class="rnote">Submitted Apr 17 · confirming status</div></div><div class="rlink"><a href="https://sam.gov" target="_blank">sam.gov →</a></div></div>
+      <div class="reg-row"><div class="rs rs-no">✗</div><div><div class="rn">MBE/DBE — MDOT</div><div class="rnote">Due May 15 · 90-120 day clock</div></div><div class="rlink"><a href="https://mbe.mdot.maryland.gov" target="_blank">mdot →</a></div></div>
+      <div class="reg-row"><div class="rs rs-no">✗</div><div><div class="rn">MONK LLC Formation</div><div class="rnote">OVERDUE · businessexpress.maryland.gov</div></div><div class="rlink"><a href="https://businessexpress.maryland.gov" target="_blank">sdat →</a></div></div>
+      <div class="reg-row"><div class="rs rs-no">✗</div><div><div class="rn">IRS Form 1023 — EAF 501(c)(3)</div><div class="rnote">OVERDUE · blocks all grant funding</div></div><div class="rlink"><a href="https://pay.gov" target="_blank">pay.gov →</a></div></div>
+      <div class="reg-row"><div class="rs rs-q">?</div><div><div class="rn">SBA 8(a) Program</div><div class="rnote">Federal sole-source up to $4.5M</div></div><div class="rlink"><a href="https://certify.sba.gov" target="_blank">sba →</a></div></div>
+      <div class="reg-row"><div class="rs rs-ok">✓</div><div><div class="rn">Maryland SDAT — Good Standing</div><div class="rnote">Extensions filed · FP + KAL</div></div><div class="rlink"><a href="https://egov.maryland.gov/BusinessExpress" target="_blank">sdat →</a></div></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-a">A</div><div><div class="panel-title">Agent Status — 15 Workflows</div></div></div>
+    <div class="panel-body">
+      <div class="ag-row"><div class="ai ai-s" style="width:20px;height:20px;font-size:8px;">S</div><div class="ag-name">Scout v5</div><div class="ag-sched">Manual + scheduled</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-j" style="width:20px;height:20px;font-size:8px;">J</div><div class="ag-name">Jordan v3.1</div><div class="ag-sched">cron + pursue</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-i" style="width:20px;height:20px;font-size:8px;">I</div><div class="ag-name">Iris v3</div><div class="ag-sched">cron</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-a" style="width:20px;height:20px;font-size:8px;">At</div><div class="ag-name">Atlas v2</div><div class="ag-sched">webhook</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-s" style="width:20px;height:20px;font-size:8px;">N</div><div class="ag-name">Nova Proactive v3.2</div><div class="ag-sched">9AM daily + webhook</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-s" style="width:20px;height:20px;font-size:8px;">P</div><div class="ag-name">Nova Pursue Command</div><div class="ag-sched">/webhook/nova-pursue</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-s" style="width:20px;height:20px;font-size:8px;">O</div><div class="ag-name">Aidan Bridge v4</div><div class="ag-sched">WhatsApp</div><div class="ab ab-live">LIVE</div></div>
+      <div class="ag-row"><div class="ai ai-s" style="width:20px;height:20px;font-size:8px;">Sc</div><div class="ag-name">Scribe — ECL Directive Sync</div><div class="ag-sched">/webhook/ecl-directive</div><div class="ab ab-live" style="background:rgba(232,197,71,.12);color:var(--ecl-gold);">LIVE</div></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="ai ai-i">!</div><div><div class="panel-title">Hard Compliance Rules</div></div></div>
+    <div class="panel-body">
+      <div class="rule">NO funds flow FP → EAF — IRS private benefit prohibition</div>
+      <div class="rule">MONK IP belongs to MONK LLC only — never EAF or FP</div>
+      <div class="rule">NDAA fleet segregation — Green UAS never mixed with non-NDAA on gov contracts</div>
+      <div class="rule">Red team exercises require written auth + James Scott Esq. review</div>
+      <div class="rule">EAF compliance always beats FP efficiency when they conflict</div>
+      <div class="rule">DJI M350 RTK — private sector ONLY, NEVER government contract</div>
+      <div class="rule">Fleet 3 show hardware — private entertainment ONLY</div>
+      <div class="rule">NOTHING leaves platform without Kevin explicit WhatsApp approval</div>
+    </div>
+  </div>
+</div>
+<div class="footer">
+  <div class="footer-l">KAI-Netics Core MVP · v0.1 · May 2026 · Nova Proactive v3.2 LIVE · Pursue pipeline LIVE<br>n8n: localhost:5678 · Supabase: raxpmeltyxmtiihxoxpa · Feedback loop: ACTIVE · Scribe: /webhook/ecl-directive</div>
+  <div class="footer-r">
+    <a class="ql" href="https://sam.gov" target="_blank">SAM.gov →</a>
+    <a class="ql" href="https://mbe.mdot.maryland.gov" target="_blank">MBE →</a>
+    <a class="ql" href="https://businessexpress.maryland.gov" target="_blank">MONK LLC →</a>
+    <a class="ql" href="http://localhost:5678" target="_blank">n8n →</a>
+    <a class="ql" href="http://localhost:3030/health" target="_blank">server →</a>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     VIEW: INSPECTION
+═══════════════════════════════════════════════════════ -->
+<div class="view-pane" id="view-inspect">
+<div class="ops-container">
+  <div class="ops-header">
+    <div>
+      <div class="logo" style="color:var(--accent);">KAI-Netics // Opportunity Inspection</div>
+      <h1 style="font-size:26px;font-weight:800;letter-spacing:-1px;">Pipeline <span style="color:var(--accent);">Inspection</span></h1>
+    </div>
+    <div class="header-right">
+      <button onclick="loadInspectionList()" style="background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text2);font-family:'Space Mono',monospace;font-size:9px;padding:6px 12px;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- Two-pane layout: list left, detail right -->
+  <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;">
+
+    <!-- LEFT: opportunity list -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:sticky;top:60px;">
+      <div style="padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);letter-spacing:1px;">SELECT OPPORTUNITY</div>
+      <div id="inspect-list" style="max-height:calc(100vh - 180px);overflow-y:auto;">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);padding:20px 14px;text-align:center;">Loading...</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: inspection detail -->
+    <div id="inspect-detail">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:40px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:12px;">🔍</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);line-height:1.8;">Select an opportunity from the list<br>to view the full inspection record</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     VIEW: PLATFORM OPS
+═══════════════════════════════════════════════════════ -->
+<div class="view-pane" id="view-ops">
+<div class="ops-container">
+
+  <div class="ops-header">
+    <div>
+      <div class="logo" style="color:var(--nova);">KAI-Netics // Platform Operations</div>
+      <h1 style="font-size:26px;font-weight:800;letter-spacing:-1px;">Platform <span style="color:var(--nova);">Ops</span></h1>
+    </div>
+    <div class="header-right">
+      <div class="live-badge" style="border-color:rgba(0,229,255,.3);color:var(--nova);"><span class="live-dot" style="background:var(--nova);"></span> ALL AGENTS LIVE</div>
+      <div class="timestamp" id="ops-ts"></div>
+    </div>
+  </div>
+
+  <!-- ── RESCAN BAR ── -->
+  <div class="ops-rescan-bar">
+    <div class="orb-label">⚡ NOVA INTELLIGENCE — Rescan now or focus on a specific topic. Use when morning brief was missed or a new signal changes the picture.</div>
+    <input type="text" class="ops-focused-input" id="nova-focus-input" placeholder="Optional focus: e.g. FEMA preparedness grants, DOT SBIR, county EM partners...">
+    <button class="ops-rescan-btn" id="nova-rescan-btn" onclick="fireNovaScan()">⚡ Run Nova Scan</button>
+  </div>
+
+  <!-- ── NOVA LAST BRIEF ── -->
+  <div class="nova-brief-panel">
+    <div class="nova-brief-hdr">
+      <div style="width:28px;height:28px;border-radius:6px;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--nova);">N</div>
+      <div class="nb-title">Nova Proactive · Last Brief</div>
+      <div class="nb-meta" id="nova-brief-meta">Loading last report...</div>
+      <button onclick="loadLastNovaBrief()" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text2);font-family:'Space Mono',monospace;font-size:8px;padding:3px 8px;cursor:pointer;margin-left:8px;" onmouseover="this.style.borderColor='var(--nova)';this.style.color='var(--nova)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">↻ Reload</button>
+    </div>
+    <div class="nova-brief-body">
+      <div class="nova-brief-text" id="nova-brief-text">
+        <div class="nova-brief-placeholder">Loading last Nova Proactive report...<br><br>If blank, fire a Nova Scan above to generate the first brief.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── AGENT FIRE BUTTONS ── -->
+  <div class="sl">Fire Any Agent</div>
+  <div class="ops-fire-grid">
+    <button class="fire-btn nova-btn" id="fb-nova" onclick="fireAgent('nova-proactive','Nova Proactive','nova')">
+      <span class="fb-icon">🔭</span>
+      <div class="fb-name">Nova Scan</div>
+      <div class="fb-desc">Full proactive sweep<br>SAM + SBIR + USASpending<br>+ Regulations + Brave</div>
+      <div class="fb-status fb-s-ready" id="fbs-nova">READY</div>
+    </button>
+    <button class="fire-btn jordan-btn" id="fb-jordan" onclick="fireAgent('grant-writer','Jordan Grant Sweep','jordan')">
+      <span class="fb-icon">📝</span>
+      <div class="fb-name">Jordan</div>
+      <div class="fb-desc">Grant file sweep<br>LOI drafts · Fit scoring<br>EAF + FP grants</div>
+      <div class="fb-status fb-s-ready" id="fbs-jordan">READY</div>
+    </button>
+    <button class="fire-btn scout-btn" id="fb-scout" onclick="fireAgentWithInput('scout-research','Scout BD Research','scout')">
+      <span class="fb-icon">🔍</span>
+      <div class="fb-name">Scout</div>
+      <div class="fb-desc">BD research sweep<br>Enter target below<br>or fires default sweep</div>
+      <div class="fb-status fb-s-ready" id="fbs-scout">READY</div>
+    </button>
+    <button class="fire-btn iris-btn" id="fb-iris" onclick="fireAgent('iris-monitor','Iris Compliance','iris')">
+      <span class="fb-icon">🛡️</span>
+      <div class="fb-name">Iris</div>
+      <div class="fb-desc">Compliance report<br>Deadline check<br>Regulatory alerts</div>
+      <div class="fb-status fb-s-ready" id="fbs-iris">READY</div>
+    </button>
+    <button class="fire-btn atlas-btn" id="fb-atlas" onclick="fireAgentWithInput('atlas-architect','Atlas Architecture','atlas')">
+      <span class="fb-icon">🏗️</span>
+      <div class="fb-name">Atlas</div>
+      <div class="fb-desc">Architecture status<br>Platform health check<br>Drift detection</div>
+      <div class="fb-status fb-s-ready" id="fbs-atlas">READY</div>
+    </button>
+    <button class="fire-btn orch-btn" id="fb-orch" onclick="fireAgentWithInput('aidan-orchestra','Orchestra — All Agents','orch')">
+      <span class="fb-icon">🎼</span>
+      <div class="fb-name">Orchestra</div>
+      <div class="fb-desc">Fires ALL agents<br>Atlas + Scout + Jordan<br>+ Iris consolidated brief</div>
+      <div class="fb-status fb-s-ready" id="fbs-orch">READY</div>
+    </button>
+  </div>
+
+  <!-- ── SCOUT QUERY ROW ── -->
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:28px;flex-wrap:wrap;">
+    <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);white-space:nowrap;">Scout / Atlas / Orchestra query:</div>
+    <input type="text" id="agent-query-input" placeholder="e.g. BGE utility inspection contract · or · architecture status" style="flex:1;min-width:200px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:8px 12px;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);">Used by Scout · Atlas · Orchestra buttons above</div>
+  </div>
+
+  <!-- ── PURSUE FORM ── -->
+  <div class="pursue-form">
+    <div class="pursue-form-title">⬡ Add to Pipeline — Nova Pursue / Scout Pursue</div>
+    <div class="pursue-row">
+      <input type="text" class="pursue-input" id="pursue-opp-input" placeholder="Opportunity title: e.g. FEMA preparedness grant -- county EM partner needed">
+      <select class="pursue-entity-sel" id="pursue-entity-sel">
+        <option value="">Auto-detect</option>
+        <option value="EAF">EAF (grant/nonprofit)</option>
+        <option value="FP">FP (contract/BD)</option>
+        <option value="MONK">MONK (SBIR/R&D)</option>
+      </select>
+      <button class="pursue-fire-btn" id="pursue-fire-btn" onclick="firePursue()">⬡ Pursue</button>
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-top:6px;">Jordan drafts the document · Supabase pipeline record created · Iris fires for EAF items · confirmation on WhatsApp</div>
+  </div>
+
+  <!-- ── PIPELINE ── -->
+  <div class="sl">Active Pipeline</div>
+  <div class="pipeline-list">
+    <div class="pipeline-hdr">
+      <div style="font-size:12px;font-weight:700;flex:1;">Supabase Pipeline</div>
+      <button onclick="loadPipeline()" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text2);font-family:'Space Mono',monospace;font-size:8px;padding:3px 8px;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">↻ Refresh</button>
+    </div>
+    <div id="pipeline-items">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);padding:20px 16px;text-align:center;">Loading pipeline from Supabase...</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     VIEW: COMMAND (ECL)
+═══════════════════════════════════════════════════════ -->
+<div class="view-pane" id="view-command">
+<div class="ecl-header">
+  <div class="ecl-eyebrow">KAI-Netics // Executive Control Layer</div>
+  <div class="ecl-title">Platform <span>Command</span></div>
+  <div class="ecl-vision">This portal exists because agentic platforms only deliver their promise when the operator can speak to them in real language — updating what they know, correcting what they believe, and shaping what they prioritize. Every field here is a direct input to agent reasoning. When you update a deadline, Iris knows. When you enter a BD note, Scout knows. When you edit a directive, that agent's worldview shifts on the next run. This is not a dashboard. It is the cognitive interface between the operator and the platform. The intended outcome is a platform that thinks like Kevin, works like Kevin, and builds like Kevin — autonomously, relentlessly, and in service of the mission and the legacy of MONK.</div>
+</div>
+<div class="ecl-nav">
+  <div class="ecl-tab active" onclick="switchTab('deadlines')">Deadlines &amp; Status</div>
+  <div class="ecl-tab" onclick="switchTab('bd')">BD Pipeline</div>
+  <div class="ecl-tab" onclick="switchTab('mrr')">Revenue / MRR</div>
+  <div class="ecl-tab" onclick="switchTab('directives')">Agent Directives</div>
+  <div class="ecl-tab" onclick="switchTab('context')">Platform Context</div>
+</div>
+<div class="ecl-pane active" id="pane-deadlines">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div class="sl" style="margin-bottom:0;flex:1;">Compliance &amp; Deadline Registry</div>
+    <button class="save-btn" onclick="saveDeadlines()">⬆ Push to Iris</button>
+  </div>
+  <div id="deadline-list">
+    <div class="dl-item" data-id="form1023ez"><div><div class="dl-name">Form 1023-EZ Eligibility Check</div><div class="dl-sub">EAF · Owner: James Scott · Blocks all 501c3-dependent programs</div></div><input type="date" class="dl-date-input" value="2026-04-25"><select class="status-select s-overdue" onchange="colorStatus(this)"><option value="OVERDUE" selected>OVERDUE</option><option value="IN PROGRESS">IN PROGRESS</option><option value="COMPLETE">COMPLETE</option><option value="BLOCKED">BLOCKED</option><option value="PENDING">PENDING</option></select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button></div>
+    <div class="dl-notes-drawer"><textarea class="ecl-textarea">Eligibility check required before Form 1023 filing. James Scott to confirm 1023-EZ vs full 1023.</textarea></div>
+    <div class="dl-item" data-id="monk_llc"><div><div class="dl-name">MONK LLC Formation</div><div class="dl-sub">MONK · businessexpress.maryland.gov · Blocks patent filing</div></div><input type="date" class="dl-date-input" value="2026-05-01"><select class="status-select s-overdue" onchange="colorStatus(this)"><option value="OVERDUE" selected>OVERDUE</option><option value="IN PROGRESS">IN PROGRESS</option><option value="COMPLETE">COMPLETE</option><option value="BLOCKED">BLOCKED</option><option value="PENDING">PENDING</option></select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button></div>
+    <div class="dl-notes-drawer"><textarea class="ecl-textarea">James Scott to file Articles of Organization. Under $200. Highest risk open item — blocks patent filing and SBIR.</textarea></div>
+    <div class="dl-item" data-id="monk_patent"><div><div class="dl-name">MONK Provisional Patent Filing</div><div class="dl-sub">MONK · Owner: James Scott · IP protection window at risk</div></div><input type="date" class="dl-date-input" value="2026-04-30"><select class="status-select s-overdue" onchange="colorStatus(this)"><option value="OVERDUE" selected>OVERDUE</option><option value="IN PROGRESS">IN PROGRESS</option><option value="COMPLETE">COMPLETE</option><option value="BLOCKED">BLOCKED</option><option value="PENDING">PENDING</option></select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button></div>
+    <div class="dl-notes-drawer"><textarea class="ecl-textarea">Cannot safely file until MONK LLC exists as IP assignee. Sequence: MONK LLC first, then provisional patent.</textarea></div>
+    <div class="dl-item" data-id="irs1023"><div><div class="dl-name">IRS Form 1023 — EAF 501(c)(3)</div><div class="dl-sub">EAF · pay.gov · $275 (1023-EZ) or $600 (full) · Primary funding blocker</div></div><input type="date" class="dl-date-input" value="2026-05-01"><select class="status-select s-overdue" onchange="colorStatus(this)"><option value="OVERDUE" selected>OVERDUE</option><option value="IN PROGRESS">IN PROGRESS</option><option value="COMPLETE">COMPLETE</option><option value="BLOCKED">BLOCKED</option><option value="PENDING">PENDING</option></select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button></div>
+    <div class="dl-notes-drawer"><textarea class="ecl-textarea">Eligibility check prerequisite. 191-day processing reality. Blocks TechSoup, Google for Nonprofits, EARN Maryland, all 501c3-dependent grants.</textarea></div>
+    <div class="dl-item" data-id="sam_gov"><div><div class="dl-name">SAM.gov UEI + CAGE Registration</div><div class="dl-sub">FP · Submitted April 17 · Gates all federal contracts and SBIR</div></div><input type="date" class="dl-date-input" value="2026-04-30"><select class="status-select s-progress" onchange="colorStatus(this)"><option value="OVERDUE">OVERDUE</option><option value="IN PROGRESS" selected>IN PROGRESS</option><option value="COMPLETE">COMPLETE</option><option value="BLOCKED">BLOCKED</option><option value="PENDING">PENDING</option></select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button></div>
+    <div class="dl-notes-drawer"><textarea class="ecl-textarea">Submitted April 17. Kevin confirming current status.</textarea></div>
+    <div class="dl-item" data-id="mbe_dbe"><div><div class="dl-name">MBE/DBE Certification — MDOT</div><div class="dl-sub">FP · mbe.mdot.maryland.gov · 90–120 day processing clock</div></div><input type="date" class="dl-date-input" value="2026-05-15"><select class="status-select s-pending" onchange="colorStatus(this)"><option value="OVERDUE">OVERDUE</option><option value="IN PROGRESS">IN PROGRESS</option><option value="COMPLETE">COMPLETE</option><option value="BLOCKED">BLOCKED</option><option value="PENDING" selected>PENDING</option></select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button></div>
+    <div class="dl-notes-drawer"><textarea class="ecl-textarea">12 days remaining. Must apply to start 90-120 day clock. Gates MDSHA bridge inspection contracts.</textarea></div>
+    <div class="dl-item" data-id="omb_m2602"><div><div class="dl-name">OMB M-26-02 Federal Drone Compliance</div><div class="dl-sub">FP · CISSP + Part 107 = first dollar · $5K–$30K per engagement</div></div><input type="date" class="dl-date-input" value="2026-05-20"><select class="status-select s-pending" onchange="colorStatus(this)"><option value="OVERDUE">OVERDUE</option><option value="IN PROGRESS">IN PROGRESS</option><option value="COMPLETE">COMPLETE</option><option value="BLOCKED">BLOCKED</option><option value="PENDING" selected>PENDING</option></select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button></div>
+    <div class="dl-notes-drawer"><textarea class="ecl-textarea">FIRST DOLLAR OPPORTUNITY. No drone required. CISSP + Part 107 = uniquely qualified. Rate $150-250/hr or $5K-15K fixed.</textarea></div>
+    <div class="dl-item" data-id="techstars"><div><div class="dl-name">Techstars AI Health Baltimore Demo Day</div><div class="dl-sub">FP · M&T Bank Stadium · June 3 · Register by May 15</div></div><input type="date" class="dl-date-input" value="2026-06-03"><select class="status-select s-pending" onchange="colorStatus(this)"><option value="OVERDUE">OVERDUE</option><option value="IN PROGRESS">IN PROGRESS</option><option value="COMPLETE">COMPLETE</option><option value="BLOCKED">BLOCKED</option><option value="PENDING" selected>PENDING</option></select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button></div>
+    <div class="dl-notes-drawer"><textarea class="ecl-textarea">Register by May 15. Medical delivery angle. Dr. Amukele is the hook.</textarea></div>
+    <div class="dl-item" data-id="earn_md"><div><div class="dl-name">EARN Maryland Grant Application</div><div class="dl-sub">EAF · $50K–$500K · CAKO anchor program</div></div><input type="date" class="dl-date-input" value="2026-06-30"><select class="status-select s-pending" onchange="colorStatus(this)"><option value="OVERDUE">OVERDUE</option><option value="IN PROGRESS">IN PROGRESS</option><option value="COMPLETE">COMPLETE</option><option value="BLOCKED">BLOCKED</option><option value="PENDING" selected>PENDING</option></select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button></div>
+    <div class="dl-notes-drawer"><textarea class="ecl-textarea">Jordan has LOI draft ($285K ask). Blocked on 501c3 determination.</textarea></div>
+  </div>
+  <div class="add-form" style="margin-top:16px;">
+    <div class="add-form-title">+ Add Deadline / Compliance Item</div>
+    <div class="card-row"><div class="ecl-field"><div class="ecl-label">Item Name</div><input type="text" class="ecl-input" id="new-dl-name" placeholder="e.g. Maryland Annual Report — FP"></div><div class="ecl-field"><div class="ecl-label">Entity</div><select class="ecl-select" id="new-dl-entity"><option value="FP">FP</option><option value="EAF">EAF</option><option value="MONK">MONK LLC</option><option value="KAL">KAL</option></select></div></div>
+    <div class="card-row three"><div class="ecl-field"><div class="ecl-label">Deadline Date</div><input type="date" class="ecl-input" id="new-dl-date"></div><div class="ecl-field"><div class="ecl-label">Status</div><select class="ecl-select" id="new-dl-status"><option>PENDING</option><option>IN PROGRESS</option><option>COMPLETE</option><option>OVERDUE</option><option>BLOCKED</option></select></div><div class="ecl-field"><div class="ecl-label">Owner</div><input type="text" class="ecl-input" id="new-dl-owner" placeholder="Kevin / James Scott / ..."></div></div>
+    <div class="ecl-field"><div class="ecl-label">Notes <span class="hint">— Iris will surface these in compliance briefs</span></div><textarea class="ecl-textarea" id="new-dl-notes" placeholder="What should Iris know? What does it block? What does it unlock?"></textarea></div>
+    <button class="add-btn" onclick="addDeadline()">+ Add to Registry</button>
+  </div>
+</div>
+<div class="ecl-pane" id="pane-bd">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div class="sl" style="margin-bottom:0;flex:1;">Business Development Pipeline</div>
+    <button class="save-btn" onclick="saveBD()">⬆ Push to Scout</button>
+  </div>
+  <div class="add-form">
+    <div class="add-form-title">+ Log BD Update / New Target</div>
+    <div class="bd-form-grid">
+      <div class="ecl-field" style="margin-bottom:0"><div class="ecl-label">Organization</div><input type="text" class="ecl-input" id="bd-org" placeholder="e.g. BGE, Johns Hopkins"></div>
+      <div class="ecl-field" style="margin-bottom:0"><div class="ecl-label">Opportunity</div><input type="text" class="ecl-input" id="bd-opp" placeholder="e.g. T&D Inspection Contract"></div>
+      <div class="ecl-field" style="margin-bottom:0"><div class="ecl-label">Vertical</div><select class="ecl-select" id="bd-vert"><option>V1 Infrastructure</option><option>V2 Warehouse/Logistics</option><option>V3 Public Safety</option><option>V4 Entertainment</option><option>V5 Medical Delivery</option><option>V6 OMB Compliance</option><option>V7 MONK Licensing</option></select></div>
+      <div class="ecl-field" style="margin-bottom:0"><div class="ecl-label">Fit %</div><input type="number" class="ecl-input" id="bd-fit" placeholder="82" min="0" max="100" style="text-align:center"></div>
+      <div class="ecl-field" style="margin-bottom:0"><div class="ecl-label">Stage</div><select class="ecl-select" id="bd-stage"><option>Identified</option><option>Researching</option><option>Qualified</option><option>Outreach Sent</option><option>In Conversation</option><option>Proposal Submitted</option><option>Closed Won</option><option>Closed Lost</option></select></div>
+      <div><button class="add-btn" style="height:38px;width:100%;justify-content:center;" onclick="addBDEntry()">+ Add</button></div>
+    </div>
+    <div class="ecl-field" style="margin-top:8px;margin-bottom:0"><div class="ecl-label">Notes / Context <span class="hint">— Scout and Atlas will use this</span></div><textarea class="ecl-textarea" id="bd-notes" style="min-height:60px;" placeholder="Contacts, conversations, blockers, intel..."></textarea></div>
+  </div>
+  <div id="bd-list">
+    <div class="bd-entry"><div><div class="bd-org">BGE — Transmission &amp; Distribution</div><div class="bd-opp">NERC FAC-001/003 · fleet arrives July 1 · outreach pending SAM.gov</div></div><div class="bd-vert-tag">V1 INFRA</div><div class="bd-score" style="color:var(--success)">92%</div><select class="status-select s-pending" onchange="colorStatus(this)" style="font-size:8px;"><option>Identified</option><option>Researching</option><option selected>Qualified</option><option>Outreach Sent</option><option>In Conversation</option><option>Proposal Submitted</option><option>Closed Won</option><option>Closed Lost</option></select><button class="del-btn" onclick="removeBD(this)">✕</button></div>
+    <div class="bd-entry"><div><div class="bd-org">UMMS Sparrows Point</div><div class="bd-opp">Medical campus delivery · 415K sq ft · 11 hospitals · Pat Vizzard VP Supply Chain</div></div><div class="bd-vert-tag">V5 MEDICAL</div><div class="bd-score" style="color:var(--success)">90%</div><select class="status-select s-pending" onchange="colorStatus(this)" style="font-size:8px;"><option>Identified</option><option>Researching</option><option selected>Qualified</option><option>Outreach Sent</option><option>In Conversation</option><option>Proposal Submitted</option><option>Closed Won</option><option>Closed Lost</option></select><button class="del-btn" onclick="removeBD(this)">✕</button></div>
+  </div>
+</div>
+<div class="ecl-pane" id="pane-mrr">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div class="sl" style="margin-bottom:0;flex:1;">Revenue Tracking &amp; MRR Targets</div>
+    <button class="save-btn" onclick="saveMRR()">⬆ Save &amp; Sync</button>
+  </div>
+  <div class="mrr-grid">
+    <div class="mrr-card"><div class="mrr-label">Current MRR</div><div class="mrr-val" id="mrr-display">$0</div><div class="mrr-sub">Monthly Recurring Revenue</div><div class="mrr-input-wrap"><span>$</span><input type="number" class="mrr-input" id="mrr-current" value="0" oninput="updateMRRDisplay()"></div></div>
+    <div class="mrr-card"><div class="mrr-label">Year 1 Target</div><div class="mrr-val" style="color:var(--text2)">$636K</div><div class="mrr-sub">Total Revenue Goal</div><div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" id="y1-bar" style="width:0%"></div></div><div class="progress-pct" id="y1-pct">0% achieved</div></div></div>
+    <div class="mrr-card"><div class="mrr-label">Revenue to Date</div><div class="mrr-val" id="rev-display">$0</div><div class="mrr-sub">Actual earned this year</div><div class="mrr-input-wrap"><span>$</span><input type="number" class="mrr-input" id="rev-actual" value="0" oninput="updateRevDisplay()"></div></div>
+    <div class="mrr-card"><div class="mrr-label">Pipeline Value</div><div class="mrr-val" id="pipe-display">$0</div><div class="mrr-sub">Qualified opportunities</div><div class="mrr-input-wrap"><span>$</span><input type="number" class="mrr-input" id="pipe-val" value="0" oninput="updatePipeDisplay()"></div></div>
+  </div>
+</div>
+<div class="ecl-pane" id="pane-directives">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+    <div class="sl" style="margin-bottom:0;flex:1;">Agent Directives &amp; Personality</div>
+    <button class="save-btn" onclick="saveDirectives()">⬆ Push to All Agents</button>
+  </div>
+  <div style="background:rgba(232,197,71,.05);border:1px solid rgba(232,197,71,.15);border-radius:6px;padding:12px 16px;margin-bottom:20px;font-family:'Space Mono',monospace;font-size:9px;color:var(--ecl-gold);line-height:1.8;">⬡ DIRECTIVE ENGINE — What you write here becomes the agent's worldview. Write in plain language. Be specific. Push sends directly to running agent workflows via Scribe.</div>
+  <div class="agent-card"><div class="agent-hdr" onclick="toggleAgent(this)"><div class="agent-icon" style="background:rgba(255,159,67,.1);border:1px solid rgba(255,159,67,.2);color:var(--monk);">A</div><div class="agent-meta"><div class="agent-name">Aidan — Chief of Staff</div><div class="agent-role">Orchestrator · WhatsApp routing · Morning brief synthesis</div></div><div class="agent-expand">▾ expand</div></div><div class="agent-body"><div class="directive-label">Core Directive</div><textarea class="directive-textarea" id="dir-aidan">You are Aidan, Chief of Staff to Kevin Alexander Smith, CEO of KAI-Netics. Synthesize what Atlas, Scout, Jordan, and Iris have found and give Kevin a morning brief that tells him exactly what to do today, in what order, and why. Kevin is a 33-year IT veteran — give him decisions, not explanations. Lead with the highest-leverage action of the day. Flag anything blocking money. Keep under 4000 characters for WhatsApp delivery. Nothing leaves the platform without Kevin's explicit approval.</textarea><div class="token-count" id="tc-aidan"></div></div></div>
+  <div class="agent-card"><div class="agent-hdr" onclick="toggleAgent(this)"><div class="agent-icon" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.15);color:var(--accent);">S</div><div class="agent-meta"><div class="agent-name">Scout — BD &amp; Grant Intelligence</div><div class="agent-role">Pipeline research · Grant sweeps · Fit scoring</div></div><div class="agent-expand">▾ expand</div></div><div class="agent-body"><div class="directive-label">Core Directive</div><textarea class="directive-textarea" id="dir-scout">You are Scout, BD and Grant Intelligence Manager for KAI-Netics. KAI-Netics is a drone services and technology company in the Baltimore/DMV region. Score on: credential alignment, entity fit (EAF for nonprofit grants, FP for commercial), DMV geographic concentration, revenue timeline. SBIR requires SAM.gov UEI — flag as blocked until confirmed. EAF grants require 501c3 — flag as blocked until Form 1023 approved.</textarea><div class="token-count" id="tc-scout"></div></div></div>
+  <div class="agent-card"><div class="agent-hdr" onclick="toggleAgent(this)"><div class="agent-icon" style="background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.2);color:var(--eaf);">J</div><div class="agent-meta"><div class="agent-name">Jordan — Grant Writer</div><div class="agent-role">Federal/state funding · LOI drafts · Eligibility analysis</div></div><div class="agent-expand">▾ expand</div></div><div class="agent-body"><div class="directive-label">Core Directive</div><textarea class="directive-textarea" id="dir-jordan">You are Jordan, Grant Writer for KAI-Netics Equity & Autonomy Foundry (EAF). EAF's primary program is CAKO — 12-16 week zero-tuition certification. Grant narrative: building the workforce pipeline that makes the autonomous economy equitable. Priority grants: EARN Maryland ($285K ask, June 30), FAA Aviation Workforce Development, FEMA C-UAS SLTT. Blocker: EAF 501c3 pending — flag all 501c3-required grants as BLOCKED.</textarea><div class="token-count" id="tc-jordan"></div></div></div>
+  <div class="agent-card"><div class="agent-hdr" onclick="toggleAgent(this)"><div class="agent-icon" style="background:rgba(255,59,59,.08);border:1px solid rgba(255,59,59,.15);color:var(--danger);">I</div><div class="agent-meta"><div class="agent-name">Iris — Compliance Monitor</div><div class="agent-role">Deadline tracking · Regulatory calendar · Risk flags</div></div><div class="agent-expand">▾ expand</div></div><div class="agent-body"><div class="directive-label">Core Directive</div><textarea class="directive-textarea" id="dir-iris">You are Iris, Compliance Officer for KAI-Netics. Flag CRITICAL items at 30 days, URGENT at 14 days, OVERDUE immediately with resolution path. Highest-risk failures: (1) MONK LLC not formed before patent, (2) IRS Form 1023 delayed, (3) SAM.gov UEI not confirmed. Never surface a compliance item without stating what it blocks.</textarea><div class="token-count" id="tc-iris"></div></div></div>
+  <div class="agent-card"><div class="agent-hdr" onclick="toggleAgent(this)"><div class="agent-icon" style="background:rgba(255,159,67,.1);border:1px solid rgba(255,159,67,.2);color:var(--monk);">At</div><div class="agent-meta"><div class="agent-name">Atlas — Chief Architect</div><div class="agent-role">Platform architecture · Cost model · Drift detection</div></div><div class="agent-expand">▾ expand</div></div><div class="agent-body"><div class="directive-label">Core Directive</div><textarea class="directive-textarea" id="dir-atlas">You are Atlas, Chief Architect of KAI-Netics Kinetic Core. North star: a licensable, multi-agent intelligence engine. Cost discipline: flag any Claude API call over $0.05, any session over $0.50. Three things that must never break: (1) Orchestra fan-out and callback consolidation, (2) Supabase agent_executions writes, (3) WhatsApp delivery to 14432576836.</textarea><div class="token-count" id="tc-atlas"></div></div></div>
+  <div class="agent-card"><div class="agent-hdr" onclick="toggleAgent(this)"><div class="agent-icon" style="background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.15);color:var(--success);">N</div><div class="agent-meta"><div class="agent-name">Nova — Intelligence Officer</div><div class="agent-role">Proactive sweep · Pipeline intelligence · RFP scoring</div></div><div class="agent-expand">▾ expand</div></div><div class="agent-body"><div class="directive-label">Core Directive</div><textarea class="directive-textarea" id="dir-nova">You are Nova, Intelligence Officer for KAI-Netics. Score opportunities on: NAICS alignment, geographic fit (MD, DC, VA), contract vehicle eligibility (SAM.gov UEI pending — flag federal as blocked), timeline to award. Priority types: drone inspection, UAS compliance consulting, workforce development, C-UAS. Flag any opportunity with past performance requirement — we are pre-revenue.</textarea><div class="token-count" id="tc-nova"></div></div></div>
+</div>
+<div class="ecl-pane" id="pane-context">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+    <div class="sl" style="margin-bottom:0;flex:1;">Platform Context — What the Agents Know</div>
+    <button class="save-btn" onclick="saveContext()">⬆ Patch KAI_Context.json</button>
+  </div>
+  <div class="ctx-section"><div class="ctx-hdr" onclick="toggleCtx(this)"><div class="ctx-icon">🎯</div><div class="ctx-name">Mission &amp; Vision</div><div class="ctx-desc">All agents · foundational</div></div><div class="ctx-body"><div class="ecl-field"><div class="ecl-label">Mission Statement</div><textarea class="ecl-textarea">KAI-Netics is building a business that provides for Kevin's family today and leaves a legacy for his grandson MONK tomorrow. Starting at net zero, bootstrapped, lean, and growth-focused. The short game funds the long game. The long game builds the platform. The platform builds the legacy.</textarea></div><div class="ecl-field"><div class="ecl-label">Current Phase</div><input type="text" class="ecl-input" value="Bootstrap Launch — Pre-Revenue · May 2026"></div><div class="ecl-field"><div class="ecl-label">First Dollar Path</div><textarea class="ecl-textarea" style="min-height:60px;">OMB M-26-02 federal drone compliance consulting. Every federal contractor operating drones must comply by May 20, 2026. Kevin's CISSP + Part 107 combination is uniquely qualified. No flight hours required. Rate: $150-250/hour or $5,000-15,000 fixed engagement.</textarea></div></div></div>
+  <div class="ctx-section"><div class="ctx-hdr" onclick="toggleCtx(this)"><div class="ctx-icon">🏰</div><div class="ctx-name">Competitive Moat</div><div class="ctx-desc">Scout · Nova · Atlas · opportunity scoring</div></div><div class="ctx-body"><div class="ecl-field"><div class="ecl-label">What makes KAI-Netics unique?</div><textarea class="ecl-textarea" style="min-height:120px;">1. FAA Part 107 + CISSP + PMP — rare credential stack no competitor combines
+2. Dual-entity structure — EAF absorbs workforce costs, FP captures revenue
+3. MONK hardware trust layer — cryptographically authenticated mission system (in development)
+4. AKMS data moat — proprietary flight dataset compounds with every operation
+5. CURN Baltimore endpoint — UMMS Sparrows Point 415K sq ft, 11 hospitals
+6. Multi-vertical coverage — infrastructure, entertainment, medical, technology
+7. Insider supply chain intelligence — Medline, MedImmune, MedStar, Capital One</textarea></div></div></div>
+  <div class="ctx-section"><div class="ctx-hdr" onclick="toggleCtx(this)"><div class="ctx-icon">📋</div><div class="ctx-name">Strategic Notes &amp; Open Questions</div><div class="ctx-desc">Free-form · all agents</div></div><div class="ctx-body"><div class="ecl-field"><div class="ecl-label">Kevin's current focus</div><textarea class="ecl-textarea" style="min-height:100px;">MONK LLC formation is the highest-risk open item. James Scott call closes 4 items: 1023-EZ eligibility, provisional patent, MONK LLC Articles, GoDaddy defederation. OMB M-26-02 deadline is 17 days — first dollar opportunity. Nova Proactive v3.2 LIVE. Pursue pipeline LIVE. FEMA Preparedness Grant LOI drafted — county EM partner needed.</textarea></div><div class="ecl-field"><div class="ecl-label">Open Questions for agents to research</div><textarea class="ecl-textarea" style="min-height:80px;" placeholder="List questions you want Scout, Jordan, or Atlas to investigate..."></textarea></div></div></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="ecl-toast" id="ecl-toast"></div>
+
+<script>
+const N8N = 'http://localhost:5678';
+const SERVER = 'http://localhost:3030';
+const SUPABASE_URL = 'https://raxpmeltyxmtiihxoxpa.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJheHBtZWx0eXhtdGlpaHhveHBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODI5MDIsImV4cCI6MjA5MjM1ODkwMn0.UScReg6BG4pimbjMeIE7NB2glcpdbgUbDLnDhDLURPM';
+const POLL_INTERVAL = 8000;
+
+function switchView(id, btn) {
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('view-' + id).classList.add('active');
+  if (id === 'ops') { loadLastNovaBrief(); loadPipeline(); }
+  if (id === 'inspect') { loadInspectionList(); }
+}
+
+const now = new Date();
+const tsStr = now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) + ' · ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+document.getElementById('ts').textContent = tsStr;
+document.getElementById('ops-ts').textContent = tsStr;
+
+let toastT;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 4500);
+}
+
+function toggleGC(el) {
+  const exp = el.querySelector('.gc-exp');
+  if (exp) exp.classList.toggle('open');
+}
+
+async function checkServer() {
+  try {
+    const r = await fetch(SERVER + '/health', {signal: AbortSignal.timeout(2000)});
+    const d = await r.json();
+    if (d.ok) { setServerStatus(true); toast('✓ File server online · ' + d.root, 'ok'); }
+    else { setServerStatus(false); }
+  } catch(e) { setServerStatus(false); }
+}
+function setServerStatus(online) {
+  const el = document.getElementById('serverStatus');
+  if (online) { el.textContent = '⬤ SERVER ONLINE'; el.className = 'server-status ok'; }
+  else { el.textContent = '⬤ SERVER OFFLINE'; el.className = 'server-status err'; }
+}
+checkServer();
+
+// ── PLATFORM OPS FUNCTIONS ─────────────────────────────
+
+async function loadLastNovaBrief() {
+  const el = document.getElementById('nova-brief-text');
+  const meta = document.getElementById('nova-brief-meta');
+  try {
+    const r = await fetch(SERVER + '/files?dir=Aidan_Outputs/Nova', {signal: AbortSignal.timeout(3000)});
+    const data = await r.json();
+    if (!data.files || data.files.length === 0) {
+      el.innerHTML = '<div class="nova-brief-placeholder">No Nova reports found. Fire a Nova Scan to generate the first brief.</div>';
+      meta.textContent = 'No reports yet';
+      return;
+    }
+    // Sort by modified time descending, find most recent JSON
+    const jsonFiles = data.files.filter(f => f.name.endsWith('.json')).sort((a,b) => new Date(b.modified||0) - new Date(a.modified||0));
+    if (jsonFiles.length === 0) { el.innerHTML = '<div class="nova-brief-placeholder">No JSON reports found.</div>'; return; }
+    const newest = jsonFiles[0];
+    const fr = await fetch(SERVER + '/file?path=' + encodeURIComponent(newest.path), {signal: AbortSignal.timeout(5000)});
+    const fd = await fr.json();
+    if (!fd.content) { el.innerHTML = '<div class="nova-brief-placeholder">Could not read report file.</div>'; return; }
+    const report = JSON.parse(fd.content);
+    const generated = report.meta && report.meta.generated ? new Date(report.meta.generated).toLocaleString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : 'unknown';
+    meta.textContent = generated + ' · v' + (report.meta && report.meta.version || '?');
+    // Build display
+    const apiSummary = report.api_summary || {};
+    const samStatus = apiSummary.sam && apiSummary.sam.skipped ? 'skipped' : (apiSummary.sam && apiSummary.sam.ok ? apiSummary.sam.count : 'err');
+    let briefHtml = '';
+    briefHtml += '<span style="color:var(--text2)">NOVA PROACTIVE v' + (report.meta && report.meta.version || '?') + ' — ' + (report.meta && report.meta.generated ? report.meta.generated.slice(0,10) : '') + '</span>\n';
+    briefHtml += '<span style="color:var(--muted)">SAM(' + samStatus + ') SBIR(' + (apiSummary.sbir ? (apiSummary.sbir.ok ? apiSummary.sbir.count : 'err') : '?') + ') Grants(' + (apiSummary.grants ? (apiSummary.grants.ok ? apiSummary.grants.count : 'err') : '?') + ') Awards(' + (apiSummary.usaAwards ? (apiSummary.usaAwards.ok ? apiSummary.usaAwards.count : 'err') : '?') + ')</span>\n\n';
+    if (report.top_insight) {
+      briefHtml += '<span style="color:var(--accent);font-weight:700;">TOP INSIGHT:</span>\n<span class="insight-line">' + escHtml(report.top_insight) + '</span>\n\n';
+    }
+    briefHtml += '<span style="color:var(--muted)">BH6: ' + (report.bh6_status || 'WATCH') + '</span>\n\n';
+    const t1 = report.tier1 || [];
+    briefHtml += '<span style="color:var(--success);font-weight:700;">TIER 1 — ACT NOW (' + t1.length + '):</span>\n';
+    if (t1.length === 0) { briefHtml += '<span style="color:var(--muted)">None this cycle</span>\n'; }
+    else {
+      t1.forEach((o, i) => {
+        briefHtml += '<span class="t1-line">' + (i+1) + '. [' + (o.scope||'?') + '][' + (o.entity||'?') + '] ' + escHtml(o.whatsapp_line || o.title) + (o.ndaa_advantage ? ' [NDAA]' : '') + (o.zero_capital ? ' [ZERO-CAP]' : '') + '</span>\n';
+        if (o.specific_next_step) briefHtml += '<span style="color:var(--accent)">   → ' + escHtml(o.specific_next_step) + '</span>\n';
+      });
+    }
+    const t2 = report.tier2 || [];
+    briefHtml += '\n<span style="color:var(--warn)">TIER 2 (' + t2.length + ' items — pursue soon):</span>\n';
+    t2.slice(0,5).forEach((o, i) => {
+      briefHtml += '<span class="warn-line">' + (i+1) + '.[' + (o.scope||'?') + '][' + (o.entity||'?') + '] ' + escHtml(o.whatsapp_line || o.title) + '</span>\n';
+      if (o.unlock_gate) briefHtml += '<span style="color:var(--muted)">   Gate: ' + escHtml(o.unlock_gate) + '</span>\n';
+    });
+    if (t2.length > 5) briefHtml += '<span style="color:var(--muted)">   ...and ' + (t2.length - 5) + ' more in Supabase</span>\n';
+    briefHtml += '\n<span style="color:var(--muted)">Tier 3: ' + (report.tier3 || []).length + ' items in pipeline</span>';
+    el.innerHTML = briefHtml;
+    setServerStatus(true);
+  } catch(e) {
+    el.innerHTML = '<div class="nova-brief-placeholder">Could not load brief — file server may be offline.<br><br>' + e.message + '</div>';
+    setServerStatus(false);
+  }
+}
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function fireNovaScan() {
+  const btn = document.getElementById('nova-rescan-btn');
+  const focus = document.getElementById('nova-focus-input').value.trim();
+  btn.textContent = '⟳ Firing...';
+  btn.disabled = true;
+  const payload = { source: 'dashboard' };
+  if (focus) payload.focus = focus;
+  try {
+    await fetch(N8N + '/webhook/nova-proactive', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    toast('⚡ Nova scan fired — brief arriving ~2 minutes', 'info');
+    btn.textContent = '⟳ Running...';
+    setTimeout(() => { btn.textContent = '⚡ Run Nova Scan'; btn.disabled = false; loadLastNovaBrief(); }, 130000);
+  } catch(e) {
+    toast('✗ Failed: ' + e.message, 'err');
+    btn.textContent = '⚡ Run Nova Scan';
+    btn.disabled = false;
+  }
+}
+
+function setFireBtn(id, state, label) {
+  const btn = document.getElementById('fb-' + id);
+  const status = document.getElementById('fbs-' + id);
+  if (!btn || !status) return;
+  btn.className = 'fire-btn' + (id==='nova'?' nova-btn':id==='jordan'?' jordan-btn':id==='scout'?' scout-btn':id==='iris'?' iris-btn':id==='atlas'?' atlas-btn':id==='orch'?' orch-btn':'') + (state==='firing'?' firing':state==='done'?' done':state==='error'?' error':'');
+  status.className = 'fb-status fb-s-' + (state==='firing'?'firing':state==='done'?'done':state==='error'?'error':'ready');
+  status.textContent = label || state.toUpperCase();
+}
+
+async function fireAgent(webhook, label, id) {
+  setFireBtn(id, 'firing', 'FIRING');
+  toast('⚡ Firing ' + label, 'info');
+  try {
+    await fetch(N8N + '/webhook/' + webhook, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({trigger:'dashboard'}) });
+    setFireBtn(id, 'firing', 'RUNNING');
+    setTimeout(() => { setFireBtn(id, 'done', 'DONE ✓'); toast('✓ ' + label + ' complete — check WhatsApp', 'ok'); }, 30000);
+    setTimeout(() => setFireBtn(id, 'ready', 'READY'), 60000);
+  } catch(e) {
+    setFireBtn(id, 'error', 'ERR');
+    toast('✗ ' + label + ' failed: ' + e.message, 'err');
+    setTimeout(() => setFireBtn(id, 'ready', 'READY'), 5000);
+  }
+}
+
+async function fireAgentWithInput(webhook, label, id) {
+  const query = document.getElementById('agent-query-input').value.trim();
+  setFireBtn(id, 'firing', 'FIRING');
+  toast('⚡ Firing ' + label + (query ? ': ' + query.substring(0,40) : ''), 'info');
+  const payload = { trigger: 'dashboard', command: query || label + ' status', query: query, detail: query };
+  try {
+    await fetch(N8N + '/webhook/' + webhook, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    setFireBtn(id, 'firing', 'RUNNING');
+    setTimeout(() => { setFireBtn(id, 'done', 'DONE ✓'); toast('✓ ' + label + ' complete — check WhatsApp', 'ok'); }, 45000);
+    setTimeout(() => setFireBtn(id, 'ready', 'READY'), 75000);
+  } catch(e) {
+    setFireBtn(id, 'error', 'ERR');
+    toast('✗ ' + label + ' failed: ' + e.message, 'err');
+    setTimeout(() => setFireBtn(id, 'ready', 'READY'), 5000);
+  }
+}
+
+async function firePursue() {
+  const opp = document.getElementById('pursue-opp-input').value.trim();
+  const entity = document.getElementById('pursue-entity-sel').value;
+  const btn = document.getElementById('pursue-fire-btn');
+  if (!opp) { toast('Enter an opportunity title', 'err'); return; }
+  btn.textContent = '⟳ Firing...';
+  btn.classList.add('firing');
+  const parts = opp.split(' -- ');
+  const title = parts[0].trim();
+  const note = parts[1] ? parts[1].trim() : '';
+  const payload = { title, note, source: 'dashboard', entity: entity || '' };
+  try {
+    await fetch(N8N + '/webhook/nova-pursue', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    toast('⬡ Pipeline initiated: ' + title.substring(0,60) + ' — Jordan drafting, check WhatsApp ~45s', 'ok');
+    document.getElementById('pursue-opp-input').value = '';
+    document.getElementById('pursue-entity-sel').value = '';
+    setTimeout(() => loadPipeline(), 10000);
+  } catch(e) {
+    toast('✗ Pursue failed: ' + e.message, 'err');
+  }
+  btn.textContent = '⬡ Pursue';
+  btn.classList.remove('firing');
+}
+
+async function loadPipeline() {
+  const el = document.getElementById('pipeline-items');
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/pipeline?select=id,title,entity,opportunity_type,status,kevin_note,created_at&order=created_at.desc&limit=20', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    if (!data || data.length === 0) {
+      el.innerHTML = '<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:var(--muted);padding:20px 16px;text-align:center;">No pipeline items yet. Use Pursue above to add opportunities.</div>';
+      return;
+    }
+    el.innerHTML = data.map(item => {
+      const entityClass = item.entity === 'EAF' ? 'pi-eaf' : item.entity === 'FP' ? 'pi-fp' : item.entity === 'MONK' ? 'pi-monk' : 'pi-fp';
+      const statusClass = item.status === 'pursuing' ? 'pi-pursuing' : item.status === 'applied' ? 'pi-applied' : item.status === 'won' ? 'pi-won' : 'pi-pursuing';
+      const date = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      return '<div class="pipeline-item" style="cursor:pointer;" onclick="openInspection(\''+item.id+'\')" onmouseover="this.style.borderLeft=\'3px solid var(--accent)\'" onmouseout="this.style.borderLeft=\'\'"><span class="pi-entity ' + entityClass + '">' + (item.entity||'?') + '</span><div><div class="pi-title">' + escHtml(item.title) + '</div>' + (item.kevin_note ? '<div class="pi-note">' + escHtml(item.kevin_note) + '</div>' : '') + '</div><div style="font-family:\'Space Mono\',monospace;font-size:9px;color:var(--muted);margin-left:auto;padding-right:10px;">' + date + '</div><span class="pi-status ' + statusClass + '">' + (item.status||'?').toUpperCase() + '</span><span style="font-family:\'Space Mono\',monospace;font-size:9px;color:var(--accent);padding-left:8px;">→</span></div>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:var(--danger);padding:20px 16px;">Could not load pipeline: ' + e.message + '</div>';
+  }
+}
+
+// ── INSPECTION FUNCTIONS ────────────────────────────────
+
+async function loadInspectionList() {
+  const el = document.getElementById('inspect-list');
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/pipeline?select=id,title,entity,status,fit_score,last_activity_at&order=last_activity_at.desc&limit=30', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    if (!Array.isArray(data)) {
+      el.innerHTML = '<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:var(--danger);padding:20px 14px;">Supabase error: ' + escHtml(JSON.stringify(data)) + '</div>';
+      return;
+    }
+    if (data.length === 0) {
+      el.innerHTML = '<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:var(--muted);padding:20px 14px;text-align:center;">No opportunities yet.</div>';
+      return;
+    }
+    el.innerHTML = data.map(item => {
+      const entityClass = item.entity === 'EAF' ? 'pi-eaf' : item.entity === 'FP' ? 'pi-fp' : item.entity === 'MONK' ? 'pi-monk' : 'pi-fp';
+      const fitColor = item.fit_score >= 80 ? 'var(--success)' : item.fit_score >= 60 ? 'var(--warn)' : item.fit_score ? 'var(--danger)' : 'var(--muted)';
+      const date = item.last_activity_at ? new Date(item.last_activity_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      return `<div onclick="loadInspectionDetail('${item.id}')" style="padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(0,229,255,.04)'" onmouseout="this.style.background=''"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="pi-entity ${entityClass}" style="font-size:7px;padding:1px 5px;">${item.entity||'?'}</span><span style="font-size:11px;font-weight:700;flex:1;">${escHtml(item.title)}</span></div><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:'Space Mono',monospace;font-size:9px;color:${fitColor}">${item.fit_score ? item.fit_score+'%' : '—'}</span><span style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);">${date}</span></div></div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:var(--danger);padding:20px 14px;">Error: ' + e.message + '</div>';
+  }
+}
+
+async function openInspection(id) {
+  // Switch to inspection tab and load
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('inspect-tab').classList.add('active');
+  document.getElementById('view-inspect').classList.add('active');
+  await loadInspectionList();
+  await loadInspectionDetail(id);
+}
+
+async function loadInspectionDetail(id) {
+  const el = document.getElementById('inspect-detail');
+  el.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:40px;text-align:center;"><div style="font-family:\'Space Mono\',monospace;font-size:10px;color:var(--muted);">Loading...</div></div>';
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/pipeline?id=eq.' + id + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    if (!data || data.length === 0) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">Record not found.</div>'; return; }
+    const o = data[0];
+    const fitColor = o.fit_score >= 80 ? 'var(--success)' : o.fit_score >= 60 ? 'var(--warn)' : o.fit_score ? 'var(--danger)' : 'var(--text2)';
+    const entityClass = o.entity === 'EAF' ? 'pi-eaf' : o.entity === 'FP' ? 'pi-fp' : o.entity === 'MONK' ? 'pi-monk' : 'pi-fp';
+    const statusClass = o.status === 'pursuing' ? 'pi-pursuing' : o.status === 'won' ? 'pi-won' : 'pi-pursuing';
+    const blockers = Array.isArray(o.blockers) ? o.blockers : (o.blockers ? JSON.parse(o.blockers) : []);
+    const actions = Array.isArray(o.recommended_actions) ? o.recommended_actions : (o.recommended_actions ? JSON.parse(o.recommended_actions) : []);
+    const tags = Array.isArray(o.tags) ? o.tags : [];
+    const lastActivity = o.last_activity_at ? new Date(o.last_activity_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+
+    let html = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:20px 24px;margin-bottom:14px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;">
+          <div style="font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(o.title)}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <span class="pi-entity ${entityClass}">${o.entity||'?'}</span>
+            <span class="pi-status ${statusClass}">${(o.status||'?').toUpperCase()}</span>
+            ${tags.map(t => `<span style="font-family:'Space Mono',monospace;font-size:8px;background:rgba(0,229,255,.08);color:var(--accent);padding:2px 6px;border-radius:3px;">${escHtml(t)}</span>`).join('')}
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:'Space Mono',monospace;font-size:36px;font-weight:700;color:${fitColor};line-height:1;">${o.fit_score !== null ? o.fit_score+'%' : '—'}</div>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px;">FIT SCORE</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">Grant / Contract Details</div>
+        ${fieldRow('Issuing Body', o.issuing_body)}
+        ${fieldRow('Opportunity Type', o.opportunity_type)}
+        ${fieldRow('Estimated Value', o.award_value)}
+        ${fieldRow('Deadline', o.deadline)}
+        ${fieldRow('Deadline Notes', o.deadline_notes)}
+        ${fieldRow('Source', o.source_url ? `<a href="${escHtml(o.source_url)}" target="_blank" style="color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;">${escHtml(o.source_url).substring(0,60)}...</a>` : null, true)}
+        ${fieldRow('Contact', o.contact_poc)}
+        ${fieldRow('Contact Email', o.contact_email)}
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">Intelligence Layer</div>
+        ${fieldRow('Fit Rationale', o.fit_rationale)}
+        ${fieldRow('Strategic Alignment', o.strategic_alignment)}
+        ${fieldRow('Relationship Overlaps', o.relationship_overlaps)}
+        ${fieldRow('Beachhead', o.beachhead)}
+        ${fieldRow('Last Activity', lastActivity)}
+        ${fieldRow('Created By', o.created_by_agent)}
+      </div>
+    </div>
+
+    ${blockers.length > 0 ? `
+    <div style="background:var(--surface);border:1px solid rgba(255,59,59,.2);border-radius:8px;padding:14px 16px;margin-bottom:14px;">
+      <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--danger);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;">⚠ Blockers (${blockers.length})</div>
+      ${blockers.map(b => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+          <div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;background:${b.status==='resolved'?'var(--success)':'var(--danger)'};box-shadow:0 0 5px ${b.status==='resolved'?'var(--success)':'var(--danger)'}"></div>
+          <div style="flex:1;"><div style="font-size:12px;font-weight:700;">${escHtml(b.label||'')}</div><div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px;">Owner: ${escHtml(b.owner||'—')} · ${b.status||'open'}</div></div>
+        </div>`).join('')}
+    </div>` : ''}
+
+    ${actions.length > 0 ? `
+    <div style="background:var(--surface);border:1px solid rgba(0,229,255,.15);border-radius:8px;padding:14px 16px;margin-bottom:14px;">
+      <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--accent);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;">→ Recommended Actions</div>
+      ${actions.map(a => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+          <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;min-width:20px;">${a.step||''}.</div>
+          <div style="flex:1;"><div style="font-size:12px;">${escHtml(a.action||'')}</div><div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px;">Owner: ${escHtml(a.owner||'—')}</div></div>
+          <button onclick="firePursueFromInspection('${escHtml(o.title)}','${o.entity||''}')" style="background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);color:var(--success);font-family:'Space Mono',monospace;font-size:8px;padding:4px 8px;border-radius:3px;cursor:pointer;white-space:nowrap;">⬡ Pursue</button>
+        </div>`).join('')}
+    </div>` : ''}
+
+    ${o.requirements_summary ? `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:14px;">
+      <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">Requirements Summary</div>
+      <div style="font-size:11px;line-height:1.7;color:var(--text2);">${escHtml(o.requirements_summary)}</div>
+    </div>` : ''}
+
+    ${o.draft_path ? `
+    <div style="background:rgba(0,200,150,.04);border:1px solid rgba(0,200,150,.2);border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:16px;">📄</span>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;color:var(--success);">Jordan Draft Available</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px;">${escHtml(o.draft_path.split('/').pop())}</div>
+      </div>
+      <button onclick="viewDraft('${escHtml(o.draft_path)}')" style="background:transparent;border:1px solid var(--border);color:var(--text2);font-family:'Space Mono',monospace;font-size:9px;padding:6px 12px;border-radius:4px;cursor:pointer;white-space:nowrap;margin-right:6px;">View</button>
+      <button onclick="prepareEmail('${escHtml(o.id)}','${escHtml(o.title)}','${escHtml(o.contact_email||'')}','${escHtml(o.contact_poc||'')}','${escHtml(o.issuing_body||'')}','${escHtml(o.draft_path)}')" style="background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);color:var(--accent);font-family:'Space Mono',monospace;font-size:9px;padding:6px 12px;border-radius:4px;cursor:pointer;white-space:nowrap;">✉ Prepare Email</button>
+    </div>` : ''}
+
+    <!-- CONTACT LOG -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:14px;">
+      <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;">
+        Contact Log
+        <button onclick="saveContactLog('${o.id}')" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);color:var(--accent);font-family:'Space Mono',monospace;font-size:8px;padding:3px 10px;border-radius:3px;cursor:pointer;">Save</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:4px;">Last Contact</div>
+          <input type="date" id="cl-last-date" value="${o.last_contact_date||''}" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:6px 8px;outline:none;">
+        </div>
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:4px;">Next Follow-up</div>
+          <input type="date" id="cl-next-date" value="${o.next_follow_up_date||''}" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:6px 8px;outline:none;">
+        </div>
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:4px;">Status Update</div>
+          <select id="cl-status" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:6px 8px;outline:none;">
+            <option value="pursuing" ${o.status==='pursuing'?'selected':''}>Pursuing</option>
+            <option value="in_conversation" ${o.status==='in_conversation'?'selected':''}>In Conversation</option>
+            <option value="proposal_sent" ${o.status==='proposal_sent'?'selected':''}>Proposal Sent</option>
+            <option value="won" ${o.status==='won'?'selected':''}>Won</option>
+            <option value="lost" ${o.status==='lost'?'selected':''}>Lost</option>
+            <option value="archived" ${o.status==='archived'?'selected':''}>Archived</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:4px;">Contact Notes <span style="opacity:.5;">— agents read this</span></div>
+        <textarea id="cl-notes" rows="3" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:8px;outline:none;resize:vertical;line-height:1.6;" placeholder="e.g. Called BGE supplier diversity, left voicemail. Follow up Friday. Contact confirmed NERC inspection cycle starts Q3.">${o.last_contact_notes||''}</textarea>
+      </div>
+    </div>
+    `;
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger);font-family:\'Space Mono\',monospace;font-size:10px;">Error loading record: ' + e.message + '</div>';
+  }
+}
+
+function fieldRow(label, val, raw) {
+  if (!val) return '';
+  const display = raw ? val : escHtml(String(val));
+  return `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;"><span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);flex-shrink:0;margin-right:8px;">${label}</span><span style="text-align:right;color:var(--text);font-weight:500;">${display}</span></div>`;
+}
+
+async function firePursueFromInspection(title, entity) {
+  try {
+    await fetch(N8N + '/webhook/nova-pursue', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ title, entity, source: 'dashboard_inspection' }) });
+    toast('⬡ Pursue fired: ' + title.substring(0,40) + ' — check WhatsApp ~45s', 'ok');
+  } catch(e) { toast('✗ Pursue failed: ' + e.message, 'err'); }
+}
+
+async function saveContactLog(pipelineId) {
+  const lastDate = document.getElementById('cl-last-date')?.value || null;
+  const nextDate = document.getElementById('cl-next-date')?.value || null;
+  const notes = document.getElementById('cl-notes')?.value || null;
+  const status = document.getElementById('cl-status')?.value || null;
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/pipeline?id=eq.' + pipelineId, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ last_contact_date: lastDate||undefined, next_follow_up_date: nextDate||undefined, last_contact_notes: notes, status, last_activity_at: new Date().toISOString() })
+    });
+    if (r.ok) { toast('✓ Contact log saved', 'ok'); }
+    else { const e = await r.json(); toast('✗ Save failed: ' + (e.message||r.status), 'err'); }
+  } catch(e) { toast('✗ ' + e.message, 'err'); }
+}
+
+async function prepareEmail(pipelineId, title, contactEmail, contactPoc, issuingBody, draftPath) {
+  // Load the draft content first
+  const relativePath = draftPath.replace(/^\/data\//, '');
+  let draftContent = '';
+  try {
+    const r = await fetch(SERVER + '/file?path=' + encodeURIComponent(relativePath), {signal: AbortSignal.timeout(5000)});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    draftContent = data.content || '';
+    if (!draftContent) throw new Error('Empty content returned');
+    // Strip the Jordan header block (everything up to the first blank line after headers)
+    draftContent = draftContent.replace(/^JORDAN[\s\S]*?\n\n/, '').trim();
+  } catch(e) {
+    // Fallback: try to load the most recent Pipeline file for this opportunity
+    try {
+      const listR = await fetch(SERVER + '/files?dir=Aidan_Outputs/Jordan', {signal: AbortSignal.timeout(3000)});
+      const listData = await listR.json();
+      const oppSlug = draftPath.split('/').pop().replace(/^Pipeline_[\dT\-Z]+_/, '').replace('.txt','');
+      const match = (listData.files || []).find(f => f.name.includes(oppSlug) && f.name.startsWith('Pipeline_'));
+      if (match) {
+        const fr = await fetch(SERVER + '/file?path=' + encodeURIComponent(match.path), {signal: AbortSignal.timeout(5000)});
+        const fd = await fr.json();
+        draftContent = (fd.content || '').replace(/^JORDAN[\s\S]*?\n\n/, '').trim();
+      }
+    } catch(e2) {}
+    if (!draftContent) draftContent = '[Draft could not be loaded automatically.\n\nPaste or type your message here.\n\nOpportunity: ' + title + ']';
+  }
+
+  const subject = 'Capability Statement — KAI-Netics | ' + title.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+  const bcc = 'kas42869@gmail.com';
+
+  const existing = document.getElementById('email-modal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'email-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:var(--surface);border:1px solid rgba(0,229,255,.2);border-radius:12px;width:100%;max-width:860px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 20px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+        <div style="font-size:14px;font-weight:800;color:var(--accent);flex:1;">✉ Prepare Outreach Email</div>
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--warn);padding:3px 8px;background:rgba(255,214,10,.08);border:1px solid rgba(255,214,10,.2);border-radius:3px;">REVIEW BEFORE SEND</div>
+        <button onclick="document.getElementById('email-modal').remove()" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text2);font-family:'Space Mono',monospace;font-size:9px;padding:4px 10px;cursor:pointer;">✕ Close</button>
+      </div>
+      <div style="padding:18px 20px;overflow-y:auto;flex:1;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:4px;letter-spacing:1px;">TO</div>
+            <input id="em-to" type="email" value="${escHtml(contactEmail)}" placeholder="recipient@organization.com" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;padding:8px 10px;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+          <div>
+            <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:4px;letter-spacing:1px;">BCC (record copy)</div>
+            <input id="em-bcc" type="email" value="${escHtml(bcc)}" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;padding:8px 10px;outline:none;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:4px;letter-spacing:1px;">SUBJECT</div>
+          <input id="em-subject" type="text" value="${escHtml(subject)}" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;padding:8px 10px;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div style="margin-bottom:14px;">
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);margin-bottom:4px;letter-spacing:1px;">BODY <span style="opacity:.5;">— edit before sending</span></div>
+          <textarea id="em-body" rows="18" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;padding:10px;outline:none;resize:vertical;line-height:1.7;transition:border-color .15s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">${escHtml(draftContent)}</textarea>
+        </div>
+        <div style="background:rgba(255,214,10,.04);border:1px solid rgba(255,214,10,.15);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-family:'Space Mono',monospace;font-size:9px;color:var(--warn);line-height:1.7;">
+          ⚠ Review all fields before sending. To field may need manual entry if contact email is not yet in the pipeline record. BCC ensures a record copy lands in kas42869@gmail.com.
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button onclick="document.getElementById('email-modal').remove()" style="background:transparent;border:1px solid var(--border);color:var(--text2);font-family:'Space Mono',monospace;font-size:9px;padding:9px 18px;border-radius:5px;cursor:pointer;">Cancel</button>
+          <button onclick="sendPursuitEmail('${pipelineId}')" style="background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);color:var(--accent);font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:9px 20px;border-radius:5px;cursor:pointer;">✉ Send via Gmail</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
+async function sendPursuitEmail(pipelineId) {
+  const to = document.getElementById('em-to')?.value?.trim();
+  const bcc = document.getElementById('em-bcc')?.value?.trim();
+  const subject = document.getElementById('em-subject')?.value?.trim();
+  const body = document.getElementById('em-body')?.value?.trim();
+  if (!to) { toast('Enter a recipient email address', 'err'); return; }
+  const btn = document.querySelector('#email-modal button[onclick*="sendPursuitEmail"]');
+  if (btn) { btn.textContent = '⟳ Sending...'; btn.disabled = true; }
+  try {
+    const r = await fetch(N8N + '/webhook/jordan-send-email', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ to, bcc, subject, body, pipelineId, source: 'dashboard_inspection' })
+    });
+    if (r.ok || r.status === 200) {
+      // Update pipeline record
+      await fetch(SUPABASE_URL + '/rest/v1/pipeline?id=eq.' + pipelineId, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'pursuing', last_contact_date: new Date().toISOString().slice(0,10), last_contact_notes: 'Outreach email sent to ' + to + ' — ' + subject, last_activity_at: new Date().toISOString() })
+      });
+      document.getElementById('email-modal')?.remove();
+      toast('✓ Email sent to ' + to + ' — pipeline updated', 'ok');
+      // Reload the inspection detail
+      await loadInspectionDetail(pipelineId);
+    } else {
+      throw new Error('HTTP ' + r.status);
+    }
+  } catch(e) {
+    toast('✗ Send failed: ' + e.message, 'err');
+    if (btn) { btn.textContent = '✉ Send via Gmail'; btn.disabled = false; }
+  }
+}
+
+async function viewDraft(path) {
+  // Strip the /data/ prefix to get the relative path for the file server
+  const relativePath = path.replace(/^\/data\//, '');
+  try {
+    const r = await fetch(SERVER + '/file?path=' + encodeURIComponent(relativePath), {signal: AbortSignal.timeout(5000)});
+    const data = await r.json();
+    if (!data.content) { toast('Draft file not found on server', 'err'); return; }
+    // Show in a modal overlay
+    const existing = document.getElementById('draft-modal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'draft-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:800px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+          <div style="font-size:13px;font-weight:800;flex:1;">Jordan Draft</div>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text2);">${escHtml(path.split('/').pop())}</div>
+          <button onclick="document.getElementById('draft-modal').remove()" style="background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text2);font-family:'Space Mono',monospace;font-size:9px;padding:4px 10px;cursor:pointer;">Close</button>
+        </div>
+        <div style="padding:20px;overflow-y:auto;flex:1;">
+          <pre style="font-family:'Space Mono',monospace;font-size:10px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-wrap:break-word;margin:0;">${escHtml(data.content)}</pre>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  } catch(e) { toast('Could not load draft: ' + e.message, 'err'); }
+}
+
+// Scout launch pad functions (existing)
+function parseScoutOutput(raw) {
+  const get = (key) => { const m = raw.match(new RegExp(key + '[:\\s*\\*]+([^\\n]+)', 'i')); return m ? m[1].trim().replace(/\*\*/g,'') : null; };
+  const fitMatch = raw.match(/(?:EAF FIT SCORE|FIT SCORE)[:\s*\*]*\s*\*?\*?(\d+)/i);
+  const fitScore = fitMatch ? fitMatch[1] : null;
+  const action = get('RECOMMENDED ACTION'); const funder = get('FUNDER'); const program = get('PROGRAM');
+  const deadline = get('DEADLINE'); const award = get('AWARD RANGE') || get('AWARD');
+  const portal = get('PORTAL') || get('PORTAL / CONTACT') || get('PORTAL/CONTACT');
+  const eligibility = get('ELIGIBILITY'); const nextStep = get('NEXT STEP') || get('NEXT ACTION');
+  const competing = get('COMPETING APPLICANTS');
+  const alignMatch = raw.match(/TOP 3 ALIGNMENT[^:]*:\s*([\s\S]*?)(?=TOP 2 RISKS|RECOMMENDED|$)/i);
+  const alignItems = alignMatch ? alignMatch[1].split('\n').filter(l=>l.match(/^\d+\./)).map(l=>l.replace(/^\d+\.\s*/,'').replace(/\*\*/g,'').trim()).filter(Boolean) : [];
+  const riskMatch = raw.match(/TOP 2 RISKS[^:]*:\s*([\s\S]*?)(?=RECOMMENDED|COMPETING|$)/i);
+  const riskItems = riskMatch ? riskMatch[1].split('\n').filter(l=>l.match(/^\d+\./)).map(l=>l.replace(/^\d+\.\s*/,'').replace(/\*\*/g,'').trim()).filter(Boolean) : [];
+  const loiMatch = raw.match(/LOI DRAFT[^:]*:\s*([\s\S]*?)(?=---|\n#{1,3} |$)/i);
+  const loi = loiMatch ? loiMatch[1].trim() : null;
+  const bdFitMatch = raw.match(/FIT SCORE[:\s]*(\d+)/i);
+  return {fitScore: fitScore||(bdFitMatch?bdFitMatch[1]:null),action,funder,program,deadline,award,portal,eligibility,nextStep,competing,alignItems,riskItems,loi,raw};
+}
+
+function renderDrawer(drawerEl, parsed, filename, dir) {
+  const {fitScore,action,funder,program,deadline,award,portal,eligibility,nextStep,competing,alignItems,riskItems,loi,raw} = parsed;
+  const fitColor = fitScore ? (parseInt(fitScore)>=80?'var(--success)':parseInt(fitScore)>=60?'var(--warn)':'var(--danger)') : 'var(--text2)';
+  const actionClass = action ? (action.toLowerCase().includes('immediately')?'ab-now':action.toLowerCase().includes('apply')?'ab-apply':'ab-watch') : 'ab-watch';
+  const actionLabel = action ? (action.toLowerCase().includes('immediately')?'▶ APPLY IMMEDIATELY':action.toLowerCase().includes('apply')?'▶ APPLY':action.toLowerCase().includes('watch')?'◉ WATCH':action.toUpperCase()) : 'REVIEW';
+  let html = `<div class="dr-summary">`;
+  if(fitScore) html+=`<div class="dr-fit" style="color:${fitColor}">${fitScore}%</div>`;
+  html+=`<div class="dr-action-badge ${actionClass}">${actionLabel}</div>`;
+  if(program||funder) html+=`<div class="dr-program">${program||funder||''}</div>`;
+  html+=`</div>`;
+  const fields=[funder&&{label:'Funder',val:funder},deadline&&{label:'Deadline',val:`<strong style="color:var(--warn)">${deadline}</strong>`},award&&{label:'Award',val:`<span style="color:var(--success)">${award}</span>`},eligibility&&{label:'Eligible',val:eligibility},portal&&{label:'Portal',val:`<a href="${portal.startsWith('http')?portal:'#'}" target="_blank" style="color:var(--accent);font-size:10px;">${portal.length>60?portal.substring(0,60)+'…':portal}</a>`},competing&&{label:'Competition',val:competing}].filter(Boolean);
+  if(fields.length){html+=`<div class="dr-fields">`;fields.forEach(f=>{html+=`<div class="dr-field"><div class="dr-field-label">${f.label}</div><div class="dr-field-val">${f.val}</div></div>`;});html+=`</div>`;}
+  if(nextStep) html+=`<div class="dr-nextstep"><strong>→ Next Step:</strong> ${nextStep}</div>`;
+  html+=`<div class="dr-raw-toggle" onclick="toggleRaw(this)">▸ view raw</div><div class="dr-raw">${raw.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  drawerEl.innerHTML = html;
+}
+function toggleRaw(el){const r=el.nextElementSibling;r.classList.toggle('open');el.textContent=r.classList.contains('open')?'▾ hide raw':'▸ view raw';}
+
+const activePollers = {};
+async function fireSweep(btn, sweepKey, outputDir) {
+  const n8nUrl = document.getElementById('n8nUrl').value.trim();
+  if(!n8nUrl){toast('Set your n8n webhook URL','err');return;}
+  const badge=document.getElementById('badge-'+sweepKey);
+  const drawer=document.getElementById('drawer-'+sweepKey);
+  btn.className='sb firing';
+  if(badge) badge.textContent='FIRING';
+  if(drawer) drawer.classList.remove('open');
+  document.getElementById('lpStatus').textContent='FIRING: '+sweepKey;
+  toast('⚡ Firing: '+sweepKey,'info');
+  const firedAt=Date.now();
+  try{
+    const res=await fetch(n8nUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sweep:sweepKey})});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+  }catch(e){
+    btn.className='sb error';
+    if(badge) badge.textContent='✗ ERR';
+    toast('✗ Webhook failed: '+e.message,'err');
+    return;
+  }
+  if(activePollers[sweepKey]) clearInterval(activePollers[sweepKey]);
+  let attempts=0;
+  activePollers[sweepKey]=setInterval(async()=>{
+    if(++attempts>18){clearInterval(activePollers[sweepKey]);btn.className='sb error';if(badge)badge.textContent='✗ TIMEOUT';return;}
+    try{
+      const r=await fetch(`${SERVER}/poll?dir=${encodeURIComponent(outputDir)}&since=${new Date(firedAt-5000).toISOString()}`,{signal:AbortSignal.timeout(3000)});
+      const data=await r.json();
+      if(data.newFiles&&data.newFiles.length>0){
+        const newest=data.newFiles[0];
+        const fr=await fetch(`${SERVER}/file?path=${encodeURIComponent(newest.path)}`,{signal:AbortSignal.timeout(5000)});
+        const fd=await fr.json();
+        if(fd.content){
+          clearInterval(activePollers[sweepKey]);
+          const parsed=parseScoutOutput(fd.content);
+          btn.className='sb loaded';
+          if(badge) badge.textContent=parsed.fitScore?parsed.fitScore+'% FIT':'DONE';
+          document.getElementById('lpStatus').textContent='LOADED: '+sweepKey;
+          if(drawer){renderDrawer(drawer,parsed,newest.name,outputDir);drawer.classList.add('open');}
+          toast(`✓ ${sweepKey} complete`,'ok');
+          setServerStatus(true);
+        }
+      }
+    }catch(e){setServerStatus(false);}
+  },POLL_INTERVAL);
+}
+
+async function loadExistingResults() {
+  const dirsToCheck=[
+    {dir:'Maryland_Grants',sweeps:['earn_maryland','fema_cuas','tedco_deep','lighthouse_internship','grants_gov_uas','sbir_gov_uas','nsf_seedfund','psgp_port_security','dol_wioa','md_governor_press','md_commerce_press','workforce_dev_board']},
+    {dir:'Aidan_Outputs/Scout',sweeps:['johns_hopkins_meia','crown_castle_telecom','v7_monk_licensing','cako_partnerships','mbe_certification']}
+  ];
+  for(const{dir,sweeps}of dirsToCheck){
+    try{
+      const r=await fetch(`${SERVER}/files?dir=${encodeURIComponent(dir)}`,{signal:AbortSignal.timeout(2000)});
+      const data=await r.json();
+      if(!data.files)continue;
+      for(const sweep of sweeps){
+        const matchKey=sweep.replace(/_/g,'').toLowerCase();
+        const match=data.files.find(f=>{const fn=f.name.replace(/_/g,'').replace(/-/g,'').toLowerCase();return fn.includes(matchKey.substring(0,Math.min(12,matchKey.length)));});
+        if(match){
+          try{
+            const fr=await fetch(`${SERVER}/file?path=${encodeURIComponent(match.path)}`,{signal:AbortSignal.timeout(3000)});
+            const fd=await fr.json();if(!fd.content)continue;
+            const parsed=parseScoutOutput(fd.content);
+            const drawer=document.getElementById('drawer-'+sweep);
+            const badge=document.getElementById('badge-'+sweep);
+            const btn=document.getElementById('sb-'+sweep);
+            if(drawer&&btn){renderDrawer(drawer,parsed,match.name,dir);btn.classList.add('loaded');if(badge&&parsed.fitScore)badge.textContent=parsed.fitScore+'% FIT';else if(badge)badge.textContent='PREV';}
+          }catch(e){}
+        }
+      }
+      setServerStatus(true);
+    }catch(e){}
+  }
+}
+loadExistingResults();
+
+// ── ECL ────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.ecl-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ecl-pane').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('pane-' + id).classList.add('active');
+}
+let toastTimer;
+function showToast(msg, type='ok') {
+  const el = document.getElementById('ecl-toast');
+  el.textContent = msg;
+  el.className = 'ecl-toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+function colorStatus(sel) {
+  sel.className = 'status-select';
+  const v = sel.value;
+  if(v==='COMPLETE') sel.classList.add('s-done');
+  else if(v==='OVERDUE') sel.classList.add('s-overdue');
+  else if(v==='IN PROGRESS') sel.classList.add('s-progress');
+  else if(v==='BLOCKED') sel.classList.add('s-blocked');
+  else sel.classList.add('s-pending');
+}
+function toggleNotes(btn) {
+  const drawer = btn.closest('.dl-item').nextElementSibling;
+  if(!drawer||!drawer.classList.contains('dl-notes-drawer')) return;
+  drawer.classList.toggle('open');
+  btn.textContent = drawer.classList.contains('open') ? 'notes ▴' : 'notes ▾';
+}
+function toggleAgent(hdr) {
+  const body = hdr.nextElementSibling;
+  body.classList.toggle('open');
+  hdr.querySelector('.agent-expand').textContent = body.classList.contains('open') ? '▴ collapse' : '▾ expand';
+  if(body.classList.contains('open')) updateTokenCount(body.querySelector('.directive-textarea'));
+}
+function toggleCtx(hdr) { hdr.nextElementSibling.classList.toggle('open'); }
+function updateTokenCount(ta) {
+  if(!ta||!ta.id) return;
+  const id = ta.id.replace('dir-','');
+  const tc = document.getElementById('tc-'+id);
+  if(tc) tc.textContent = `~${Math.round(ta.value.length/4)} tokens · ${ta.value.length} chars`;
+}
+document.querySelectorAll('.directive-textarea').forEach(ta => ta.addEventListener('input', () => updateTokenCount(ta)));
+function fmt(val) {
+  const n=parseInt(val)||0;
+  if(n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
+  if(n>=1000) return '$'+(n/1000).toFixed(1)+'K';
+  return '$'+n.toLocaleString();
+}
+function updateMRRDisplay(){document.getElementById('mrr-display').textContent=fmt(document.getElementById('mrr-current').value);updateY1Progress();}
+function updateRevDisplay(){document.getElementById('rev-display').textContent=fmt(document.getElementById('rev-actual').value);updateY1Progress();}
+function updatePipeDisplay(){document.getElementById('pipe-display').textContent=fmt(document.getElementById('pipe-val').value);}
+function updateY1Progress(){
+  const pct=Math.min(100,Math.round(((parseInt(document.getElementById('rev-actual').value)||0)/636000)*100));
+  document.getElementById('y1-bar').style.width=pct+'%';
+  document.getElementById('y1-pct').textContent=pct+'% achieved';
+}
+function addDeadline() {
+  const name=document.getElementById('new-dl-name').value.trim();
+  const entity=document.getElementById('new-dl-entity').value;
+  const date=document.getElementById('new-dl-date').value;
+  const status=document.getElementById('new-dl-status').value;
+  const owner=document.getElementById('new-dl-owner').value.trim();
+  const notes=document.getElementById('new-dl-notes').value.trim();
+  if(!name){showToast('Enter an item name','err');return;}
+  const sc={'COMPLETE':'s-done','OVERDUE':'s-overdue','IN PROGRESS':'s-progress','BLOCKED':'s-blocked','PENDING':'s-pending'}[status]||'s-pending';
+  const id=name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,20);
+  const item=document.createElement('div');item.className='dl-item';item.dataset.id=id;
+  item.innerHTML=`<div><div class="dl-name">${name}</div><div class="dl-sub">${entity}${owner?' · Owner: '+owner:''}</div></div><input type="date" class="dl-date-input" value="${date}"><select class="status-select ${sc}" onchange="colorStatus(this)">${['OVERDUE','IN PROGRESS','COMPLETE','BLOCKED','PENDING'].map(s=>`<option${s===status?' selected':''}>${s}</option>`).join('')}</select><button class="dl-notes-btn" onclick="toggleNotes(this)">notes ▾</button>`;
+  const drawer=document.createElement('div');drawer.className='dl-notes-drawer';drawer.innerHTML=`<textarea class="ecl-textarea">${notes}</textarea>`;
+  document.getElementById('deadline-list').appendChild(item);
+  document.getElementById('deadline-list').appendChild(drawer);
+  ['new-dl-name','new-dl-date','new-dl-owner','new-dl-notes'].forEach(i=>document.getElementById(i).value='');
+  showToast('✓ Deadline added — push to Iris when ready');
+}
+function addBDEntry() {
+  const org=document.getElementById('bd-org').value.trim();
+  const opp=document.getElementById('bd-opp').value.trim();
+  const vert=document.getElementById('bd-vert').value;
+  const fit=document.getElementById('bd-fit').value;
+  const stage=document.getElementById('bd-stage').value;
+  const notes=document.getElementById('bd-notes').value.trim();
+  if(!org){showToast('Enter an organization name','err');return;}
+  const fitColor=fit>=80?'var(--success)':fit>=60?'var(--warn)':'var(--danger)';
+  const entry=document.createElement('div');entry.className='bd-entry';
+  entry.innerHTML=`<div><div class="bd-org">${org}</div><div class="bd-opp">${opp}</div>${notes?`<div class="bd-notes-inline show">${notes}</div>`:''}</div><div class="bd-vert-tag">${vert.toUpperCase()}</div><div class="bd-score" style="color:${fitColor}">${fit||'—'}${fit?'%':''}</div><select class="status-select s-pending" onchange="colorStatus(this)" style="font-size:8px;">${['Identified','Researching','Qualified','Outreach Sent','In Conversation','Proposal Submitted','Closed Won','Closed Lost'].map(s=>`<option${s===stage?' selected':''}>${s}</option>`).join('')}</select><button class="del-btn" onclick="removeBD(this)">✕</button>`;
+  document.getElementById('bd-list').prepend(entry);
+  ['bd-org','bd-opp','bd-fit','bd-notes'].forEach(i=>document.getElementById(i).value='');
+  showToast('✓ BD entry added');
+}
+function removeBD(btn){btn.closest('.bd-entry').remove();showToast('Entry removed');}
+
+const ECL_WEBHOOK = N8N + '/webhook/ecl-directive';
+async function eclPost(type, payload) {
+  const res = await fetch(ECL_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type, ...payload }) });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json().catch(() => ({ success: true }));
+}
+async function saveDeadlines() {
+  const btn = event.target; btn.classList.add('saving'); btn.textContent = '⟳ Pushing...';
+  const items = [];
+  document.querySelectorAll('#deadline-list .dl-item').forEach(item => {
+    const notes = item.nextElementSibling;
+    items.push({ id: item.dataset.id, name: item.querySelector('.dl-name').textContent, entity: item.querySelector('.dl-sub').textContent.split('·')[0].trim(), date: item.querySelector('.dl-date-input').value, status: item.querySelector('.status-select').value, notes: notes?.querySelector('textarea')?.value || '' });
+  });
+  try { await eclPost('deadlines', { deadlines: items }); btn.classList.remove('saving'); btn.classList.add('saved'); btn.textContent = '✓ Pushed to Iris'; showToast('✓ Pushed to Iris', 'ok'); }
+  catch(e) { btn.classList.remove('saving'); btn.textContent = '⬆ Push to Iris'; showToast('✗ Push failed: ' + e.message, 'err'); }
+  setTimeout(() => { btn.classList.remove('saved'); btn.textContent = '⬆ Push to Iris'; }, 3000);
+}
+async function saveBD() {
+  const btn = event.target; btn.classList.add('saving'); btn.textContent = '⟳ Pushing...';
+  const entries = [];
+  document.querySelectorAll('#bd-list .bd-entry').forEach(entry => {
+    entries.push({ org: entry.querySelector('.bd-org')?.textContent||'', opp: entry.querySelector('.bd-opp')?.textContent||'', vert: entry.querySelector('.bd-vert-tag')?.textContent||'', fit: entry.querySelector('.bd-score')?.textContent?.replace('%','')||'', stage: entry.querySelector('select')?.value||'' });
+  });
+  try { await eclPost('bd', { entries }); btn.classList.remove('saving'); btn.classList.add('saved'); btn.textContent = '✓ Pushed to Scout'; showToast('✓ Pushed to Scout', 'ok'); }
+  catch(e) { btn.classList.remove('saving'); btn.textContent = '⬆ Push to Scout'; showToast('✗ Failed: ' + e.message, 'err'); }
+  setTimeout(() => { btn.classList.remove('saved'); btn.textContent = '⬆ Push to Scout'; }, 3000);
+}
+async function saveMRR() {
+  const btn = event.target; btn.classList.add('saving'); btn.textContent = '⟳ Saving...';
+  const patch = { revenue_targets: { current_mrr: document.getElementById('mrr-current')?.value||'0', revenue_to_date: document.getElementById('rev-actual')?.value||'0', pipeline_value: document.getElementById('pipe-val')?.value||'0' } };
+  try { await eclPost('context', { patch }); btn.classList.remove('saving'); btn.classList.add('saved'); btn.textContent = '✓ Saved'; showToast('✓ Saved', 'ok'); }
+  catch(e) { btn.classList.remove('saving'); btn.textContent = '⬆ Save & Sync'; showToast('✗ Failed: ' + e.message, 'err'); }
+  setTimeout(() => { btn.classList.remove('saved'); btn.textContent = '⬆ Save & Sync'; }, 3000);
+}
+async function saveDirectives() {
+  const btn = event.target; btn.classList.add('saving'); btn.textContent = '⟳ Pushing...';
+  const directives = {};
+  ['aidan','scout','jordan','iris','atlas','nova'].forEach(id => { const el = document.getElementById('dir-' + id); if(el && el.value.trim()) directives[id] = el.value.trim(); });
+  try { await eclPost('directives', { directives }); btn.classList.remove('saving'); btn.classList.add('saved'); btn.textContent = '✓ Pushed to All Agents'; showToast('✓ Directives pushed', 'ok'); }
+  catch(e) { btn.classList.remove('saving'); btn.textContent = '⬆ Push to All Agents'; showToast('✗ Failed: ' + e.message, 'err'); }
+  setTimeout(() => { btn.classList.remove('saved'); btn.textContent = '⬆ Push to All Agents'; }, 3000);
+}
+async function saveContext() {
+  const btn = event.target; btn.classList.add('saving'); btn.textContent = '⟳ Patching...';
+  const textareas = document.querySelectorAll('#pane-context .ecl-textarea');
+  const patch = { phase: { narrative: textareas[2]?.value || '' } };
+  try { await eclPost('context', { patch }); btn.classList.remove('saving'); btn.classList.add('saved'); btn.textContent = '✓ Context Patched'; showToast('✓ KAI_Context.json patched', 'ok'); }
+  catch(e) { btn.classList.remove('saving'); btn.textContent = '⬆ Patch KAI_Context.json'; showToast('✗ Failed: ' + e.message, 'err'); }
+  setTimeout(() => { btn.classList.remove('saved'); btn.textContent = '⬆ Patch KAI_Context.json'; }, 3000);
+}
+
+document.querySelectorAll('.status-select').forEach(colorStatus);
+</script>
+
+<!-- KAI-Netics Core MVP stabilization patch: offline-first local mode + safer agent firing -->
+<script>
+(function(){
+  'use strict';
+  const LS = {
+    pipeline: 'kaiCore.pipeline.v1',
+    events: 'kaiCore.events.v1',
+    command: 'kaiCore.command.v1',
+    cfg: 'kaiCore.config.v1'
+  };
+  const seedPipeline = [
+    {id:'seed-omb-m2602', title:'OMB M-26-02 federal drone compliance consulting', entity:'FP', status:'Identified', note:'First-dollar path: CISSP + Part 107, no drone required', score:85, created_at:new Date().toISOString()},
+    {id:'seed-earn-md', title:'EARN Maryland CAKO workforce grant', entity:'EAF', status:'Researching', note:'CAKO training anchor; build LOI and partner map', score:85, created_at:new Date().toISOString()},
+    {id:'seed-monk-llc', title:'MONK LLC formation and provisional patent path', entity:'MONK', status:'Blocked', note:'Legal/IP gating item; owner review required', score:88, created_at:new Date().toISOString()}
+  ];
+  const $ = (id) => document.getElementById(id);
+  const safeJson = (txt, fallback) => { try { return JSON.parse(txt); } catch { return fallback; } };
+  const read = (key, fallback) => safeJson(localStorage.getItem(key), fallback);
+  const write = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+  const html = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const cfg = Object.assign({ n8nBase:'http://localhost:5678', serverBase:'http://localhost:3030' }, read(LS.cfg, {}));
+
+  function notify(msg, type='info') {
+    if (typeof window.toast === 'function') window.toast(msg, type);
+    else if (typeof window.showToast === 'function') window.showToast(msg, type === 'ok' ? 'ok' : type);
+    else console.log(msg);
+  }
+  function eventLog(type, payload) {
+    const events = read(LS.events, []);
+    events.unshift({ id:'evt-' + Date.now(), type, payload, at:new Date().toISOString() });
+    write(LS.events, events.slice(0,150));
+  }
+  function getN8nBase() {
+    const input = $('n8nUrl');
+    if (input && input.value) {
+      const v = input.value.trim();
+      const m = v.match(/^(https?:\/\/[^/]+)/i);
+      if (m) return m[1];
+    }
+    return cfg.n8nBase;
+  }
+  function endpoint(path) {
+    const base = getN8nBase().replace(/\/$/, '');
+    const clean = String(path || '').replace(/^\//, '');
+    return `${base}/webhook/${clean}`;
+  }
+  async function postJson(url, body, timeout=4500) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), timeout);
+    try {
+      const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body), signal:ctl.signal});
+      clearTimeout(timer);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json().catch(() => ({ok:true}));
+    } finally { clearTimeout(timer); }
+  }
+  function pipeline() {
+    const p = read(LS.pipeline, null);
+    if (!Array.isArray(p) || !p.length) { write(LS.pipeline, seedPipeline); return seedPipeline; }
+    return p;
+  }
+  function upsertPipeline(item) {
+    const p = pipeline();
+    const idx = p.findIndex(x => x.id === item.id);
+    if (idx >= 0) p[idx] = Object.assign({}, p[idx], item);
+    else p.unshift(item);
+    write(LS.pipeline, p);
+    return p;
+  }
+  function renderPipelineItems(items) {
+    const el = $('pipeline-items');
+    if (!el) return;
+    if (!items || !items.length) {
+      el.innerHTML = '<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:var(--muted);padding:20px 16px;text-align:center;">No pipeline items yet. Use the Pursue form above.</div>';
+      return;
+    }
+    el.innerHTML = items.map(o => {
+      const entity = (o.entity || 'FP').toUpperCase();
+      const cls = entity === 'EAF' ? 'pi-eaf' : entity === 'MONK' ? 'pi-monk' : 'pi-fp';
+      const st = (o.status || 'Identified').toLowerCase().replace(/\s+/g,'-');
+      return `<div class="pipeline-item" onclick="switchView('inspect', document.getElementById('inspect-tab')); setTimeout(()=>openInspection('${html(o.id)}'),50)" style="cursor:pointer;">
+        <div class="pi-entity ${cls}">${html(entity)}</div>
+        <div class="pi-title">${html(o.title || o.name || 'Untitled pursuit')}</div>
+        <div class="pi-note">${html(o.note || o.next_step || '')}</div>
+        <div class="pi-status pi-pursuing">${html(st.toUpperCase())}</div>
+      </div>`;
+    }).join('');
+  }
+  function renderInspectionList(items) {
+    const el = $('inspect-list');
+    if (!el) return;
+    el.innerHTML = (items || pipeline()).map(o => {
+      const entity = (o.entity || 'FP').toUpperCase();
+      const score = o.score || o.fit_score || 75;
+      return `<div class="bdc" onclick="openInspection('${html(o.id)}')" style="margin-bottom:10px;">
+        <div class="bdc-top"><div class="bdc-score" style="color:${score >= 80 ? 'var(--success)' : 'var(--warn)'}">${html(score)}%</div><div><div class="bdc-vert">${html(entity)} · ${html(o.status || 'Identified')}</div><div class="bdc-org">${html(o.title || o.name || 'Untitled pursuit')}</div></div></div>
+        <div class="bdc-next">${html(o.note || o.next_step || 'Open inspection record')}</div>
+      </div>`;
+    }).join('');
+  }
+  function renderInspectionDetail(o) {
+    const el = $('inspect-detail');
+    if (!el || !o) return;
+    const entity = (o.entity || 'FP').toUpperCase();
+    const score = o.score || 75;
+    el.innerHTML = `<div class="panel">
+      <div class="panel-hdr"><div class="ai ai-s">${html(entity[0])}</div><div><div class="panel-title">${html(o.title || 'Inspection Record')}</div></div><div class="panel-sub">LOCAL MVP RECORD</div></div>
+      <div class="panel-body">
+        <div class="dr-summary"><div class="dr-fit ${score >= 80 ? 'fh' : 'fm'}">${html(score)}%</div><div class="dr-action-badge ab-apply">${html(o.status || 'IDENTIFIED')}</div><div class="dr-program">${html(entity)} pursuit</div></div>
+        <div class="dr-fields">
+          <div class="dr-field"><div class="dr-field-label">Entity</div><div class="dr-field-val">${html(entity)}</div></div>
+          <div class="dr-field"><div class="dr-field-label">Created</div><div class="dr-field-val">${html(new Date(o.created_at || Date.now()).toLocaleString())}</div></div>
+          <div class="dr-field"><div class="dr-field-label">Next Step</div><div class="dr-field-val">${html(o.next_step || o.note || 'Qualify, identify owner, draft outreach, and move to human review.')}</div></div>
+          <div class="dr-field"><div class="dr-field-label">Source</div><div class="dr-field-val">${html(o.source || 'Local MVP / KAI-Netics Core')}</div></div>
+        </div>
+        <div class="dr-nextstep"><strong>Human gate:</strong> Decide whether to pursue, hold, escalate, or reject. This record persists locally even if Supabase/n8n are offline.</div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button class="pursue-fire-btn" onclick="firePursueFromInspection('${html(o.title || '')}','${html(entity)}')">⬡ Pursue Again</button>
+          <button class="lp-server-check" onclick="window.print()">Print / PDF</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  window.loadPipeline = async function(){ renderPipelineItems(pipeline()); notify('Pipeline loaded from local MVP store', 'ok'); };
+  window.loadInspectionList = async function(){ renderInspectionList(pipeline()); };
+  window.openInspection = async function(id){ const o = pipeline().find(x => x.id === id) || pipeline()[0]; renderInspectionDetail(o); };
+
+  window.firePursue = async function(){
+    const input = $('pursue-opp-input');
+    const btn = $('pursue-fire-btn');
+    const title = (input?.value || '').trim();
+    if (!title) { notify('Enter an opportunity title first', 'err'); return; }
+    const entity = ($('pursue-entity-sel')?.value || (/(grant|workforce|nonprofit|earn|foundation)/i.test(title) ? 'EAF' : /(monk|sbir|patent|ip)/i.test(title) ? 'MONK' : 'FP')).toUpperCase();
+    const item = { id:'pursuit-' + Date.now(), title, entity, status:'Identified', note:'Added from Pursue form', score: entity === 'MONK' ? 88 : entity === 'EAF' ? 85 : 80, created_at:new Date().toISOString() };
+    upsertPipeline(item); renderPipelineItems(pipeline()); renderInspectionList(pipeline()); eventLog('pursue.local', item);
+    if (btn) { btn.classList.add('firing'); btn.textContent = '⬡ Saved Locally'; }
+    input.value = '';
+    try {
+      await postJson(endpoint('nova-pursue'), {opportunity:title, entity, source:'KAI-Netics Core MVP', local_id:item.id}, 5000);
+      item.status = 'Pursuing'; upsertPipeline(item); renderPipelineItems(pipeline()); notify('✓ Pursuit saved locally and sent to n8n', 'ok');
+    } catch(e) { notify('✓ Pursuit saved locally; n8n offline/not reachable', 'info'); }
+    if (btn) setTimeout(()=>{ btn.classList.remove('firing'); btn.textContent='⬡ Pursue'; }, 1200);
+  };
+  window.firePursueFromInspection = async function(title, entity) {
+    const input = $('pursue-opp-input'); const sel = $('pursue-entity-sel');
+    if (input) input.value = title || '';
+    if (sel) sel.value = entity || '';
+    await window.firePursue();
+  };
+
+  window.setFireBtn = function(id, state, label) {
+    const btn = $('fb-' + id), st = $('fbs-' + id);
+    if (btn) btn.className = btn.className.replace(/\b(firing|done|error)\b/g,'').trim() + (state === 'firing' ? ' firing' : state === 'done' ? ' done' : state === 'error' ? ' error' : '');
+    if (st) { st.textContent = label || state.toUpperCase(); st.className = 'fb-status ' + (state === 'done' ? 'fb-s-done' : state === 'error' ? 'fb-s-error' : state === 'firing' ? 'fb-s-firing' : 'fb-s-ready'); }
+  };
+  window.fireAgent = async function(webhook, label, id) {
+    window.setFireBtn(id, 'firing', 'FIRING');
+    const payload = {agent:id, label, source:'KAI-Netics Core MVP', fired_at:new Date().toISOString()};
+    eventLog('agent.fire', payload);
+    try { await postJson(endpoint(webhook), payload, 6000); window.setFireBtn(id,'done','SENT'); notify('✓ ' + label + ' sent to n8n','ok'); }
+    catch(e) { window.setFireBtn(id,'error','LOCAL'); notify(label + ' logged locally; n8n unavailable','info'); }
+    setTimeout(()=>window.setFireBtn(id,'ready','READY'), 2500);
+  };
+  window.fireAgentWithInput = async function(webhook, label, id) {
+    const query = $('agent-query-input')?.value?.trim() || '';
+    window.setFireBtn(id, 'firing', 'FIRING');
+    const payload = {agent:id, label, query, source:'KAI-Netics Core MVP', fired_at:new Date().toISOString()};
+    eventLog('agent.fire', payload);
+    try { await postJson(endpoint(webhook), payload, 6000); window.setFireBtn(id,'done','SENT'); notify('✓ ' + label + ' sent to n8n','ok'); }
+    catch(e) { window.setFireBtn(id,'error','LOCAL'); notify(label + ' logged locally; n8n unavailable','info'); }
+    setTimeout(()=>window.setFireBtn(id,'ready','READY'), 2500);
+  };
+  window.fireNovaScan = async function() {
+    const focus = $('nova-focus-input')?.value?.trim() || 'general proactive scan';
+    const btn = $('nova-rescan-btn'); if (btn) { btn.disabled = true; btn.textContent='⟳ Running...'; }
+    const report = { id:'nova-' + Date.now(), title:'Nova Scan — ' + focus, entity:'FP', status:'Scanned', note:'Local brief generated; n8n delivery attempted separately', score:78, created_at:new Date().toISOString(), source:'Nova Local MVP' };
+    upsertPipeline(report); eventLog('nova.scan', {focus});
+    const brief = $('nova-brief-text'); const meta = $('nova-brief-meta');
+    if (meta) meta.textContent = new Date().toLocaleString() + ' · local MVP';
+    if (brief) brief.innerHTML = `<span style="color:var(--accent);font-weight:700;">NOVA LOCAL BRIEF</span>\n\n<span class="insight-line">Focus: ${html(focus)}</span>\n\n<span class="t1-line">1. ${html(report.title)} added to inspection pipeline.</span>\n<span style="color:var(--accent)">→ Review in Inspection and decide pursue/hold/escalate.</span>\n\n<span style="color:var(--muted)">This local fallback keeps the MVP usable while n8n/server wiring is finalized.</span>`;
+    try { await postJson(endpoint('nova-proactive'), {focus, source:'KAI-Netics Core MVP'}, 6000); notify('✓ Nova scan sent to n8n and saved locally','ok'); }
+    catch(e) { notify('Nova scan saved locally; n8n unavailable','info'); }
+    renderPipelineItems(pipeline()); renderInspectionList(pipeline());
+    if (btn) setTimeout(()=>{ btn.disabled=false; btn.textContent='⚡ Run Nova Scan'; }, 1000);
+  };
+  window.loadLastNovaBrief = async function() {
+    const events = read(LS.events, []).filter(e => e.type === 'nova.scan');
+    const brief = $('nova-brief-text'); const meta = $('nova-brief-meta');
+    if (!brief) return;
+    if (!events.length) { brief.innerHTML = '<div class="nova-brief-placeholder">No Nova scan yet in local MVP mode. Run Nova Scan above to create the first brief.</div>'; if(meta) meta.textContent='Local MVP ready'; return; }
+    const e = events[0]; if(meta) meta.textContent = new Date(e.at).toLocaleString() + ' · local MVP';
+    brief.innerHTML = `<span style="color:var(--accent);font-weight:700;">LAST LOCAL NOVA BRIEF</span>\n\n<span class="insight-line">Focus: ${html(e.payload.focus || 'general')}</span>\n\n<span style="color:var(--muted)">Status: persisted in browser localStorage. Use n8n when webhook services are online.</span>`;
+  };
+
+  function captureCommandState(){
+    const data = { saved_at:new Date().toISOString(), fields:{} };
+    document.querySelectorAll('#view-command input, #view-command textarea, #view-command select').forEach((el, idx) => {
+      const key = el.id || el.name || `${el.tagName.toLowerCase()}-${idx}`;
+      data.fields[key] = el.value;
+    });
+    write(LS.command, data); eventLog('command.save', {count:Object.keys(data.fields).length});
+    return data;
+  }
+  function restoreCommandState(){
+    const data = read(LS.command, null); if (!data || !data.fields) return;
+    document.querySelectorAll('#view-command input, #view-command textarea, #view-command select').forEach((el, idx) => {
+      const key = el.id || el.name || `${el.tagName.toLowerCase()}-${idx}`;
+      if (Object.prototype.hasOwnProperty.call(data.fields, key)) el.value = data.fields[key];
+    });
+    document.querySelectorAll('.status-select').forEach(s => { if (typeof window.colorStatus === 'function') window.colorStatus(s); });
+  }
+  async function saveAndMaybeSync(type, buttonText){
+    const btn = window.event?.target;
+    if (btn) { btn.classList.add('saving'); btn.textContent = '✓ Saved Locally'; }
+    const data = captureCommandState();
+    try { await postJson(endpoint('ecl-directive'), {type, data, source:'KAI-Netics Core MVP'}, 5000); notify('✓ Saved locally and pushed to n8n','ok'); }
+    catch(e) { notify('✓ Saved locally; n8n unavailable','info'); }
+    if (btn) setTimeout(()=>{ btn.classList.remove('saving','saved'); btn.textContent=buttonText; }, 1500);
+  }
+  window.saveDeadlines = () => saveAndMaybeSync('deadlines','⬆ Push to Iris');
+  window.saveBD = () => saveAndMaybeSync('bd','⬆ Push to Scout');
+  window.saveMRR = () => saveAndMaybeSync('mrr','⬆ Save & Sync');
+  window.saveDirectives = () => saveAndMaybeSync('directives','⬆ Push to All Agents');
+  window.saveContext = () => saveAndMaybeSync('context','⬆ Patch KAI_Context.json');
+
+  function addMvpRibbon(){
+    if ($('mvpRibbon')) return;
+    const bar = document.createElement('div');
+    bar.id = 'mvpRibbon';
+    bar.style.cssText = 'position:sticky;top:45px;z-index:180;background:rgba(0,229,255,.08);border-bottom:1px solid rgba(0,229,255,.18);color:var(--accent);font-family:Space Mono,monospace;font-size:9px;letter-spacing:1px;padding:7px 24px;text-align:center;';
+    bar.textContent = 'MVP MODE: offline-first persistence enabled · localStorage active · n8n/webhooks optional';
+    document.body.insertBefore(bar, document.body.children[1]);
+  }
+  function patchStaticCopy(){
+    document.title = 'KAI-Netics Core MVP';
+    document.querySelectorAll('.ehandle').forEach(el => { if (/501c3 Pending/i.test(el.textContent)) el.textContent = el.textContent.replace('501c3 Pending','501(c)(3) Active'); });
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const n8n = $('n8nUrl');
+    if (n8n) { n8n.value = `${cfg.n8nBase}/webhook/scout-research`; n8n.addEventListener('change', () => { const m=n8n.value.match(/^(https?:\/\/[^/]+)/i); if(m){ cfg.n8nBase=m[1]; write(LS.cfg,cfg); }}); }
+    restoreCommandState(); addMvpRibbon(); patchStaticCopy(); renderPipelineItems(pipeline()); renderInspectionList(pipeline()); window.loadLastNovaBrief();
+  });
+  if (document.readyState !== 'loading') { restoreCommandState(); addMvpRibbon(); patchStaticCopy(); renderPipelineItems(pipeline()); renderInspectionList(pipeline()); window.loadLastNovaBrief(); }
+})();
+</script>
+
+</body>
+</html>

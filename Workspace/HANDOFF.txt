@@ -1,0 +1,155 @@
+================================================================================
+KAI-NETICS SESSION HANDOFF
+Date: May 4, 2026 (End of Day — Full Session)
+================================================================================
+
+RESUME LINE:
+"Read my handoff file at C:\Kinetic_Core\HANDOFF.txt and pick up from there."
+
+================================================================================
+PLATFORM STATUS — FULLY LIVE
+================================================================================
+WhatsApp Bridge v4 (patched) — ACTIVE
+Nova Proactive v3.2 — ACTIVE (SBIR rate limited until tomorrow)
+Nova Pursue Command — ACTIVE (BUG: inserts new pipeline row instead of upsert)
+Jordan v3.2 (pursue-aware, dual Supabase write, Gmail send) — ACTIVE
+Pipeline table — SCHEMA COMPLETE (45 columns, full DIIPO)
+grant_applications table — LINKED to pipeline via pipeline_id FK
+DASHBOARD v4.2 — Platform Ops tab ACTIVE
+
+================================================================================
+WHAT IS CONFIRMED WORKING
+================================================================================
+PURSUE LOOP (full end-to-end):
+  "Nova pursue [opportunity]" →
+    Pipeline record saved to Supabase ✅
+    Jordan detects pursue_command, drafts LOI/capstat ✅
+    Format + Save Report extracts all fields ✅
+    Log to Supabase writes to grant_applications ✅
+    Log to Supabase cross-updates pipeline row via pipelineId ✅
+    Gmail sends draft email to kas@kevin-llc.com ✅
+    Iris fires compliance report ✅
+    Aidan Callback fires ✅
+
+SCHEMA COMPLETE:
+  pipeline table — 45 columns covering full DIIPO lifecycle
+  grant_applications — linked to pipeline via pipeline_id FK
+  Check constraints updated: application_status + recommended_action
+  Indexes on deadline, outcome, fit_score, entity, pipeline_id
+
+================================================================================
+OPEN BUGS
+================================================================================
+1. Nova duplicate insert — every pursue command creates a NEW pipeline row
+   instead of upserting the existing one. Fix: add upsert logic to Nova's
+   Supabase write node (match on title + entity).
+
+2. fit_score null on pursue runs — capability statement Claude output does not
+   contain FIT SCORE: line. Expected behavior. Will resolve on grant analysis
+   runs. Consider adding fit_score to Jordan's pursue prompt template.
+
+3. grants.gov endpoint — apply07.grants.gov still returning errors. Not fixed.
+
+================================================================================
+PIPELINE STATUS
+================================================================================
+1. FEMA C-UAS Grant (EAF)
+   Status: pursuing
+   Entity: EAF — subrecipient path via MD SAA (MEMA)
+   FY2026: CLOSED (Dec 5, 2025). FY2027: ~Oct 2026 NOFO expected.
+   Next: Outreach to Baltimore County OEM + contact MEMA SAA
+   Fit score: 87% — CISSP + Part 107 + AKMS + Maryland NCR eligible
+   Blockers: SAM UEI confirm, MBE cert (May 15), county EM partner, MONK LLC
+
+2. BGE Utility Inspection Contract (FP)
+   Status: pursuing
+   pipeline_id: confirmed linked in grant_applications
+   Next: Review capstat in kas@kevin-llc.com inbox, submit to BGE supplier
+   portal after SAM clears
+   Blocker: SAM UEI confirmation
+
+================================================================================
+DIIPO STATUS
+================================================================================
+D — Discovery:     LIVE (Nova Proactive v3.2)
+I — Ingestion:     COMPLETE (pipeline 45-col schema, Jordan dual-write)
+I — Inspection:    NOT BUILT → DASHBOARD v4.3 next major build
+P — Pursuit:       LIVE (Jordan v3.2, full loop confirmed)
+O — Outcome:       NOT BUILT → Phase 2 (Won/Lost/Archived + intel loop)
+
+================================================================================
+NEXT BUILD — PRIORITY ORDER
+================================================================================
+1. Fix Nova duplicate insert bug (upsert on title+entity) — 15 min fix
+2. Jordan Grant Reader v1 (15_jordan_grant_reader.json) — PENDING 4 answers:
+   Q1: Gmail OAuth — does scope include calendar?
+       Check n8n → Credentials → Gmail OAuth → scopes
+   Q2: Grant Inbox path — confirm: C:\Kinetic_Core\Data\Grant_Inbox\
+   Q3: Calendar target — primary Gmail or dedicated KAI-Netics Ops calendar?
+   Q4: Attach PDF to invite? (Recommended: No — file path in description, v1)
+3. DASHBOARD v4.3 — Inspection tab (single pane of glass per opportunity)
+   Fields: fit score, blockers, recommended actions, relationship overlaps,
+   strategic alignment, source URL, estimated value, follow-up history
+4. Fix grants.gov endpoint (apply07 errors)
+5. SAM_API_KEY — sam.gov/profile → add to .env + START_KINETIC.ps1
+
+================================================================================
+CRITICAL ADMIN — BLOCKING REVENUE (by deadline)
+================================================================================
+  James Scott     — (410) 908-4454 — CALL MONDAY
+                    Closes: MONK LLC + Form 1023 + SAM confirm + MBE guidance
+  MBE/DBE cert    — due May 15 — mbe.mdot.maryland.gov
+  Techstars       — Demo Day Jun 3 — register by May 15
+  OMB M-26-02     — May 20 — FIRST DOLLAR — $7,500/5 days
+                    Script: "I hold CISSP + Part 107. Compliant before May 20."
+  SAM.gov UEI     — submitted Apr 17 — confirm active (blocks BGE + FEMA)
+  MONK LLC        — OVERDUE — businessexpress.maryland.gov
+  IRS Form 1023   — OVERDUE — James Scott owns this
+
+================================================================================
+BACKLOG (prioritized)
+================================================================================
+(1)  Nova duplicate insert fix (upsert on title+entity)
+(2)  Supabase SECURITY DEFINER → INVOKER fix
+(3)  KAI_Context v3.0 + Scribe protocol
+(4)  Scout v5 profile-driven reasoning
+(5)  Scribe end-session patching
+(6)  DASHBOARD v4.3 Inspection tab
+(7)  Jordan Grant Reader v1 (pending 4 answers)
+(8)  BD Outreach Engine
+(9)  Jordan/Scout 4-line WhatsApp callback
+(10) Atlas May 22 trigger
+(11) MONK SBIR narrative
+(12) MCP SP3
+(13) Collectors 5 MD counties
+(14) Jordan mammoth (.docx reader)
+(15) Sage BL-001 newsletter
+(16) Email BL-002 MCP integration
+(17) Atlas Lighthouse command
+(18) GitHub export
+(19) Gemini Jordan review
+(20) Jordan email → Gmail API route (replace SMTP)
+(21) SAM_API_KEY — sam.gov/profile
+(22) scout_reports table schema fix
+
+================================================================================
+TECHNICAL NOTES
+================================================================================
+Jordan Log to Supabase node — key normalization pattern:
+  const pipelineId = input.pipelineId || input.pipelineid || input.pipeline_id || null;
+  const fitScore = input.fitScore || input.fitscore || input.fit_score || null;
+  const isPursue = input.isPursue || input.ispursue || input.is_pursue || false;
+  (n8n flattens camelCase between nodes — always normalize on read)
+
+grant_applications check constraints updated:
+  application_status: added 'pursuing'
+  recommended_action: added 'PURSUING'
+
+Send Email Report — now uses Gmail OAuth node (not SMTP emailSend node)
+  From: kas42869@gmail.com → To: kas@kevin-llc.com
+
+================================================================================
+GOVERNANCE — PERMANENT
+================================================================================
+NOTHING LEAVES THE PLATFORM WITHOUT KEVIN'S EXPLICIT APPROVAL.
+================================================================================

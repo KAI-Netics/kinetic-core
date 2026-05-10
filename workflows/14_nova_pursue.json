@@ -1,0 +1,67 @@
+{
+  "name": "Nova - Pursue Command Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nova-pursue",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "id": "pursue-001",
+      "name": "Webhook Trigger",
+      "webhookId": "nova-pursue-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// STEP 1 — PARSE PURSUE COMMAND\n// Accepts input from WhatsApp router or direct POST\n// Extracts opportunity title, optional note, entity hint\n// Examples:\n//   'Nova pursue FEMA preparedness grant'\n//   'Scout pursue BGE utility inspection'\n//   'Nova pursue SBIR MONK DHS — EAF co-applicant'\nconst fs = require('fs');\nconst raw = $input.first().json;\nconst body = raw.body || raw;\n\nconst rawTitle = String(body.title || body.opportunity || body.text || '').trim();\nconst source = String(body.source || 'manual').toLowerCase();\nconst kevinNote = String(body.note || body.kevin_note || '').trim();\nconst entityHint = String(body.entity || '').toUpperCase();\nconst beachheadHint = String(body.beachhead || '').toUpperCase();\n\n// Load KAI_Context for context-aware entity resolution\nlet kaiContext = {};\ntry { kaiContext = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8')); } catch(e) {}\n\n// Resolve entity from hint or title keywords\nconst resolveEntity = (title, hint) => {\n  if (hint && ['FP','EAF','MONK','MULTI'].includes(hint)) return hint;\n  const t = title.toLowerCase();\n  if (t.includes('grant') || t.includes('workforce') || t.includes('nonprofit') || t.includes('earn') || t.includes('eaf') || t.includes('cako') || t.includes('fema preparedness') || t.includes('workforce')) return 'EAF';\n  if (t.includes('sbir') || t.includes('monk') || t.includes('r&d') || t.includes('patent') || t.includes('licensing')) return 'MONK';\n  if (t.includes('inspection') || t.includes('contract') || t.includes('consulting') || t.includes('bd') || t.includes('rfp') || t.includes('utility') || t.includes('bridge') || t.includes('dfr') || t.includes('police') || t.includes('medical supply')) return 'FP';\n  return 'MULTI';\n};\n\n// Resolve opportunity type\nconst resolveType = (title) => {\n  const t = title.toLowerCase();\n  if (t.includes('sbir') || t.includes('sttr')) return 'sbir';\n  if (t.includes('grant') || t.includes('fema') || t.includes('earn') || t.includes('workforce')) return 'grant';\n  if (t.includes('contract') || t.includes('rfp') || t.includes('inspection') || t.includes('dfr')) return 'contract';\n  if (t.includes('consulting') || t.includes('advisory') || t.includes('omb m-26')) return 'consulting';\n  if (t.includes('licensing') || t.includes('oem') || t.includes('partnership')) return 'licensing';\n  return 'contract';\n};\n\nconst entity = resolveEntity(rawTitle, entityHint);\nconst opportunityType = resolveType(rawTitle);\n\n// Determine downstream actions based on entity\nconst triggerJordan = true; // always — Jordan drafts for all\nconst triggerIris = entity === 'EAF' || entity === 'MULTI'; // Iris tracks grant deadlines\nconst triggerAtlas = entity === 'MONK'; // Atlas flags for technical prep\n\nreturn [{ json: {\n  title: rawTitle,\n  source,\n  kevinNote,\n  entity,\n  beachheadHint,\n  opportunityType,\n  triggerJordan,\n  triggerIris,\n  triggerAtlas,\n  timestamp: new Date().toISOString(),\n  founderName: (kaiContext.founder || {}).name || 'Kevin Alexander Smith',\n  founderCredentials: ((kaiContext.founder || {}).credentials || []).join(', ')\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "id": "pursue-002",
+      "name": "Parse Command"
+    },
+    {
+      "parameters": {
+        "jsCode": "// STEP 2 — WRITE TO PIPELINE TABLE\n// Creates pipeline record in Supabase\n// Status = pursuing immediately\nconst https = require('https');\nconst input = $input.first().json;\nconst SUPABASE_URL = ($env.SUPABASE_URL || '').replace('https://','').replace('http://','');\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_KEY || '';\n\nconst record = {\n  title: input.title,\n  source: input.source,\n  entity: input.entity,\n  opportunity_type: input.opportunityType,\n  beachhead: input.beachheadHint || null,\n  status: 'pursuing',\n  kevin_note: input.kevinNote || null,\n  jordan_triggered: input.triggerJordan,\n  iris_triggered: input.triggerIris,\n  atlas_triggered: input.triggerAtlas\n};\n\nlet pipelineId = null;\nlet writeStatus = 'failed';\n\ntry {\n  const body = JSON.stringify(record);\n  const result = await new Promise((resolve, reject) => {\n    const req = https.request({\n      hostname: SUPABASE_URL, port: 443, path: '/rest/v1/pipeline', method: 'POST',\n      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation', 'Content-Length': Buffer.byteLength(body) }\n    }, (res) => { let d=''; res.on('data',c=>d+=c); res.on('end',()=>resolve({status:res.statusCode,body:d})); });\n    req.on('error',reject); req.write(body); req.end();\n  });\n  if (result.status === 201 || result.status === 200) {\n    writeStatus = 'saved';\n    try { pipelineId = JSON.parse(result.body)[0]?.id || null; } catch(e) {}\n  } else {\n    writeStatus = 'error_' + result.status + ': ' + result.body.substring(0,200);\n  }\n} catch(e) {\n  writeStatus = 'error: ' + e.message;\n}\n\nreturn [{ json: { ...input, pipelineId, writeStatus }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "id": "pursue-003",
+      "name": "Write to Pipeline"
+    },
+    {
+      "parameters": {
+        "jsCode": "// STEP 3 — FIRE DOWNSTREAM AGENTS\n// Jordan always fires — entity determines what it drafts:\n//   EAF → LOI / grant application\n//   FP  → capability statement\n//   MONK → SBIR narrative\n//   MULTI → capability statement + LOI\n// Iris fires for EAF/MULTI — adds deadline tracking\n// Atlas fires for MONK — flags technical prep\nconst http = require('http');\nconst input = $input.first().json;\n\nconst fireWebhook = async (path, payload) => {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: 'host.docker.internal', port: 5678, path, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bodyStr) } };\n  return new Promise(r => { const req = http.request(opts, res => { res.on('data',()=>{}); res.on('end',r); }); req.on('error',r); req.write(bodyStr); req.end(); });\n};\n\n// Determine Jordan task based on entity\nconst jordanTask = {\n  'EAF':   'loi',\n  'FP':    'capability_statement',\n  'MONK':  'sbir_narrative',\n  'MULTI': 'capability_statement_and_loi'\n}[input.entity] || 'capability_statement';\n\nconst jordanPayload = {\n  trigger: 'pursue_command',\n  pipeline_id: input.pipelineId,\n  opportunity: input.title,\n  entity: input.entity,\n  opportunity_type: input.opportunityType,\n  task: jordanTask,\n  kevin_note: input.kevinNote || '',\n  founder_credentials: input.founderCredentials\n};\n\n// Always fire Jordan\nawait fireWebhook('/webhook/grant-writer', jordanPayload);\n\n// Fire Iris for grant/EAF deadlines\nif (input.triggerIris) {\n  await fireWebhook('/webhook/iris-monitor', {\n    trigger: 'pursue_command',\n    pipeline_id: input.pipelineId,\n    opportunity: input.title,\n    entity: input.entity,\n    note: 'New pipeline item added: ' + input.title\n  });\n}\n\n// Fire Atlas for MONK technical prep\nif (input.triggerAtlas) {\n  await fireWebhook('/webhook/atlas-architect', {\n    command: 'Pipeline MONK prep',\n    detail: input.title + ' — SBIR/R&D technical narrative needed',\n    pipeline_id: input.pipelineId\n  });\n}\n\nreturn [{ json: { ...input, jordanTask, agentsFired: ['Jordan', ...(input.triggerIris?['Iris']:[]), ...(input.triggerAtlas?['Atlas']:[])] }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "id": "pursue-004",
+      "name": "Fire Downstream Agents"
+    },
+    {
+      "parameters": {
+        "jsCode": "// STEP 4 — CONFIRM TO KEVIN VIA WHATSAPP\nconst http = require('http');\nconst input = $input.first().json;\n\nconst entityLabel = { 'FP': 'For-Profit', 'EAF': 'Nonprofit', 'MONK': 'R&D/IP', 'MULTI': 'Multi-entity' }[input.entity] || input.entity;\nconst taskLabel = {\n  'loi': 'LOI draft',\n  'capability_statement': 'capability statement',\n  'sbir_narrative': 'SBIR narrative',\n  'capability_statement_and_loi': 'capability statement + LOI'\n}[input.jordanTask] || 'draft';\n\nconst dbIcon = input.writeStatus === 'saved' ? '\\u2705' : '\\u26A0\\uFE0F';\nconst agents = (input.agentsFired || []).join(' + ');\n\nlet msg = `Bot reply: PIPELINE CONFIRMED\\n\\n`;\nmsg += `Opportunity: ${input.title}\\n`;\nmsg += `Entity: ${entityLabel} [${input.entity}]\\n`;\nmsg += `Type: ${input.opportunityType}\\n`;\nif (input.kevinNote) msg += `Your note: ${input.kevinNote}\\n`;\nmsg += `\\nPipeline record: ${dbIcon} ${input.writeStatus}\\n`;\nmsg += `Agents fired: ${agents}\\n`;\nmsg += `Jordan drafting: ${taskLabel}\\n`;\nmsg += `\\nDraft ready ~45 seconds.\\nCheck Dashboard pipeline tab for status.`;\n\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: msg } });\nconst opts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) } };\nawait new Promise(r => { const req = http.request(opts, res => { res.on('data',()=>{}); res.on('end',r); }); req.on('error',r); req.write(msgBody); req.end(); });\n\n// Aidan callback\nconst cbBody = JSON.stringify({ agent: 'Nova', subagent: 'Pursue', opportunity: input.title, entity: input.entity, pipelineId: input.pipelineId, writeStatus: input.writeStatus, agentsFired: input.agentsFired, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: 'host.docker.internal', port: 5678, path: '/webhook/aidan-callback', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, res => { res.on('data',()=>{}); res.on('end',()=>{}); }); cbReq.on('error',()=>{}); cbReq.write(cbBody); cbReq.end();\n\nreturn [{ json: { success: true, opportunity: input.title, entity: input.entity, pipelineId: input.pipelineId, agentsFired: input.agentsFired }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0],
+      "id": "pursue-005",
+      "name": "Confirm to Kevin"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Parse Command",          "type": "main", "index": 0 }]] },
+    "Parse Command":   { "main": [[{ "node": "Write to Pipeline",       "type": "main", "index": 0 }]] },
+    "Write to Pipeline":{ "main": [[{ "node": "Fire Downstream Agents", "type": "main", "index": 0 }]] },
+    "Fire Downstream Agents": { "main": [[{ "node": "Confirm to Kevin", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "KAI-Netics" }, { "name": "Nova" }, { "name": "Pipeline" }, { "name": "Pursue" }]
+}

@@ -1,0 +1,101 @@
+{
+  "name": "Jordan - Send Pursuit Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jordan-send-email",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "jse-001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "kai-jordan-send-email"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── JORDAN SEND EMAIL v1.0 ──────────────────────────────\n// Node 1: Validate inputs + dedup guard via Supabase check\nconst https = require('https');\nconst input = $input.first().json;\n\nconst to          = (input.to || '').trim();\nconst bcc         = (input.bcc || 'kas42869@gmail.com').trim();\nconst subject     = (input.subject || 'KAI-Netics Outreach').trim();\nconst body        = (input.body || '').trim();\nconst pipelineId  = input.pipelineId || null;\nconst entity      = input.entity || 'FP';\nconst source      = input.source || 'dashboard';\n\nif (!to)   throw new Error('No recipient email address provided');\nif (!body) throw new Error('No email body provided');\n\n// Dedup guard — check if loi_sent already true on pipeline record\nif (pipelineId) {\n  const SUPABASE_URL = ($env.SUPABASE_URL || '').replace('https://','').replace('http://','');\n  const SUPABASE_KEY = $env.SUPABASE_SERVICE_KEY || '';\n  const check = await new Promise((resolve, reject) => {\n    const req = https.request({\n      hostname: SUPABASE_URL, port: 443,\n      path: '/rest/v1/pipeline?id=eq.' + pipelineId + '&select=loi_sent,title',\n      method: 'GET',\n      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }\n    }, (res) => { let d=''; res.on('data',c=>d+=c); res.on('end',()=>resolve({status:res.statusCode,body:d})); });\n    req.on('error', reject);\n    req.end();\n  });\n  try {\n    const rows = JSON.parse(check.body);\n    if (Array.isArray(rows) && rows.length > 0 && rows[0].loi_sent === true) {\n      throw new Error('DEDUP_BLOCK: LOI already sent for this opportunity (' + (rows[0].title||pipelineId) + '). Update pipeline record manually if resend is intentional.');\n    }\n  } catch(e) {\n    if (e.message.startsWith('DEDUP_BLOCK')) throw e;\n    // Parse error — proceed\n  }\n}\n\nreturn [{ json: { to, bcc, subject, body, pipelineId, entity, source, sentAt: new Date().toISOString() } }];"
+      },
+      "id": "jse-002",
+      "name": "Validate + Dedup Guard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Node 2: Format body + build HTML ───────────────────\n// Strips markdown, builds entity-aware HTML signature\nconst input = $input.first().json;\nconst entity = input.entity || 'FP';\n\n// ── Clean markdown from plain text body ──\nfunction cleanMarkdown(text) {\n  return text\n    .replace(/^#{1,6}\\s+/gm, '')           // Remove ## headers\n    .replace(/\\*\\*(.+?)\\*\\*/g, '$1')        // Remove **bold**\n    .replace(/\\*(.+?)\\*/g, '$1')            // Remove *italic*\n    .replace(/^[-*]\\s+/gm, '\\u2022 ')      // Convert list items to bullets\n    .replace(/^\\|.+\\|$/gm, '')             // Remove markdown tables\n    .replace(/^[-|\\s]+$/gm, '')            // Remove table separators\n    .replace(/\\[(.+?)\\]\\((.+?)\\)/g, '$1 ($2)') // Flatten links\n    .replace(/`(.+?)`/g, '$1')             // Remove inline code\n    .replace(/---+/g, '\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500') // Replace HR\n    .replace(/\\n{3,}/g, '\\n\\n')            // Collapse excess blank lines\n    .trim();\n}\n\n// ── Entity-aware signature ──\nconst signatures = {\n  FP: {\n    name: 'Kevin Alexander Smith',\n    title: 'Founder & Principal',\n    company: 'Kevin Alexander International LLC dba KAI-Netics',\n    credentials: 'FAA Part 107 #5250157 | CISSP | PMP | CCNA | Security+',\n    email: 'kas@kevin-llc.com',\n    phone: '443.257.6836',\n    web: 'www.kai-netics.com',\n    color: '#00e5ff'\n  },\n  EAF: {\n    name: 'Kevin Alexander Smith',\n    title: 'Executive Director',\n    company: 'KAI-Netics Equity & Autonomy Foundry, Inc.',\n    credentials: 'EIN: 41-4820296 | 501(c)(3) Pending | CAKO Program',\n    email: 'kas@kevin-llc.com',\n    phone: '443.257.6836',\n    web: 'www.kai-netics.com',\n    color: '#7c6af7'\n  },\n  MONK: {\n    name: 'Kevin Alexander Smith',\n    title: 'Founder',\n    company: 'MONK LLC / KAI-Netics',\n    credentials: 'FAA Part 107 #5250157 | CISSP | PMP',\n    email: 'kas@kevin-llc.com',\n    phone: '443.257.6836',\n    web: 'www.kai-netics.com',\n    color: '#ff9f43'\n  }\n};\nconst sig = signatures[entity] || signatures.FP;\n\nconst cleanBody = cleanMarkdown(input.body);\n\n// ── Plain text version ──\nconst plainText = cleanBody + '\\n\\n' +\n  sig.name + '\\n' +\n  sig.title + '\\n' +\n  sig.company + '\\n' +\n  sig.credentials + '\\n' +\n  sig.email + ' | ' + sig.phone + '\\n' +\n  sig.web;\n\n// ── HTML version ──\nconst safeBody = cleanBody\n  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')\n  .replace(/\\n\\n/g, '</p><p style=\"margin:0 0 14px 0;\">')\n  .replace(/\\n/g, '<br>');\n\nconst htmlBody =\n  '<div style=\"font-family:Arial,sans-serif;max-width:680px;margin:0 auto;\">' +\n  '<div style=\"background:#0a1628;padding:18px 24px;border-radius:8px 8px 0 0;\">' +\n  '<h2 style=\"color:' + sig.color + ';margin:0;font-size:17px;font-weight:700;\">KAI-Netics</h2>' +\n  '<p style=\"color:#8899aa;margin:3px 0 0;font-size:11px;\">' + sig.company + '</p>' +\n  '</div>' +\n  '<div style=\"background:#ffffff;padding:28px 28px 20px;border:1px solid #e0e0e0;\">' +\n  '<p style=\"margin:0 0 14px 0;font-size:14px;line-height:1.8;color:#222;\">' + safeBody + '</p>' +\n  '</div>' +\n  '<div style=\"background:#f8f9fa;border:1px solid #e0e0e0;border-top:none;padding:16px 24px;border-radius:0 0 8px 8px;\">' +\n  '<p style=\"margin:0;font-size:13px;font-weight:700;color:#222;\">' + sig.name + '</p>' +\n  '<p style=\"margin:2px 0 0;font-size:12px;color:#555;\">' + sig.title + ' | ' + sig.company + '</p>' +\n  '<p style=\"margin:4px 0 0;font-size:11px;color:#777;\">' + sig.credentials + '</p>' +\n  '<p style=\"margin:4px 0 0;font-size:11px;color:#777;\">' +\n  '<a href=\"mailto:' + sig.email + '\" style=\"color:#0066cc;text-decoration:none;\">' + sig.email + '</a>' +\n  ' | ' + sig.phone + ' | <a href=\"http://' + sig.web + '\" style=\"color:#0066cc;text-decoration:none;\">' + sig.web + '</a>' +\n  '</p>' +\n  '</div>' +\n  '</div>';\n\nreturn [{ json: Object.assign({}, input, { cleanBody, plainText, htmlBody, sig }) }];"
+      },
+      "id": "jse-003",
+      "name": "Format + Build HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "html": "={{ $json.htmlBody }}",
+        "options": {
+          "bccList": "={{ $json.bcc }}"
+        }
+      },
+      "id": "jse-004",
+      "name": "Send via Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [660, 0],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "placeholder",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Node 4: Supabase pipeline update + disk log + WhatsApp ──\nconst https = require('https');\nconst http  = require('http');\nconst fs    = require('fs');\nconst input = $input.first().json;\n\nconst SUPABASE_URL = ($env.SUPABASE_URL || '').replace('https://','').replace('http://','');\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_KEY || '';\n\n// ── 1. Update pipeline record ──\nlet supabaseStatus = 'skipped';\nif (input.pipelineId && SUPABASE_URL && SUPABASE_KEY) {\n  try {\n    const patch = JSON.stringify({\n      loi_sent:           true,\n      loi_sent_date:      input.sentAt,\n      loi_recipient:      input.to,\n      last_contact_date:  input.sentAt.slice(0,10),\n      last_contact_notes: 'Outreach email sent to ' + input.to + ' — ' + input.subject,\n      status:             'pursuing',\n      last_activity_at:   input.sentAt\n    });\n    const result = await new Promise((resolve, reject) => {\n      const req = https.request({\n        hostname: SUPABASE_URL, port: 443,\n        path: '/rest/v1/pipeline?id=eq.' + input.pipelineId,\n        method: 'PATCH',\n        headers: {\n          'Content-Type': 'application/json',\n          'apikey': SUPABASE_KEY,\n          'Authorization': 'Bearer ' + SUPABASE_KEY,\n          'Prefer': 'return=minimal',\n          'Content-Length': Buffer.byteLength(patch)\n        }\n      }, (res) => { let d=''; res.on('data',c=>d+=c); res.on('end',()=>resolve({status:res.statusCode,body:d})); });\n      req.on('error', reject);\n      req.write(patch);\n      req.end();\n    });\n    supabaseStatus = result.status === 204 || result.status === 200 ? 'updated' : 'error_' + result.status;\n  } catch(e) {\n    supabaseStatus = 'error: ' + e.message;\n  }\n}\n\n// ── 2. Log sent email to disk ──\nconst sentDir = '/data/Aidan_Outputs/Jordan/Sent';\nfs.mkdirSync(sentDir, { recursive: true });\nconst safeName = (input.subject || 'email').replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);\nconst logPath = sentDir + '/SENT_' + input.sentAt.replace(/[:.]/g,'-') + '_' + safeName + '.txt';\nconst logContent = [\n  'JORDAN SENT EMAIL LOG',\n  'Sent:        ' + input.sentAt,\n  'To:          ' + input.to,\n  'BCC:         ' + input.bcc,\n  'Subject:     ' + input.subject,\n  'Entity:      ' + (input.entity || 'FP'),\n  'Pipeline ID: ' + (input.pipelineId || 'N/A'),\n  'Supabase:    ' + supabaseStatus,\n  'Source:      ' + input.source,\n  '',\n  '─── BODY ───────────────────────────────────────',\n  input.cleanBody || input.body\n].join('\\n');\ntry { fs.writeFileSync(logPath, logContent, 'utf8'); } catch(e) {}\n\n// ── 3. WhatsApp confirmation ──\nconst msg = [\n  'JORDAN EMAIL SENT',\n  '',\n  'To: ' + input.to,\n  'Subject: ' + input.subject,\n  'BCC: ' + input.bcc,\n  'Pipeline: ' + (input.pipelineId || 'N/A'),\n  'Supabase: ' + supabaseStatus,\n  'Log: ' + logPath\n].join('\\n');\nconst msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: msg } });\nconst opts = {\n  hostname: 'host.docker.internal', port: 8081,\n  path: '/message/sendText/Aidan', method: 'POST',\n  headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) }\n};\ntry {\n  await new Promise((r) => {\n    const req = http.request(opts, (res) => { res.on('data',()=>{}); res.on('end',r); });\n    req.on('error', r);\n    req.write(msgBody);\n    req.end();\n  });\n} catch(e) {}\n\nreturn [{ json: { success: true, to: input.to, subject: input.subject, pipelineId: input.pipelineId, supabaseStatus, logPath, sentAt: input.sentAt } }];"
+      },
+      "id": "jse-005",
+      "name": "Update Supabase + Log + WhatsApp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: $json.success, to: $json.to, subject: $json.subject, supabaseStatus: $json.supabaseStatus, sentAt: $json.sentAt }) }}",
+        "options": {}
+      },
+      "id": "jse-006",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1100, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger":                  { "main": [[{ "node": "Validate + Dedup Guard",          "type": "main", "index": 0 }]] },
+    "Validate + Dedup Guard":           { "main": [[{ "node": "Format + Build HTML",              "type": "main", "index": 0 }]] },
+    "Format + Build HTML":              { "main": [[{ "node": "Send via Gmail",                   "type": "main", "index": 0 }]] },
+    "Send via Gmail":                   { "main": [[{ "node": "Update Supabase + Log + WhatsApp", "type": "main", "index": 0 }]] },
+    "Update Supabase + Log + WhatsApp": { "main": [[{ "node": "Respond to Webhook",               "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "availableInMCP": true
+  },
+  "tags": [
+    { "name": "KAI-Netics" },
+    { "name": "Jordan" },
+    { "name": "Email" },
+    { "name": "Pipeline" }
+  ]
+}

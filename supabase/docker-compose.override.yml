@@ -1,0 +1,42 @@
+services:
+  # Stub out analytics so dependency chain doesn't break
+  analytics:
+    image: hello-world
+    restart: "no"
+    healthcheck:
+      test: ["CMD-SHELL", "exit 0"]
+      interval: 5s
+      timeout: 5s
+      retries: 1
+      start_period: 2s
+    depends_on: {}
+    environment: {}
+
+  # Break studio's dependency on analytics health
+  studio:
+    depends_on:
+      analytics:
+        condition: service_started
+      db:
+        condition: service_healthy
+
+  # Fix kong for Windows — run in foreground mode
+  kong:
+    depends_on:
+      studio:
+        condition: service_started
+      db:
+        condition: service_healthy
+    user: "root"
+    entrypoint: []
+    command: ["/bin/sh", "-c", "kong start && nginx -g 'daemon off;' -p /usr/local/kong -c nginx.conf"]
+    volumes:
+      - ./volumes/api/kong.yml:/usr/local/kong/kong.yml:ro
+    environment:
+      KONG_NGINX_DAEMON: "off"
+
+  # Break functions dependency on kong health
+  functions:
+    depends_on:
+      kong:
+        condition: service_started

@@ -1,229 +1,175 @@
 ================================================================================
 KAI-NETICS SESSION HANDOFF
-Date: May 2, 2026 (End of Session)
-Prepared by: Aidan + Atlas (Claude Sonnet 4.6 / Opus 4.6)
-Next session: Open fresh -- read this file first
+Date: May 8, 2026 (Full Day Session — CLOSED)
 ================================================================================
 
 RESUME LINE:
-"Read HANDOFF.txt at C:\Kinetic_Core\HANDOFF.txt and pick up from there.
-KAI-Netics is not a misspelling -- it is the brand name."
+"Read my handoff file at C:\Kinetic_Core\HANDOFF.txt and pick up from there."
 
 ================================================================================
-PLATFORM STATUS -- MAY 2, 2026 -- ALL 13 WORKFLOWS OPERATIONAL
+PLATFORM STATUS
 ================================================================================
-n8n:            Running | localhost:5678 | kinetic-core-n8n (Docker)
-EvolutionAPI:   Running | localhost:8081 | kinetic-core-whatsapp (Docker)
-Dashboard:      Running | localhost:3030 | pm2 kai-dashboard
-Supabase MCP:   Running | pm2 supabase-mcp
-Supabase DB:    Live | raxpmeltyxmtiihxoxpa.supabase.co | 15 tables
-GitHub:         https://github.com/KAI-Netics/kinetic-core (PRIVATE)
-
-STARTUP COMMAND (after any reboot):
-  powershell -ExecutionPolicy Bypass -File C:\Kinetic_Core\START_KINETIC.ps1
-
-CONTAINER REBUILD (if container lost):
-  docker stop kinetic-core-n8n
-  docker rm kinetic-core-n8n
-  & "C:\Kinetic_Core\start_n8n.ps1"
+WhatsApp Bridge v4 — ACTIVE
+Nova Proactive v3.2 — ACTIVE (SAM skipped-no key, SBIR err, Grants err)
+Nova Pursue Command — ACTIVE (BUG: upsert fix pending)
+Jordan v3.2 — ACTIVE
+DASHBOARD v4.5 — LIVE (225,443 bytes)
+LOCAL SUPABASE — LIVE at http://localhost:8000 (empty — no schema yet)
+CLOUD SUPABASE — UNHEALTHY (us-east-1a outage all day May 8)
 
 ================================================================================
-GITHUB + SYNC ARCHITECTURE (NEW -- May 2, 2026)
+DATABASE GOVERNANCE — PERMANENT
 ================================================================================
-Repo:           https://github.com/KAI-Netics/kinetic-core (private)
-Sync Script:    C:\Kinetic_Core\sync_workflows.ps1
-n8n API Key:    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiNjI3N2M4My1hNjI4LTQxZWMtYmE4MC0zZTJlMzVjNGI5OWUiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiZGYzYjBmZWQtNmU5OS00NGRjLWFjYjAtYTM2YmRlN2Q2NDc4IiwiaWF0IjoxNzc3NzI0ODg4fQ.QAkj7PCSH_fFBJ6HNYOdeILhTf2Q7v94QOCwztC-lbk
-
-SYNC COMMANDS:
-  Export all from n8n to disk:   .\sync_workflows.ps1 -export
-  Sync one workflow to n8n:      .\sync_workflows.ps1 -workflow scout
-  Sync all workflows to n8n:     .\sync_workflows.ps1 -all
-
-WORKFLOW SOURCE OF TRUTH: workflows/export/ folder (exported May 2, 2026)
-FUTURE CHANGES: Edit JSON in workflows/export/ -> run sync -> auto git push
-
-================================================================================
-CANONICAL WORKFLOW REGISTRY -- 13 ACTIVE (May 2, 2026)
-================================================================================
-All duplicates and old versions deleted. These are the only active workflows.
-
-ID                  Name
-------------------  ----------------------------------------
-uWar6a3rBK9yUZHt   Atlas - Technical Architect v2
-E42nCnCDMNyqXBUa   Scout - BD Research v5
-GDEkrPv1ShL9biXJ   Jordan - Grant Writer v3
-VSMBeuQeSBUiETNf   Iris - Compliance Monitor v3
-lRTWOdnwTl9S4uDz   Aidan - Orchestra Fan Out
-fWCfTlmkQNtTINFB   Aidan - Callback Consolidator
-2hIt4A3sZUqObtjV   Aidan - WhatsApp Bridge v2
-SyfpMRh1XmZC7qMD   Aidan - Network Watchdog
-jb9c1ETj3mBEOtTd   Aidan - Email Router
-SVzmB2AzqiyGtsJF   Nova - RFP Intelligence Agent
-Un0wx8dCSVcgvOv5   Sage - Newsletter Automation
-ICIFC9FQo2ctSScE   Sage - Send Newsletter Email
-7Q7yuRJyev9s3DQW   Pulse - Platform Metrics
-
-================================================================================
-DOCKER ENVIRONMENT VARIABLES (AUTHORITATIVE -- May 2, 2026)
-================================================================================
-Container: kinetic-core-n8n
-Source of truth: C:\Kinetic_Core\start_n8n.ps1
-
-  ANTHROPIC_API_KEY       = [see start_n8n.ps1]
-  SUPABASE_URL            = https://raxpmeltyxmtiihxoxpa.supabase.co
-  SUPABASE_SERVICE_KEY    = [see start_n8n.ps1]
-  BRAVE_API_KEY           = BSAWHBob7ILPlWV-JX8iFTOr4wDaQ1I
-  EVOLUTION_API_KEY       = Kevin2026
-  N8N_API_KEY             = [see start_n8n.ps1]
-  NODE_FUNCTION_ALLOW_BUILTIN = fs,path,https,http,crypto
-  NODE_FUNCTION_ALLOW_EXTERNAL = *
-  N8N_BLOCK_ENV_ACCESS_IN_NODE = false
-  N8N_HOST                = localhost
-  N8N_PORT                = 5678
-  WEBHOOK_URL             = http://localhost:5678
-
-MODEL STRINGS (confirmed May 2, 2026):
-  Scout Brain v5:         claude-sonnet-4-6
-  Jordan Call Claude:     claude-sonnet-4-6
-  Atlas:                  HYBRID (claude-sonnet-4-6 default / claude-opus-4-6 deep)
-  Aidan Consolidator:     claude-opus-4-6
-  Iris:                   no Claude call (pure logic)
-  Nova Score RFP:         claude-sonnet-4-6
-  Nova Draft Response:    claude-opus-4-6
-
-================================================================================
-SUPABASE STATUS -- MAY 2, 2026
-================================================================================
-Project: raxpmeltyxmtiihxoxpa.supabase.co
-Tables: 15 total
-
-ACTIVE WRITES (confirmed working):
-  scout_reports           Scout writes on every BD/grant run
-  compliance_items        Iris writes ~10 items per run
-  grant_applications      Jordan writes on analysis runs
-  cost_log                Atlas writes cost on every call
-  atlas_decisions         Atlas writes every decision
-  agent_executions        ALL 5 agents write on every run (fixed May 2)
-  reference_architecture  Seeded (16 workflows)
-  version_registry        Seeded (8 components)
-
-NOT YET WIRED:
-  agent_feedback          Needs WhatsApp router changes
-  bd_pipeline             Needs Scout threshold logic
-  ecosystem_signals       Needs Atlas deep analysis write
-  rfp_responses           Nova writes -- verify working
-  industry_intelligence   Atlas populates on deep analysis
-  client_configs          Populated when client deployments built
-  drift_log               Populated on architecture reviews
-
-SECURITY NOTE:
-  3 views use SECURITY DEFINER -- must convert to SECURITY INVOKER (backlog #9)
-  grant_pipeline_summary, pipeline_summary, agent_health_7d
-
-================================================================================
-ORCHESTRA STATUS -- CONFIRMED WORKING MAY 2, 2026
-================================================================================
-Trigger:    POST http://localhost:5678/webhook/aidan-orchestra
-            Body: {"command":"morning brief","trigger":"manual_test"}
-Fan Out:    Fires Atlas + Scout + Jordan + Iris in parallel
-Callbacks:  All 4 landing at /webhook/aidan-callback
-Matching:   10-minute time window
-Synthesis:  Opus 4.6 -- brief saved to /data/Aidan_Outputs/Orchestra/
-Delivery:   WhatsApp 14432576836 in 3800-char chunks
-Duration:   ~2-3 minutes end-to-end
-CONFIRMED:  Brief delivered May 1 6:25 PM EST and May 2 7:30 AM EST
-
-================================================================================
-PENDING ITEMS -- PRIORITY ORDER
-================================================================================
-
-IMMEDIATE (next session):
-  1. Verify agent_executions writes landing -- run Orchestra, check SQL
-     SELECT agent, trigger_type, status FROM agent_executions ORDER BY created_at DESC LIMIT 10
-  2. Wire Gmail OAuth into n8n -- unblocks Sage, Email Router, newsletters
-  3. Build Atlas 3-week review scheduled trigger (next: May 22)
-  4. Update start_n8n.ps1 with new N8N_API_KEY (replace old MCP token)
-
-HIGH:
-  5. Fix bd_pipeline writes -- Scout needs threshold logic (fit > 70% = pipeline entry)
-  6. Fix ecosystem_signals writes -- Atlas deep analysis trigger
-  7. Supabase SECURITY DEFINER fix on 3 views
-  8. Jordan "Unknown grant" cosmetic fix -- skip path callback has no fileName
-  9. Sage TEST_MODE flip when GoDaddy forwarding confirmed
-
-ARCHITECTURE (phase 2):
-  10. MONK LLC formation -- OVERDUE -- businessexpress.maryland.gov
-  11. SAM.gov UEI -- BLOCKING all federal work
-  12. IRS Form 1023 -- BLOCKING all grant funding
-  13. Provisional patent -- call James Scott (410) 908-4454
-  14. MBE/DBE -- due May 15 -- mbe.mdot.maryland.gov
-  15. OMB M-26-02 -- due May 20 -- CISSP + Part 107 = first $ opportunity
-  16. Techstars Demo Day -- Jun 3 -- register by May 15
-
-SECURITY PUNCHLIST:
-  - Rotate Anthropic API key (exposed in session chats)
-  - Rotate Supabase service key (exposed in session chats)
-  - Update start_n8n.ps1 with rotated keys
-  - Git push after rotation
-
-================================================================================
-JAMES SCOTT CALL CLOSES 4 ITEMS
-================================================================================
-(410) 908-4454 | jlslaw@yahoo.com
-  1. Form 1023-EZ eligibility check
-  2. MONK provisional patent filing
-  3. MONK LLC Articles of Organization
-  4. GoDaddy domain defederation from Exchange Online
-
-================================================================================
-KEY FILE PATHS
-================================================================================
-Handoff:          C:\Kinetic_Core\HANDOFF.txt
-Context:          C:\Kinetic_Core\KAI_Context.json (v2.1)
-Atlas prompt:     C:\Kinetic_Core\data\Atlas_System_Prompt.txt
-Consolidator ref: C:\Kinetic_Core\aidan_consolidator_v2.js
-Docker rebuild:   C:\Kinetic_Core\start_n8n.ps1
-Sync script:      C:\Kinetic_Core\sync_workflows.ps1
-Startup:          C:\Kinetic_Core\START_KINETIC.ps1
-Workflows:        C:\Kinetic_Core\workflows\export\ (canonical -- exported May 2)
-Atlas outputs:    C:\Kinetic_Core\Atlas_Outputs\
-Orchestra:        C:\Kinetic_Core\Aidan_Outputs\Orchestra\
-Callbacks:        C:\Kinetic_Core\Aidan_Outputs\Callbacks\
-
-FILE FERRY PROTOCOL (prevents Unicode corruption):
-  notepad C:\Kinetic_Core\filename.js -> Ctrl+A -> Ctrl+C -> paste into n8n -> Save
-  NEVER copy code from Claude chat window
-
-================================================================================
-AGENT ROSTER
-================================================================================
-Aidan     Chief of Staff        WhatsApp command routing, consolidated brief
-Atlas     Chief Architect       Platform architecture, cost model, drift detection
-Scout     BD Manager            Pipeline, BD targets, grant intelligence
-Jordan    Grant Writer          Federal/state funding, LOIs, eligibility
-Iris      Compliance Officer    Deadlines, regulatory calendar, risk flags
-Nova      Contracts Analyst     RFP scoring, procurement intelligence
-Sage      Communications Dir    Newsletter, board communications
-Pulse     Operations Analyst    Platform health, metrics dashboard
-Scribe    PLANNED               Differential KAI_Context patch system
-
-Kevin is the CEO.
-Roles: (1) Sales & BD  (2) MONK tech development  (3) FAA Part 107 Operator
-
-================================================================================
-GOVERNANCE RULE -- PERMANENT
-================================================================================
+CLOUD SUPABASE = PRODUCTION SYSTEM OF RECORD. NEVER REPLACED.
+LOCAL SUPABASE = DEV/MIRROR ONLY. NOT AUTHORITATIVE.
+NO SCHEMA OR DATA MIGRATION WITHOUT BACKUP + SYNC RULES + KEVIN APPROVAL.
 NOTHING LEAVES THE PLATFORM WITHOUT KEVIN'S EXPLICIT APPROVAL.
 
-Agents research, draft, score, and present.
-Kevin decides. Kevin approves. Then it executes.
+================================================================================
+DASHBOARD v4.5 — WHAT IS BUILT
+================================================================================
+✅ Dossier Engine (6-tab: Overview, Source, Contacts, Action Plan, Log, Export)
+✅ Disconnected Ops Mode (status strip, sync queue, snapshot export)
+✅ Source Intelligence panel (provenance badge, confidence bar, raw payload drawer)
+✅ 4 source action buttons (Open Source, Copy Raw, Export Intel Packet, Rebuild)
+✅ Page Navigator (floating right-side scroll nav)
+✅ Resilient pipeline loading — AUTO-FAILOVER priority:
+     1. Cloud Supabase with rows (PRODUCTION FEED)
+     2. Local Supabase with rows (LOCAL MIRROR)
+     3. Local snapshot with rows (DEGRADED — latest snapshot)
+     4. No data anywhere (manual entry mode + Retry)
+✅ Feed mode banner — green/amber/yellow per source
+✅ SOURCE GAP badges on pipeline items and dossier headers
+✅ CONTACT READY / PURSUE NOW / VALIDATE FIRST badges
+✅ SOURCE GAP auto-creates research tasks in Action Plan
+✅ Morning Brief cards clickable — open dossiers or create stub dossiers
+✅ "Missing source data = research task, not dead card" — enforced in code
 
-Agents say:  "RECOMMENDED: Kevin to file/send/submit"
-Agents NEVER say: "Aidan will file/send/submit"
+Deploy method:
+  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+  & "C:\Kinetic_Core\deploy_dashboard.ps1"
 
 ================================================================================
-END OF HANDOFF -- May 2, 2026
-Platform fully operational. Orchestra brief working. 13 canonical workflows.
-GitHub synced. agent_executions wired for all 5 agents.
-Next: Gmail OAuth, Atlas 3-week trigger, SAM.gov, James Scott call.
+WHY PIPELINE IS EMPTY RIGHT NOW
+================================================================================
+Root cause: Supabase us-east-1a outage all day May 8, 2026.
+  - Cloud Supabase: error 521 / ECONNREFUSED all session
+  - All n8n agent writes to Supabase failed
+  - No pipeline rows ever loaded → no local snapshot saved
+  - Scout fired tonight but "No response from Claude" — Anthropic API call failed
+
+Result: Pipeline shows "No pipeline data available" — correct behavior, not a bug.
+
+================================================================================
+FIRST ACTIONS NEXT SESSION
+================================================================================
+1. TEST SUPABASE HEALTH:
+   Invoke-WebRequest -Uri "https://raxpmeltyxmtiihxoxpa.supabase.co/rest/v1/pipeline?select=id,title&limit=3" -Headers @{"apikey"="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJheHBtZWx0eXhtdGlpaHhveHBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODI5MDIsImV4cCI6MjA5MjM1ODkwMn0.UScReg6BG4pimbjMeIE7NB2glcpdbgUbDLnDhDLURPM"} -UseBasicParsing
+
+2. IF SUPABASE HEALTHY:
+   - Open dashboard → Platform Ops → click ↻ Refresh
+   - Pipeline should load and save local snapshot
+   - All dossier/source intelligence features become testable
+
+3. CHECK SCOUT ANTHROPIC API KEY:
+   - "No response from Claude" = API key may need rotation
+   - n8n → Credentials → find Anthropic key → verify it works
+   - Test: fire Scout with a simple query
+
+4. ADD SAM_API_KEY:
+   - Get from sam.gov/profile
+   - Add to C:\Kinetic_Core\.env
+   - Add to START_KINETIC.ps1
+
+================================================================================
+TRACK 2 — SCOUT UPGRADE (next major build)
+================================================================================
+Scout must capture and store per opportunity:
+  source_url, source_title, source_platform, discovered_at, discovered_by_agent,
+  search_query, raw_payload, raw_snippet, contact_name, contact_title,
+  contact_email, contact_phone, organization, program_office, application_portal,
+  eligibility_notes, why_this_matters, why_kai_fits, recommended_next_action,
+  pursuit_steps, risks, blockers, confidence_score, follow_up_script,
+  outreach_draft
+
+Scout classification labels:
+  PURSUE_NOW / VALIDATE_SOURCE / CONTACT_READY / WATCHLIST / BLOCKED / ARCHIVE
+
+New priority scoring:
+  revenue_potential + immediacy + contactability + source_quality +
+  KAI_fit + ease_of_next_action + deadline_urgency + prob_of_response + cert_fit
+
+================================================================================
+CRITICAL ADMIN — BLOCKING REVENUE
+================================================================================
+  MBE/DBE cert    — due May 15 — 7 DAYS — mbe.mdot.maryland.gov
+  Techstars       — Demo Day Jun 3 — register by May 15 — 7 DAYS
+  OMB M-26-02     — May 20 — FIRST DOLLAR — $7,500/5 days
+  SAM.gov UEI     — submitted Apr 17 — confirm active
+  MONK LLC        — OVERDUE — businessexpress.maryland.gov
+  IRS Form 1023   — OVERDUE — James Scott owns this
+  James Scott     — (410) 908-4454 — CALL NOW
+
+================================================================================
+BACKLOG (prioritized)
+================================================================================
+(1)  Verify Supabase cloud healthy + load pipeline snapshot
+(2)  Fix Scout Anthropic API key ("No response from Claude")
+(3)  Add SAM_API_KEY to .env + START_KINETIC.ps1
+(4)  Track 2: Scout schema upgrade (source, contact, raw payload, pursuit fields)
+(5)  Environment mode selector (CLOUD/LOCAL/HYBRID toggle in dashboard)
+(6)  Cloud schema pg_dump backup (requires Supabase healthy)
+(7)  Nova duplicate insert fix (upsert on title+entity)
+(8)  Fix recheck button — add toast confirmation
+(9)  Fix pooler/realtime/vector containers in local Supabase
+(10) Add local Supabase to pm2 startup
+(11) Jordan Grant Reader v1 (pending 4 answers)
+(12) KAI_Context v3.0 + Scribe protocol
+(13) Scout v5 profile-driven reasoning
+(14) BD Outreach Engine
+(15) Supabase SECURITY DEFINER → INVOKER fix
+(16) scout_reports table schema fix
+(17) MONK SBIR narrative
+
+================================================================================
+LOCAL SUPABASE CONFIG
+================================================================================
+Location:   C:\Kinetic_Core\supabase\
+Start:      cd C:\Kinetic_Core\supabase && docker compose up -d
+Stop:       cd C:\Kinetic_Core\supabase && docker compose down
+REST API:   http://localhost:8000/rest/v1/
+Studio:     http://localhost:8000 (kevin / KAINetics2026!)
+DB:         localhost:5432 (postgres / bNK0jMXQvygPNYisNyCaGheyVDVexpKk)
+Status:     kong, db, studio, auth, rest, storage, meta, imgproxy healthy
+            pooler, realtime, vector, edge-functions still restarting (non-blocking)
+
+================================================================================
+TECHNICAL NOTES
+================================================================================
+Dashboard localStorage keys:
+  kai_dossiers_v1         — dossiers keyed by pipeline ID
+  kai_sync_queue          — pending/failed/synced cloud operations
+  kai_pipeline_snapshot_v1 — last successful pipeline load
+
+Dashboard file: C:\Kinetic_Core\DASHBOARD.html (v4.5, 225,443 bytes)
+Backup:         C:\Kinetic_Core\DASHBOARD_pre_dossier.html (v4.2)
+
+n8n camelCase normalization (always needed between nodes):
+  const pipelineId = input.pipelineId || input.pipelineid || input.pipeline_id || null;
+
+Jordan Grant Reader pending answers:
+  Q1: Gmail OAuth scope includes calendar?
+  Q2: Grant Inbox path: C:\Kinetic_Core\Data\Grant_Inbox\ ?
+  Q3: Calendar target — primary Gmail or KAI-Netics Ops calendar?
+  Q4: Attach PDF to invite? (Recommended: No)
+
+================================================================================
+GOVERNANCE — PERMANENT
+================================================================================
+CLOUD SUPABASE IS THE PRODUCTION SYSTEM OF RECORD. NEVER REPLACE IT.
+LOCAL SUPABASE IS DEV/MIRROR ONLY. NEVER TREAT AS AUTHORITATIVE.
+NO SCHEMA OR DATA MIGRATION WITHOUT BACKUP + SYNC RULES + KEVIN APPROVAL.
+MISSING SOURCE DATA = RESEARCH TASK, NOT A DEAD CARD.
+PRODUCTION OUTAGES MUST DEGRADE THE FEED, NOT THE BUSINESS.
+NOTHING LEAVES THE PLATFORM WITHOUT KEVIN'S EXPLICIT APPROVAL.
 ================================================================================

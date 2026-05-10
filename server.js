@@ -1,17 +1,4 @@
-/**
- * KAI-Netics Dashboard File Server
- * Run: node server.js
- * Serves Kinetic_Core files to the dashboard over HTTP on localhost:3030
- *
- * Endpoints:
- *   GET  /files?dir=Maryland_Grants          — list files in a subfolder
- *   GET  /file?path=Maryland_Grants/X.txt    — read a specific file
- *   GET  /latest?dir=Maryland_Grants         — get the most recently modified file
- *   GET  /poll?dir=Maryland_Grants&since=ISO — files modified after a timestamp
- *   GET  /health                             — server alive check
- */
-
-const http = require('http');
+﻿const http = require('http');
 const fs   = require('fs');
 const path = require('path');
 
@@ -86,6 +73,21 @@ const server = http.createServer((req, res) => {
 
   const { pathname: route, query: q } = parseQuery(req.url);
 
+  if (route === '/' || route === '/dashboard') {
+    const dashPath = path.join(ROOT, 'DASHBOARD.html');
+    try {
+      const html = fs.readFileSync(dashPath, 'utf8');
+      res.writeHead(200, {
+        'Content-Type': 'text/html',
+        'Access-Control-Allow-Origin': '*',
+        'Content-Length': Buffer.byteLength(html)
+      });
+      res.end(html); return;
+    } catch (e) {
+      res.writeHead(404); res.end('DASHBOARD.html not found at ' + dashPath); return;
+    }
+  }
+
   if (route === '/health') {
     return send(res, 200, { ok: true, root: ROOT, time: new Date().toISOString() });
   }
@@ -126,26 +128,13 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log('');
-  console.log('  ██╗  ██╗ █████╗ ██╗      ███╗   ██╗███████╗████████╗██╗  ██████╗███████╗');
-  console.log('  ██║ ██╔╝██╔══██╗██║      ████╗  ██║██╔════╝╚══██╔══╝██║ ██╔════╝██╔════╝');
-  console.log('  █████╔╝ ███████║██║█████╗██╔██╗ ██║█████╗     ██║   ██║ ██║     ███████╗');
-  console.log('  ██╔═██╗ ██╔══██║██║╚════╝██║╚██╗██║██╔══╝     ██║   ██║ ██║     ╚════██║');
-  console.log('  ██║  ██╗██║  ██║███████╗ ██║ ╚████║███████╗   ██║   ██║ ╚██████╗███████║');
-  console.log('  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═════╝╚══════╝');
-  console.log('');
-  console.log('  Dashboard File Server — Aidan Chief of Staff');
-  console.log('  Listening on http://localhost:' + PORT);
-  console.log('  Serving from ' + ROOT);
-  console.log('');
-  console.log('  Leave this window open. Open DASHBOARD.html in your browser.');
-  console.log('  Press Ctrl+C to stop.');
-  console.log('');
+  console.log('  KAI-Netics Dashboard File Server — listening on http://localhost:3030');
+  console.log('  Open dashboard: http://localhost:3030');
 });
 
 server.on('error', e => {
   if (e.code === 'EADDRINUSE') {
-    console.error('  Port ' + PORT + ' already in use. Stop the existing process or change PORT.');
+    console.error('  Port ' + PORT + ' already in use.');
   } else {
     console.error('  Server error:', e.message);
   }

@@ -1,0 +1,226 @@
+{
+  "name": "Scout - BD Research v5",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 11 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -120
+      ],
+      "id": "scout-001",
+      "name": "Daily 7AM Trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "scout-research",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        80
+      ],
+      "id": "scout-002",
+      "name": "Webhook Trigger",
+      "webhookId": "bad5071c-c38c-4e8b-99ec-21573ac025ed"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst isScheduled = !body.query && !body.command;\nconst query = String(body.query || body.command || '');\nconst today = new Date();\nconst day = today.getDay();\nconst startOfYear = new Date(today.getFullYear(), 0, 1);\nconst weekNum = Math.ceil(((today - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);\nconst isWeekA = weekNum % 2 !== 0;\nconst weekA = {\n  1: { mode: 'grant', query: 'Maryland Lighthouse Industries Upskilling Reskilling Program 2026 workforce grant nonprofit aerospace defense IT manufacturing site:dllr.state.md.us OR site:governor.maryland.gov OR site:commerce.maryland.gov', grantName: 'MD_Lighthouse_Upskilling_2026.txt', source: 'Maryland DLLR - Lighthouse Sectors' },\n  2: { mode: 'grant', query: 'TEDCO Maryland technology development corporation grant 2026 autonomous drone UAS cybersecurity defense startup SBIR matching funds site:tedco.md OR tedco.md', grantName: 'TEDCO_2026.txt', source: 'TEDCO Maryland' },\n  3: { mode: 'grant', query: 'Maryland \"Build Our Future\" grant 2026 OR \"DECADE Act\" autonomous technology cybersecurity aerospace defense nonprofit private company site:commerce.maryland.gov OR site:governor.maryland.gov', grantName: 'MD_BuildOurFuture_DECADE_2026.txt', source: 'Maryland Commerce - Build Our Future / DECADE Act' },\n  4: { mode: 'grant', query: 'FEMA C-UAS SLTT counter drone Homeland Security Grant Program 2026 state local tribal territorial FIFA World Cup security grant site:dhs.gov OR site:fema.gov', grantName: 'FEMA_CUAS_SLTT_2026.txt', source: 'FEMA / DHS' },\n  5: { mode: 'grant', query: 'FAA Aircraft Pilots Workforce Development UAS drone operator grant 2026 OR Maryland Governor Moore press release grant technology workforce announcement site:faa.gov OR site:governor.maryland.gov', grantName: 'FAA_Workforce_MD_Governor_2026.txt', source: 'FAA Workforce / MD Governor Office' }\n};\nconst weekB = {\n  1: { mode: 'bd', query: 'Maryland State Highway Administration MDSHA bridge inspection vendor registration drone aerial UAS Part 107 2026 OR Anne Arundel County DPW infrastructure inspection contract RFP', source: 'V1 Infrastructure - MDSHA + County DPW' },\n  2: { mode: 'bd', query: 'BGE Baltimore Gas Electric NERC FAC-001 FAC-003 drone transmission inspection vendor 2026 OR OMB M-26-02 federal agency UAS compliance deadline May 2026 drone consulting', source: 'V1 Utility BD + V3 OMB Compliance' },\n  3: { mode: 'bd', query: 'Amazon fulfillment warehouse Baltimore autonomous inventory scanning drone 2026 OR pharmaceutical distribution center Maryland autonomous inventory drone inspection 3PL vendor', source: 'V2 Warehouse Autonomous Operations' },\n  4: { mode: 'bd', query: 'Baltimore City Police drone first responder DFR program 2026 OR Anne Arundel Howard County police drone program vendor RFP OR Port Baltimore PSGP security grant drone', source: 'V3 DFR / Public Safety' },\n  5: { mode: 'grant', query: 'SBIR DHS DoD drone autonomous UAS trust cybersecurity hardware 2026 Phase I grant site:sbir.gov OR DroneDeploy Resilient Futures grant 2026 nonprofit OR Northrop Grumman Foundation STEM workforce drone grant', grantName: 'SBIR_Private_Foundation_2026.txt', source: 'SBIR + Private Foundations' }\n};\nlet mode, resolvedQuery, grantName, sourceLabel;\nif (isScheduled) {\n  const schedule = isWeekA ? weekA : weekB;\n  const target = schedule[day] || weekA[1];\n  mode = target.mode; resolvedQuery = target.query; grantName = target.grantName || null; sourceLabel = target.source || 'Scheduled';\n} else {\n  mode = body.mode || 'bd'; resolvedQuery = query || 'Maryland drone infrastructure inspection contracts 2026'; grantName = body.grantName || null; sourceLabel = 'Manual';\n}\nreturn [{ json: { mode, query: resolvedQuery, grantName, sourceLabel, isScheduled, timestamp: new Date().toISOString() } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "scout-003",
+      "name": "Route + Build Task v5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const https = require('https');\nconst { mode, query, grantName, sourceLabel, isScheduled, timestamp } = $input.first().json;\nconst BRAVE_API_KEY = $env.BRAVE_API_KEY || '';\nconst encodedQuery = encodeURIComponent(query);\nconst path = `/res/v1/web/search?q=${encodedQuery}&count=5&search_lang=en&country=us&text_decorations=false&extra_snippets=true`;\nconst options = { hostname: 'api.search.brave.com', port: 443, path: path, method: 'GET', headers: { 'Accept': 'application/json', 'X-Subscription-Token': BRAVE_API_KEY } };\nconst rawResponse = await new Promise((resolve, reject) => {\n  const req = https.request(options, (res) => { const chunks = []; res.on('data', c => chunks.push(c)); res.on('end', () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString() })); });\n  req.on('error', reject); req.end();\n});\nlet braveResults = [], braveError = null;\nif (rawResponse.status === 200) {\n  try {\n    const parsed = JSON.parse(rawResponse.body);\n    braveResults = (parsed?.web?.results || []).slice(0, 5).map((r, i) => ({ index: i+1, title: r.title||'', url: r.url||'', description: r.description||'', extra_snippets: (r.extra_snippets||[]).slice(0,2) }));\n  } catch(e) { braveError = 'Failed to parse Brave response: ' + e.message; }\n} else { braveError = `Brave API returned status ${rawResponse.status}: ${rawResponse.body.substring(0,200)}`; }\nlet braveContext = braveResults.length > 0\n  ? braveResults.map(r => `[${r.index}] ${r.title}\\nURL: ${r.url}\\nSummary: ${r.description}\\n${r.extra_snippets.length > 0 ? 'Detail: ' + r.extra_snippets.join(' ') : ''}`).join('\\n\\n')\n  : (braveError || 'No results returned from Brave Search.');\nconst fetchUrls = braveResults.slice(0, 2).map(r => r.url).filter(u => u.length > 0);\nreturn [{ json: { mode, query, grantName, sourceLabel, isScheduled, timestamp, braveContext, braveResults, fetchUrls, braveError } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "scout-004",
+      "name": "Brave Search v5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const https = require('https'), http = require('http');\nconst { mode, query, grantName, sourceLabel, isScheduled, timestamp, braveContext, braveResults, fetchUrls, braveError } = $input.first().json;\nconst WORD_THRESHOLD = 500, FETCH_TIMEOUT_MS = 8000, MAX_CONTENT_CHARS = 8000;\nfunction fetchUrl(url) {\n  return new Promise((resolve) => {\n    const timer = setTimeout(() => resolve({ ok: false, reason: 'timeout', content: '' }), FETCH_TIMEOUT_MS);\n    try {\n      const lib = url.startsWith('https') ? https : http;\n      const req = lib.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KAI-Netics-Scout/5.0)' } }, (res) => {\n        if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) { clearTimeout(timer); fetchUrl(res.headers.location).then(resolve); return; }\n        if (res.statusCode !== 200) { clearTimeout(timer); resolve({ ok: false, reason: `HTTP ${res.statusCode}`, content: '' }); return; }\n        const chunks = []; res.on('data', c => chunks.push(c));\n        res.on('end', () => {\n          clearTimeout(timer);\n          let text = Buffer.concat(chunks).toString('utf8', 0, 60000);\n          text = text.replace(/<script[\\s\\S]*?<\\/script>/gi,'').replace(/<style[\\s\\S]*?<\\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\\s{3,}/g,'\\n\\n').trim();\n          resolve({ ok: true, content: text.substring(0, MAX_CONTENT_CHARS) });\n        });\n      });\n      req.on('error', (e) => { clearTimeout(timer); resolve({ ok: false, reason: e.message, content: '' }); });\n    } catch(e) { clearTimeout(timer); resolve({ ok: false, reason: e.message, content: '' }); }\n  });\n}\nfunction wordCount(text) { return text.split(/\\s+/).filter(w => w.length > 0).length; }\nconst fetchResults = await Promise.all((fetchUrls||[]).slice(0,2).map(url => fetchUrl(url).then(result => ({ url, ...result }))));\nlet enrichedContext = '', fetchSummary = [];\nfor (const result of fetchResults) {\n  const wc = wordCount(result.content||'');\n  if (result.ok && wc >= WORD_THRESHOLD) { enrichedContext += `\\n\\n=== FULL PAGE CONTENT: ${result.url} ===\\n${result.content}\\n`; fetchSummary.push(`FULL CONTENT (${wc} words): ${result.url}`); }\n  else { const reason = !result.ok ? result.reason : `only ${wc} words`; enrichedContext += `\\n\\n=== PARTIAL/UNAVAILABLE: ${result.url} ===\\n[Full content unavailable: ${reason}.]\\n`; fetchSummary.push(`SNIPPET FALLBACK (${reason}): ${result.url}`); }\n}\nconst combinedContext = ['=== LIVE BRAVE SEARCH RESULTS ===', braveContext||'No Brave results available.', enrichedContext||''].join('\\n');\nreturn [{ json: { mode, query, grantName, sourceLabel, isScheduled, timestamp, combinedContext, fetchSummary, braveResults } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "scout-005",
+      "name": "Web Fetch + Fallback v5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs'), https = require('https');\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8').replace(/^\\uFEFF/,'')); } catch(e) { ctx = {}; }\nconst { mode, query, grantName, sourceLabel, isScheduled, timestamp, combinedContext, fetchSummary, braveResults } = $input.first().json;\nconst founder = ctx.founder || {};\nconst beachheads = ctx.beachheads || {};\nconst entities = ctx.entities || {};\nconst naics = ctx.naics || {};\nconst revenue = ctx.revenue_targets || {};\nconst tech = ctx.technology || {};\nconst moat = ctx.competitive_moat || {};\nconst phase = ctx.phase || {};\n\nconst beachheadSummary = Object.entries(beachheads).filter(([k]) => k.startsWith('BH')).map(([k,v]) => k+': '+v.name+' | Status: '+v.status+' | Key buyers: '+(v.key_buyers||'')+' | Compliance: '+(v.compliance_hooks||'')).join('\\n');\nconst eafProfile = 'EAF: '+(entities.EAF?.name||'KAI-Netics EAF')+' | EIN: '+(entities.EAF?.ein||'')+' | Status: '+(entities.EAF?.status||'');\nconst fpProfile  = 'FP: '+(entities.FP?.name||'KAI-Netics FP')+' | EIN: '+(entities.FP?.ein||'')+' | Status: '+(entities.FP?.status||'');\nconst monkProfile = 'MONK: '+(entities.MONK?.name||'MONK LLC')+' | Status: '+(entities.MONK?.status||'');\nconst techSummary = ['MONK: '+(tech.MONK?.description||'')+' Status: '+(tech.MONK?.status||''), 'AKMS: '+(tech.AKMS?.description||''), 'CAKO: '+(tech.CAKO?.description||'')+' Cohort 1: '+(tech.CAKO?.cohort_1_target||'')].join('\\n');\nconst credStack = (founder.credentials || []).join(', ');\nconst moatDimensions = (moat.dimensions || []).join(' | ');\nconst complianceRules = (ctx.compliance_rules || []).join(' | ');\nconst activePrograms = (ctx.deadlines || []).filter(d => !['FILED','COMPLETE','EXEMPT'].includes(d.status)).map(d => d.item+' | Due: '+d.date+' | Entity: '+d.entity+(d.notes?' | '+d.notes:'')).join('\\n');\n\nlet systemMessage, userMessage, outputFolder, outputPrefix;\nif (mode === 'grant') {\n  systemMessage = 'You are Scout, Grant Intelligence Agent for KAI-Netics.\\n\\nENTITY PROFILES:\\n'+eafProfile+'\\n'+fpProfile+'\\n'+monkProfile+'\\n\\nFOUNDER: '+(founder.name||'Kevin Alexander Smith')+' -- '+credStack+'\\nBACKGROUND: '+(founder.background||'')+'\\n\\nTECHNOLOGY ASSETS:\\n'+techSummary+'\\n\\nBEACHHEADS:\\n'+beachheadSummary+'\\n\\nCOMPETITIVE MOAT:\\n'+moatDimensions+'\\n\\nNAICS REGISTERED: '+((naics.registered||[]).map(n=>n.code+' '+n.description).join(', '))+'\\n\\nACTIVE PROGRAMS + DEADLINES:\\n'+(activePrograms||'None.')+'\\n\\nPHASE: '+(phase.current||'')+' | First dollar: '+(phase.first_dollar_path||'')+'\\n\\nREVENUE TARGETS: Y1 '+revenue.year1_total+' | Y2 '+revenue.year2_total+'\\n\\nCOMPLIANCE RULES: '+complianceRules+'\\n\\nIMPORTANT: Use LIVE WEB SEARCH RESULTS as primary source. State UNCONFIRMED if field cannot be verified.\\n\\nFORMAT OUTPUT EXACTLY:\\n\\nFUNDER: [exact legal name]\\nPROGRAM: [exact program name]\\nDEADLINE: [from live content, or UNCONFIRMED]\\nAWARD RANGE: [from live content, or UNCONFIRMED]\\nPORTAL / CONTACT: [exact URL]\\nELIGIBILITY: [from live content]\\nEAF FIT SCORE: [0-100%]\\nFP FIT SCORE: [0-100%]\\nFIT RATIONALE: [2-3 sentences]\\n\\nTOP 3 ALIGNMENT POINTS:\\n1.\\n2.\\n3.\\n\\nTOP 2 RISKS:\\n1.\\n2.\\n\\nCOMPETING APPLICANTS: [landscape]\\nRECOMMENDED ACTION: [APPLY IMMEDIATELY / APPLY / WATCH / PASS]\\nNEXT STEP: [single action with URL or contact]\\nDATA CONFIDENCE: [HIGH / MEDIUM / LOW]\\n\\nLOI DRAFT:\\n[300-400 word LOI ready for Jordan to refine.]';\n  userMessage = 'Research this grant using live search results.\\n\\nQUERY: '+query+'\\nToday: '+new Date().toLocaleDateString('en-US', {timeZone: 'America/New_York'})+'\\n\\n--- LIVE SEARCH DATA ---\\n'+combinedContext+'\\n--- END LIVE SEARCH DATA ---';\n  outputFolder = 'Maryland_Grants';\n  outputPrefix = grantName ? grantName.replace('.txt','') : 'Grant_Intel_' + new Date().toISOString().slice(0,10);\n} else {\n  systemMessage = 'You are Scout, BD Intelligence Agent for KAI-Netics. Think like a BD analyst, not a scraper.\\n\\nENTITY PROFILES:\\n'+fpProfile+'\\n'+eafProfile+'\\n'+monkProfile+'\\n\\nFOUNDER: '+(founder.name||'Kevin Alexander Smith')+' -- '+credStack+'\\nBACKGROUND: '+(founder.background||'')+'\\n\\nKEVIN\\'S TWO ROLES: (1) Sales & BD -- closing contracts, grants, jobs, partnerships; (2) MONK technology development.\\nPHASE: '+(phase.current||'Bootstrap')+' | '+phase.first_dollar_path+'\\n\\nBEACHHEADS:\\n'+beachheadSummary+'\\n\\nTECHNOLOGY ASSETS:\\n'+techSummary+'\\n\\nCOMPETITIVE MOAT:\\n'+moatDimensions+'\\n\\nNAICS REGISTERED: '+((naics.registered||[]).map(n=>n.code+' '+n.description).join(', '))+'\\nKEY COMPLIANCE HOOKS: FHWA 23 CFR 650, PHMSA 49 CFR 192, OMB M-26-02 May 20 2026, NDAA fleet cert, NERC FAC-001/003, FAA Part 107, CISSP framework\\n\\nACTIVE PIPELINE:\\n'+(activePrograms||'None.')+'\\n\\nIMPORTANT: Use LIVE WEB SEARCH RESULTS as primary source. State UNCONFIRMED if cannot be verified. Think about what Kevin really needs to WIN this -- social angles, events, showcases, decision-maker signals, recent news he can reference.\\n\\nProduce ALL 9 sections:\\n1. TARGET ORG -- full name, named decision maker with exact title, recent news/signals\\n2. PROCUREMENT PORTAL -- exact URL\\n3. CONTRACT VEHICLE -- how they procure\\n4. FIT SCORE 0-100% -- with rationale against beachheads\\n5. CAPABILITY STATEMENT -- 2-3 paragraphs; lead with CISSP + PMP + Part 107 + MONK\\n6. CERTIFICATIONS NEEDED -- exact gaps\\n7. NEXT ACTION -- specific name, phone, email, URL, social angle\\n8. FOLLOW-UP SEQUENCE -- 3-touch plan with dates and what to say\\n9. DATA CONFIDENCE: [HIGH / MEDIUM / LOW]\\n\\nFor each section ask: what does Kevin need to WIN this? What event, showcase, demo, or news can he reference? What would make him walk in looking like he already knows them?\\nNever fabricate contacts. Today: '+new Date().toLocaleDateString('en-US', {timeZone: 'America/New_York'})+'.';\n  userMessage = 'Research this BD target using live search results.\\n\\nQUERY: '+query+'\\nToday: '+new Date().toLocaleDateString('en-US', {timeZone: 'America/New_York'})+'\\n\\n--- LIVE SEARCH DATA ---\\n'+combinedContext+'\\n--- END LIVE SEARCH DATA ---';\n  outputFolder = 'Aidan_Outputs/Scout';\n  outputPrefix = 'Scout_BD_' + new Date().toISOString().slice(0,10).replace(/-/g,'');\n}\nconst requestBody = JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4096, system: systemMessage, messages: [{ role: 'user', content: userMessage }] });\nconst options = { hostname: 'api.anthropic.com', port: 443, path: '/v1/messages', method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': $env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(requestBody) } };\nconst result = await new Promise((resolve, reject) => {\n  const req = https.request(options, (res) => { let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d })); });\n  req.on('error', reject); req.write(requestBody); req.end();\n});\nlet aiOutput = '';\ntry { aiOutput = JSON.parse(result.body).content?.[0]?.text || 'No response from Claude.'; } catch(e) { aiOutput = result.body.substring(0, 500); }\nconst dateStr = new Date().toISOString().replace(/[:.]/g,'-');\nconst filename = mode === 'grant' ? outputPrefix+'.txt' : outputPrefix+'_'+dateStr+'.txt';\nconst folderPath = '/data/'+outputFolder;\nfs.mkdirSync(folderPath, { recursive: true });\nconst fetchLog = fetchSummary && fetchSummary.length > 0 ? '\\n\\n--- FETCH LOG ---\\n' + fetchSummary.join('\\n') : '';\nconst header = ['SCOUT v5.1 -- KAI-NETICS', 'Mode: '+mode.toUpperCase(), 'Source: '+sourceLabel, 'Query: '+query, 'Generated: '+timestamp, 'Scheduled: '+isScheduled, 'Live Search: YES (Brave API)', '', ''].join('\\n');\nfs.writeFileSync(folderPath+'/'+filename, header + aiOutput + fetchLog + '\\n', 'utf8');\nconst fitMatch = aiOutput.match(/(?:EAF FIT SCORE|FIT SCORE)[:\\s*\\*]*\\s*\\*?\\*?(\\d+)/i);\nconst fitScore = fitMatch ? parseInt(fitMatch[1]) : null;\nconst fitScoreDisplay = fitScore !== null ? fitScore+'%' : 'See report';\nconst actionMatch = aiOutput.match(/RECOMMENDED ACTION[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst action = actionMatch ? actionMatch[1].trim().replace(/\\*/g,'') : 'Review report';\nconst nextMatch = aiOutput.match(/NEXT (?:STEP|ACTION)[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst nextStep = nextMatch ? nextMatch[1].trim().replace(/\\*/g,'').substring(0,100) : 'See report';\nconst confMatch = aiOutput.match(/DATA CONFIDENCE[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst confidence = confMatch ? confMatch[1].trim().replace(/\\*/g,'') : 'See report';\nconst targetMatch = aiOutput.match(/TARGET ORG[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i) || aiOutput.match(/FUNDER[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst targetName = targetMatch ? targetMatch[1].trim().replace(/\\*/g,'').substring(0,100) : sourceLabel;\nconst crypto = require('crypto');\nconst contentHash = crypto.createHash('md5').update(query+mode+new Date().toISOString().slice(0,10)).digest('hex');\nreturn [{ json: { aiOutput, savedTo: folderPath+'/'+filename, query, fitScore, fitScoreDisplay, action, mode, filename, outputFolder, isScheduled, sourceLabel, timestamp, confidence, targetName, contentHash } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "scout-006",
+      "name": "Scout Brain v5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// SCOUT ENRICHMENT SEARCH v1.0\n// Fires 3 targeted Brave searches on the identified target org\n// Goal: surface decision makers, procurement signals, showcase/conference events, recent news\nconst https = require('https');\nconst input = $input.first().json;\n\nconst BRAVE_KEY = $env.BRAVE_API_KEY || $env.BRAVE_SEARCH_API_KEY || '';\n\n// Extract org name from report\nconst orgMatch = input.aiOutput.match(/(?:TARGET ORG|FUNDER)[^\\n]*\\n[^\\n]*(?:Full Legal Name|Name)[^\\n]*[|:]\\s*\\*?\\*?([^\\n|]+)/i)\n  || input.aiOutput.match(/##\\s*1\\.\\s*TARGET ORGAN?I[ZS]ATION[\\s\\S]{0,200}?\\*\\*([^*\\n]+)\\*\\*/i)\n  || input.aiOutput.match(/TARGET ORG[:\\s*\\*]*\\s*\\*?\\*?([^\\n]+)/i);\nconst orgName = orgMatch ? orgMatch[1].trim().replace(/\\*/g,'').substring(0,80) : input.query;\n\n// Extract source URLs from report\nconst urlMatches = input.aiOutput.match(/https?:\\/\\/[^\\s\\)>\\`\"]+/g) || [];\nconst sourceUrls = [...new Set(urlMatches)].slice(0,3);\n\nfunction braveSearch(query) {\n  if (!BRAVE_KEY) return Promise.resolve([]);\n  const encoded = encodeURIComponent(query);\n  return new Promise(function(resolve) {\n    const timer = setTimeout(function() { resolve([]); }, 8000);\n    const req = https.request({\n      hostname: 'api.search.brave.com', port: 443,\n      path: '/res/v1/web/search?q=' + encoded + '&count=5&search_lang=en&country=us&text_decorations=false&extra_snippets=true',\n      method: 'GET',\n      headers: { 'Accept': 'application/json', 'X-Subscription-Token': BRAVE_KEY }\n    }, function(res) {\n      let d = ''; res.on('data', function(c) { d += c; });\n      res.on('end', function() {\n        clearTimeout(timer);\n        try {\n          const results = (JSON.parse(d).web.results || []).slice(0,5).map(function(r) {\n            return { title: r.title||'', url: r.url||'', description: r.description||'', snippets: (r.extra_snippets||[]).slice(0,2) };\n          });\n          resolve(results);\n        } catch(e) { resolve([]); }\n      });\n    });\n    req.on('error', function() { clearTimeout(timer); resolve([]); });\n    req.end();\n  });\n}\n\n// 3 enrichment searches\nconst queries = [\n  orgName + ' procurement contract RFP drone UAS 2025 2026',\n  orgName + ' director VP innovation technology procurement LinkedIn',\n  orgName + ' drone conference showcase demo event 2026'\n];\n\nconst results = await Promise.all(queries.map(function(q, i) {\n  return braveSearch(q).then(function(r) {\n    return { category: ['procurement_signals','decision_makers','events_showcases'][i], query: q, results: r };\n  });\n}));\n\n// Format enrichment context\nlet enrichmentContext = '\\n\\n=== ENRICHMENT INTELLIGENCE ===\\n';\nresults.forEach(function(cat) {\n  if (cat.results.length > 0) {\n    enrichmentContext += '\\n[' + cat.category.toUpperCase().replace('_',' ') + ']\\n';\n    cat.results.forEach(function(r, i) {\n      enrichmentContext += (i+1) + '. ' + r.title + '\\n   ' + r.url + '\\n   ' + r.description + '\\n';\n      if (r.snippets.length) enrichmentContext += '   ' + r.snippets.join(' | ') + '\\n';\n    });\n  }\n});\n\nreturn [{ json: Object.assign({}, input, {\n  orgName: orgName,\n  sourceUrls: sourceUrls,\n  enrichmentContext: enrichmentContext,\n  enrichmentResults: results\n}) }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "scout-009",
+      "name": "Enrichment Search"
+    },
+    {
+      "parameters": {
+        "jsCode": "// AIDAN INTELLIGENCE SYNTHESIS v1.0\n// Claude takes full report + enrichment and produces:\n// 1. Structured pipeline record for Supabase\n// 2. CEO-ready WhatsApp brief in Aidan's voice\n// 3. Ranked pursuit classification\nconst https = require('https');\nconst fs = require('fs');\nconst input = $input.first().json;\n\nconst ANTHROPIC_KEY = $env.ANTHROPIC_API_KEY;\nconst SUPABASE_URL = ($env.SUPABASE_URL || '').replace('https://','').replace('http://','');\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_KEY || '';\n\n// Load KAI Context\nlet ctx = {};\ntry { ctx = JSON.parse(fs.readFileSync('/data/KAI_Context.json', 'utf8').replace(/^\\uFEFF/,'')); } catch(e) {}\nconst founder = ctx.founder || {};\nconst entities = ctx.entities || {};\nconst phase = ctx.phase || {};\n\nconst systemPrompt = `You are Aidan, Chief of Staff to Kevin Alexander Smith, CEO of KAI-Netics.\nKevin is a 33-year IT veteran: ${(founder.credentials||[]).join(', ')}.\nEntities: FP (commercial revenue), EAF (nonprofit/grants/workforce), MONK (IP/R&D).\nPhase: ${phase.current||'Bootstrap \u2014 Pre-Revenue'}. First dollar path: ${phase.first_dollar_path||'OMB M-26-02 consulting'}.\nKevin needs: near-term revenue, contracts, grants, jobs, partnerships. He is bootstrapping.\n\nYou have received a Scout BD report AND enrichment intelligence. Your job:\n1. Extract all structured fields for the pipeline database\n2. Write a CEO-ready WhatsApp brief \u2014 Aidan's voice, direct, no fluff\n3. Classify the opportunity\n\nCLASSIFICATION OPTIONS: PURSUE_NOW | CONTACT_READY | VALIDATE_SOURCE | WATCHLIST | BLOCKED | ARCHIVE\n\nPRIORITY SCORE (0-100):\nrevenue_potential + immediacy + contactability + source_quality + KAI_fit + ease_of_next_action + deadline_urgency + probability_of_response + certification_fit\n\nReturn STRICT JSON only \u2014 no markdown, no preamble:\n{\n  \"title\": \"string \u2014 org + opportunity type\",\n  \"organization\": \"string\",\n  \"opportunity_type\": \"contract|grant|consulting|job|partnership|sbir\",\n  \"entity_fit\": \"FP|EAF|MONK|MULTI\",\n  \"vertical\": \"V1 Infrastructure|V2 Warehouse|V3 Public Safety|V4 Entertainment|V5 Medical|V6 Compliance|V7 MONK\",\n  \"fit_score\": 0-100,\n  \"priority_score\": 0-100,\n  \"urgency_score\": 0-100,\n  \"revenue_potential\": \"string e.g. $50K-$500K\",\n  \"deadline\": \"string or null\",\n  \"classification\": \"PURSUE_NOW|CONTACT_READY|VALIDATE_SOURCE|WATCHLIST|BLOCKED|ARCHIVE\",\n  \"source_url\": \"primary source URL string\",\n  \"source_title\": \"string\",\n  \"source_platform\": \"string\",\n  \"contact_name\": \"string or UNCONFIRMED\",\n  \"contact_title\": \"string or null\",\n  \"contact_email\": \"string or null\",\n  \"contact_phone\": \"string or null\",\n  \"program_office\": \"string or null\",\n  \"application_portal\": \"string or null\",\n  \"eligibility_notes\": \"string\",\n  \"why_this_matters\": \"string \u2014 2 sentences max, Kevin's angle\",\n  \"why_kai_fits\": \"string \u2014 2 sentences max, specific credential hooks\",\n  \"recommended_next_action\": \"string \u2014 single specific action with URL or phone\",\n  \"pursuit_steps\": [\"step1\",\"step2\",\"step3\"],\n  \"risks\": [\"risk1\",\"risk2\"],\n  \"blockers\": [\"blocker1\"],\n  \"confidence_score\": 0-100,\n  \"evidence_quality\": \"HIGH|MEDIUM|LOW|SOURCE_GAP\",\n  \"follow_up_script\": \"string \u2014 opening line Kevin uses on first contact\",\n  \"outreach_draft\": \"string \u2014 3-sentence email/call opener\",\n  \"social_intelligence\": \"string \u2014 events, showcases, LinkedIn signals, recent news Kevin can leverage\",\n  \"whatsapp_brief\": \"string \u2014 Aidan's consolidated CEO brief, 400 chars max, lead with source URL and open lane\"\n}`;\n\nconst userPrompt = `SCOUT REPORT:\\n${input.aiOutput.substring(0,3000)}\\n\\n${input.enrichmentContext||''}\\n\\nOrg identified: ${input.orgName}\\nSource URLs found: ${(input.sourceUrls||[]).join(', ')}\\n\\nProduce the JSON synthesis now.`;\n\nconst rb = JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] });\n\nconst result = await new Promise(function(resolve, reject) {\n  const req = https.request({\n    hostname: 'api.anthropic.com', port: 443, path: '/v1/messages', method: 'POST',\n    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(rb) }\n  }, function(res) { let d=''; res.on('data',function(c){d+=c;}); res.on('end',function(){resolve({status:res.statusCode,body:d});}); });\n  req.on('error', reject); req.write(rb); req.end();\n});\n\nlet intel = {};\ntry {\n  const raw = JSON.parse(result.body).content[0].text;\n  const clean = raw.replace(/^```json\\s*/,'').replace(/^```\\s*/,'').replace(/\\s*```$/,'').trim();\n  intel = JSON.parse(clean);\n} catch(e) {\n  intel = {\n    title: input.orgName || input.query,\n    organization: input.orgName || 'Unknown',\n    classification: 'VALIDATE_SOURCE',\n    evidence_quality: 'SOURCE_GAP',\n    why_this_matters: 'Parse error \u2014 see raw report',\n    recommended_next_action: 'Review raw Scout report',\n    whatsapp_brief: 'Scout report complete \u2014 synthesis failed. Check raw file.'\n  };\n}\n\n// Write to Supabase pipeline table\nlet pipelineId = null;\nlet pipelineLogged = false;\nif (SUPABASE_URL && SUPABASE_KEY && intel.title) {\n  try {\n    const record = {\n      title: intel.title,\n      entity: intel.entity_fit || 'FP',\n      opportunity_type: intel.opportunity_type || 'contract',\n      vertical: intel.vertical || null,\n      fit_score: intel.fit_score || null,\n      source_url: intel.source_url || null,\n      source_title: intel.source_title || null,\n      source_platform: intel.source_platform || null,\n      contact_name: intel.contact_name !== 'UNCONFIRMED' ? intel.contact_name : null,\n      contact_title: intel.contact_title || null,\n      contact_email: intel.contact_email || null,\n      contact_phone: intel.contact_phone || null,\n      organization: intel.organization || null,\n      program_office: intel.program_office || null,\n      application_portal: intel.application_portal || null,\n      eligibility_notes: intel.eligibility_notes || null,\n      why_this_matters: intel.why_this_matters || null,\n      why_kai_fits: intel.why_kai_fits || null,\n      recommended_next_action: intel.recommended_next_action || null,\n      pursuit_steps: intel.pursuit_steps ? JSON.stringify(intel.pursuit_steps) : null,\n      risks: intel.risks ? JSON.stringify(intel.risks) : null,\n      blockers: intel.blockers ? JSON.stringify(intel.blockers) : null,\n      confidence_score: intel.confidence_score || null,\n      follow_up_script: intel.follow_up_script || null,\n      outreach_draft: intel.outreach_draft || null,\n      classification: intel.classification || 'VALIDATE_SOURCE',\n      status: 'pursuing',\n      created_by_agent: 'Scout v5',\n      last_activity_at: new Date().toISOString(),\n      source: 'scout_v5',\n      kevin_note: intel.social_intelligence ? intel.social_intelligence.substring(0,500) : null\n    };\n    const body = JSON.stringify(record);\n    const r = await new Promise(function(resolve, reject) {\n      const req = https.request({\n        hostname: SUPABASE_URL, port: 443, path: '/rest/v1/pipeline', method: 'POST',\n        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation', 'Content-Length': Buffer.byteLength(body) }\n      }, function(res) { let d=''; res.on('data',function(c){d+=c;}); res.on('end',function(){resolve({status:res.statusCode,body:d});}); });\n      req.on('error', reject); req.write(body); req.end();\n    });\n    if (r.status === 201 || r.status === 200) {\n      pipelineLogged = true;\n      try { pipelineId = JSON.parse(r.body)[0]?.id || null; } catch(e) {}\n    }\n  } catch(e) {}\n}\n\nreturn [{ json: Object.assign({}, input, {\n  intel: intel,\n  pipelineId: pipelineId,\n  pipelineLogged: pipelineLogged,\n  whatsappBrief: intel.whatsapp_brief || '',\n  classification: intel.classification || 'VALIDATE_SOURCE',\n  priorityScore: intel.priority_score || 0\n}) }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "id": "scout-010",
+      "name": "Aidan Intelligence Synthesis"
+    },
+    {
+      "parameters": {
+        "jsCode": "// AIDAN CALLBACK v5.1 \u2014 CEO Brief Delivery\n// Delivers consolidated ranked brief in Aidan's voice\n// Source URL first. Social intelligence. Outreach script. No fluff.\nconst http = require('http');\nconst fs = require('fs');\nconst input = $input.first().json;\nconst intel = input.intel || {};\n\nconst classification = intel.classification || 'VALIDATE_SOURCE';\nconst classIcon = {\n  'PURSUE_NOW': '\ud83d\udd25',\n  'CONTACT_READY': '\ud83d\udcde',\n  'VALIDATE_SOURCE': '\ud83d\udd0d',\n  'WATCHLIST': '\ud83d\udc41',\n  'BLOCKED': '\ud83d\udd34',\n  'ARCHIVE': '\ud83d\udcc1'\n}[classification] || '\ud83d\udccb';\n\nconst fitScore = intel.fit_score || input.fitScore || null;\nconst priorityScore = intel.priority_score || null;\nconst evidenceQuality = intel.evidence_quality || 'LOW';\nconst evidenceIcon = { 'HIGH': '\u2705', 'MEDIUM': '\u26a0\ufe0f', 'LOW': '\u274c', 'SOURCE_GAP': '\u26a0\ufe0f SOURCE GAP' }[evidenceQuality] || '\u2753';\n\n// Build CEO brief\nlet brief = '';\n\n// Header\nbrief += classIcon + ' ' + classification + ' \u2014 ' + (intel.title || input.orgName || input.query) + '\\n';\nbrief += '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';\n\n// Source \u2014 most important\nif (intel.source_url) {\n  brief += '\ud83c\udf10 SOURCE: ' + intel.source_url + '\\n';\n}\nif (intel.source_title) {\n  brief += '   ' + intel.source_title + '\\n';\n}\nbrief += evidenceIcon + ' Evidence: ' + evidenceQuality + '\\n';\n\n// Scores\nbrief += '\\n';\nif (fitScore) brief += '\ud83d\udcca Fit: ' + fitScore + '/100';\nif (priorityScore) brief += ' | Priority: ' + priorityScore + '/100';\nif (intel.revenue_potential) brief += ' | \ud83d\udcb0 ' + intel.revenue_potential;\nbrief += '\\n';\nif (intel.deadline) brief += '\u23f0 Deadline: ' + intel.deadline + '\\n';\n\n// Entity + vertical\nbrief += '\ud83c\udfe2 Entity: ' + (intel.entity_fit||'FP') + ' | ' + (intel.vertical||'See report') + '\\n';\n\n// Why it matters\nif (intel.why_this_matters) {\n  brief += '\\n\ud83d\udca1 WHY THIS MATTERS:\\n' + intel.why_this_matters + '\\n';\n}\nif (intel.why_kai_fits) {\n  brief += '\\n\ud83c\udfaf KAI FIT:\\n' + intel.why_kai_fits + '\\n';\n}\n\n// Social intelligence \u2014 events, showcases, LinkedIn signals\nif (intel.social_intelligence) {\n  brief += '\\n\ud83d\udd0e INTEL:\\n' + intel.social_intelligence + '\\n';\n}\n\n// Contact path\nbrief += '\\n\ud83d\udccb CONTACT PATH:\\n';\nif (intel.contact_name && intel.contact_name !== 'UNCONFIRMED') {\n  brief += '   ' + intel.contact_name + (intel.contact_title ? ' \u2014 ' + intel.contact_title : '') + '\\n';\n}\nif (intel.contact_phone) brief += '   \ud83d\udcde ' + intel.contact_phone + '\\n';\nif (intel.contact_email) brief += '   \ud83d\udce7 ' + intel.contact_email + '\\n';\nif (intel.application_portal) brief += '   \ud83c\udf10 ' + intel.application_portal + '\\n';\n\n// Next action\nif (intel.recommended_next_action) {\n  brief += '\\n\u26a1 NEXT ACTION:\\n' + intel.recommended_next_action + '\\n';\n}\n\n// Pursuit steps\nif (intel.pursuit_steps && intel.pursuit_steps.length) {\n  brief += '\\n\ud83d\udccc PURSUIT STEPS:\\n';\n  intel.pursuit_steps.forEach(function(s, i) { brief += (i+1) + '. ' + s + '\\n'; });\n}\n\n// Outreach script\nif (intel.follow_up_script) {\n  brief += '\\n\ud83d\udcac OPENING LINE:\\n\"' + intel.follow_up_script + '\"\\n';\n}\n\n// Risks\nif (intel.risks && intel.risks.length) {\n  brief += '\\n\u26a0\ufe0f RISKS: ' + intel.risks.join(' | ') + '\\n';\n}\nif (intel.blockers && intel.blockers.length) {\n  brief += '\ud83d\udd34 BLOCKERS: ' + intel.blockers.join(' | ') + '\\n';\n}\n\n// Pipeline status\nconst dbIcon = input.pipelineLogged ? '\u2705' : '\u26a0\ufe0f';\nbrief += '\\n' + dbIcon + ' Pipeline: ' + (input.pipelineLogged ? 'Saved to dashboard' : 'Log failed \u2014 check Supabase') + '\\n';\nbrief += '\ud83d\udcc4 Full report: http://localhost:3030/Aidan_Outputs/Scout/' + (input.filename||'') + '\\n';\n\n// Split for WhatsApp 3800 char limit\nconst chunks = [];\nfor (let i = 0; i < brief.length; i += 3800) chunks.push(brief.substring(i, i+3800));\n\nfor (let i = 0; i < chunks.length; i++) {\n  const msgBody = JSON.stringify({ number: '14432576836@s.whatsapp.net', textMessage: { text: chunks[i] } });\n  const opts = { hostname: 'host.docker.internal', port: 8081, path: '/message/sendText/Aidan', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': 'Kevin2026', 'Content-Length': Buffer.byteLength(msgBody) } };\n  await new Promise(function(r) { const req = http.request(opts, function(res) { res.on('data',function(){}); res.on('end',r); }); req.on('error',r); req.write(msgBody); req.end(); });\n  if (chunks.length > 1) await new Promise(function(r) { setTimeout(r, 1200); });\n}\n\n// Write last success timestamp\ntry {\n  fs.mkdirSync('/data/Aidan_Outputs/Scout', { recursive: true });\n  if (input.pipelineLogged) fs.writeFileSync('/data/Aidan_Outputs/Scout/.supabase_last_success', new Date().toISOString(), 'utf8');\n} catch(e) {}\n\n// Aidan callback\nconst cbBody = JSON.stringify({ agent: 'Scout', version: 'v5.1', summary: brief.substring(0,500), fitScore: fitScore, classification: classification, pipelineLogged: input.pipelineLogged, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: 'host.docker.internal', port: 5678, path: '/webhook/aidan-callback', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, function(res) { res.on('data',function(){}); res.on('end',function(){}); }); cbReq.on('error',function(){}); cbReq.write(cbBody); cbReq.end();\n\nreturn [{ json: { success: true, agent: 'Scout', version: 'v5.1', classification, fitScore, pipelineLogged: input.pipelineLogged } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        0
+      ],
+      "id": "scout-007",
+      "name": "Aidan Callback v5"
+    }
+  ],
+  "connections": {
+    "Daily 7AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Route + Build Task v5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Route + Build Task v5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route + Build Task v5": {
+      "main": [
+        [
+          {
+            "node": "Brave Search v5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brave Search v5": {
+      "main": [
+        [
+          {
+            "node": "Web Fetch + Fallback v5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Fetch + Fallback v5": {
+      "main": [
+        [
+          {
+            "node": "Scout Brain v5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scout Brain v5": {
+      "main": [
+        [
+          {
+            "node": "Enrichment Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrichment Search": {
+      "main": [
+        [
+          {
+            "node": "Aidan Intelligence Synthesis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aidan Intelligence Synthesis": {
+      "main": [
+        [
+          {
+            "node": "Aidan Callback v5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
