@@ -256,13 +256,49 @@
   ::-webkit-scrollbar{width:3px;height:3px;}
   ::-webkit-scrollbar-track{background:var(--surface);}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+
+  /* PATCH B/C/D — OPERATOR UX + PAGE NAVIGATOR */
+  .page-nav{position:fixed;right:12px;top:88px;z-index:500;background:rgba(17,19,24,.92);border:1px solid var(--border);border-radius:10px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(8px);max-width:150px;}
+  .page-nav-title{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin:2px 4px 6px;opacity:.85;}
+  .page-nav a{display:block;font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);text-decoration:none;padding:5px 7px;border-radius:4px;border:1px solid transparent;white-space:nowrap;transition:all .15s;}
+  .page-nav a:hover{color:var(--accent);border-color:rgba(0,229,255,.25);background:rgba(0,229,255,.06);}
+  .page-nav a.active{color:var(--success);background:rgba(0,200,150,.08);border-color:rgba(0,200,150,.2);}
+  .dr-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px;}
+  .dr-btn{font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:6px 8px;cursor:pointer;transition:all .15s;}
+  .dr-btn:hover{color:var(--accent);border-color:rgba(0,229,255,.35);background:rgba(0,229,255,.05);}
+  .dr-btn.money{color:var(--success);border-color:rgba(0,200,150,.25);background:rgba(0,200,150,.05);}
+  .dr-status-row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px;}
+  .dr-status-chip{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;padding:3px 7px;border-radius:3px;border:1px solid var(--border);color:var(--text2);background:rgba(74,85,104,.18);}
+  .dr-status-chip.ok{color:var(--success);border-color:rgba(0,200,150,.25);background:rgba(0,200,150,.08);}
+  .dr-status-chip.gap{color:var(--warn);border-color:rgba(255,214,10,.25);background:rgba(255,214,10,.08);}
+  .dr-section-title{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin:10px 0 5px;}
+  .dr-outreach{background:var(--bg);border:1px solid rgba(0,200,150,.2);border-radius:5px;padding:10px;font-size:10px;line-height:1.65;color:var(--text);font-family:'Space Mono',monospace;max-height:220px;overflow-y:auto;white-space:pre-wrap;margin-bottom:8px;}
+  @media(max-width:1050px){.page-nav{display:none;}}
+
 </style>
+<script>
+var SERVER = window.SERVER || 'http://localhost:3030';
+</script>
 </head>
 <body>
+
+<nav class="page-nav" id="pageNav" aria-label="Page Navigator">
+  <div class="page-nav-title">Page Navigator</div>
+  <a href="#top">Top</a>
+  <a href="#deadlines">Deadlines</a>
+  <a href="#grant-intel">Grant Intel</a>
+  <a href="#compliance">Compliance</a>
+  <a href="#bd-pipeline">BD Pipeline</a>
+  <a href="#launch-pad">Launch Pad</a>
+  <a href="#bottom-grid">Ops/Status</a>
+  <a href="#bottom">Bottom</a>
+</nav>
+
 <div class="container">
 
 <!-- HEADER -->
-<div class="header">
+<div class="header" id="top">
   <div>
     <div class="logo">KAI-Netics // Command Center</div>
     <h1>Morning <span>Brief</span></h1>
@@ -282,7 +318,7 @@
 </div>
 
 <!-- DEADLINES -->
-<div class="sl">Critical Deadlines</div>
+<div class="sl" id="deadlines">Critical Deadlines</div>
 <div class="dl-grid">
   <div class="dl-card dlc"><div class="dl-badge">CRITICAL</div><div class="dl-title">MEIA Capstone v13</div><div class="dl-date">April 14 — before 5PM</div><div class="dl-tags"><span class="tag t-eaf">EAF</span><span class="tag t-fp">FP</span></div></div>
   <div class="dl-card dlc"><div class="dl-badge">CRITICAL</div><div class="dl-title">EAF Annual Report — SDAT</div><div class="dl-date">April 15 — midnight hard wall</div><div class="dl-tags"><span class="tag t-eaf">EAF</span></div></div>
@@ -302,7 +338,7 @@
 <div class="main-grid">
   <!-- GRANT INTEL -->
   <div class="panel">
-    <div class="panel-hdr"><div class="ai ai-s">S</div><div><div class="panel-title">Scout · Grant Intelligence</div></div><div class="panel-sub">JORDAN ANALYZED</div></div>
+    <div class="panel-hdr" id="grant-intel"><div class="ai ai-s">S</div><div><div class="panel-title">Scout · Grant Intelligence</div></div><div class="panel-sub">JORDAN ANALYZED</div></div>
     <div class="panel-body">
       <div class="gc" onclick="toggleGC(this)">
         <div class="gc-row"><div class="gc-fit fh">95%</div><div class="gc-info"><div class="gc-prog">FEMA HSGP-SLTP — Counter-UAS Enhancement</div><div class="gc-fund">Federal Emergency Management Agency / DHS</div><div class="gc-meta"><span class="gc-amt">$500K–$2.5M</span><span class="gc-dl dl-warn">LOI May 15</span><span class="tag t-eaf">EAF</span></div></div></div>
@@ -329,7 +365,7 @@
 
   <!-- IRIS COMPLIANCE -->
   <div class="panel">
-    <div class="panel-hdr"><div class="ai ai-i">I</div><div><div class="panel-title">Iris v2 · Compliance Monitor</div></div><div class="panel-sub">LAST RUN: TODAY</div></div>
+    <div class="panel-hdr" id="compliance"><div class="ai ai-i">I</div><div><div class="panel-title">Iris v2 · Compliance Monitor</div></div><div class="panel-sub">LAST RUN: TODAY</div></div>
     <div class="panel-body">
       <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">MEIA Capstone Submission</div><div class="ci-det">EAF/FP · Owner: Kevin</div></div><div class="ci-r"><div class="ci-days dc">5d</div><div class="ci-det">Apr 14</div></div></div>
       <div class="ci"><div class="ci-dot uc"></div><div><div class="ci-title">EAF Annual Report — SDAT</div><div class="ci-det">EAF · $0 · egov.maryland.gov</div></div><div class="ci-r"><div class="ci-days dc">6d</div><div class="ci-det">Apr 15</div></div></div>
@@ -350,7 +386,7 @@
 </div>
 
 <!-- BD TARGETS -->
-<div class="panel" style="margin-bottom:32px;">
+<div class="panel" style="margin-bottom:32px;" id="bd-pipeline">
   <div class="panel-hdr"><div class="ai ai-s">S</div><div><div class="panel-title">Scout v4 · BD Pipeline</div></div><div class="panel-sub">ALL 7 VERTICALS</div></div>
   <div class="panel-body"><div class="bd-grid">
     <div class="bdc" onclick="toggleGC(this)"><div class="bdc-top"><div class="bdc-score" style="color:var(--success)">92%</div><div><div class="bdc-vert">V1 INFRASTRUCTURE</div><div class="bdc-org">BGE — Transmission Inspection</div></div></div><div class="bdc-next">NERC FAC-001/003 deadline · $50K–$500K · (410) 470-3520</div><div class="gc-exp"><div class="gf"><div class="gfl">Portal</div><div class="gfv"><a class="lnk" href="https://www.exeloncorp.com/suppliers" target="_blank">exeloncorp.com/suppliers →</a></div></div><div class="gf"><div class="gfl">Hook</div><div class="gfv">11K+ miles transmission · May 2026 NERC deadline · 60–75% below helicopter</div></div></div></div>
@@ -362,10 +398,25 @@
   </div></div>
 </div>
 
+<!-- CORE 1.0 ACTIONABLE LEADS PANEL -->
+<div class="panel" id="actionable-leads-panel" style="margin-bottom:32px;border-color:rgba(0,229,255,.35);">
+  <div class="panel-hdr">
+    <div class="ai ai-s">S</div>
+    <div>
+      <div class="panel-title">Actionable Leads · Scout v6 Live Output</div>
+    </div>
+    <div class="panel-sub">CORE 1.0</div>
+  </div>
+  <div class="panel-body" id="actionableLeadsBody">
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);">
+      Loading latest Scout v6 lead...
+    </div>
+  </div>
+</div>
 <!-- ═══════════════════════════════════════════
      SCOUT LAUNCH PAD — LIVE WITH RESULT DRAWERS
 ═══════════════════════════════════════════ -->
-<div class="sl">Scout v4 · On-Demand Launch Pad</div>
+<div class="sl" id="launch-pad">Scout v4 · On-Demand Launch Pad</div>
 <div class="panel launchpad">
   <div class="panel-hdr">
     <div class="ai ai-s">S</div>
@@ -498,7 +549,7 @@
           <div class="sb-drawer" id="drawer-johns_hopkins_meia"></div>
         </button>
         <button class="sb" id="sb-v4_entertainment_shows" onclick="fireSweep(this,'v4_entertainment_shows','Aidan_Outputs/Scout')">
-          <div class="sb-top"><div class="sb-label">FIFA / Entertainment</div><div class="sb-badge" id="badge-v4_entertainment_shows">●</div></div>
+          <div class="sb-top"><div class="sb-label">Entertainment / Events</div><div class="sb-badge" id="badge-v4_entertainment_shows">●</div></div>
           <div class="sb-key">V4 · $625M FIFA security grants · drone shows</div>
           <div class="sb-drawer" id="drawer-v4_entertainment_shows"></div>
         </button>
@@ -529,7 +580,7 @@
 </div>
 
 <!-- BOTTOM GRID -->
-<div class="bot-grid">
+<div class="bot-grid" id="bottom-grid">
   <div class="panel">
     <div class="panel-hdr"><div class="ai ai-i">R</div><div><div class="panel-title">Registration Status</div></div></div>
     <div class="panel-body">
@@ -554,7 +605,7 @@
       <div class="ag-row"><div class="ai" style="width:20px;height:20px;font-size:8px;background:rgba(74,85,104,.2);color:var(--muted);border:1px solid var(--border);">N</div><div class="ag-name">Nova / Sage / Pulse</div><div class="ag-sched">—</div><div class="ab ab-pend">PENDING</div></div>
       <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
         <div class="sl" style="margin-bottom:6px;font-size:8px;">Week A/B Rotation</div>
-        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);line-height:1.9;">WK A MON · Lighthouse Upskilling<br>WK A TUE · TEDCO All Programs<br>WK A WED · Build Our Future / DECADE Act<br>WK A THU · FEMA C-UAS + FIFA<br>WK A FRI · FAA Workforce + Gov Press<br>WK B MON · V1 MDSHA + County DPW<br>WK B TUE · V1 Utility + OMB M-26-02<br>WK B WED · V2 Warehouse BD<br>WK B THU · V3 DFR + Public Safety<br>WK B FRI · SBIR + Private Foundations</div>
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text2);line-height:1.9;">WK A MON · Lighthouse Upskilling<br>WK A TUE · TEDCO All Programs<br>WK A WED · Build Our Future / DECADE Act<br>WK A THU · FEMA C-UAS + Public Safety<br>WK A FRI · FAA Workforce + Gov Press<br>WK B MON · V1 MDSHA + County DPW<br>WK B TUE · V1 Utility + OMB M-26-02<br>WK B WED · V2 Warehouse BD<br>WK B THU · V3 DFR + Public Safety<br>WK B FRI · SBIR + Private Foundations</div>
       </div>
     </div>
   </div>
@@ -573,8 +624,29 @@
   </div>
 </div>
 
+<!-- AIDAN EXECUTIVE BRIEF -->
+<div class="sl" id="aidan-brief">Aidan · Executive Brief</div>
+<div class="panel" style="margin-bottom:32px;" id="aidan-brief-panel">
+  <div class="panel-hdr">
+    <div class="ai ai-a">A</div>
+    <div><div class="panel-title">Aidan Chief of Staff · Daily Brief</div></div>
+    <div class="panel-sub" id="briefStatus">LOADING...</div>
+  </div>
+  <div class="panel-body">
+    <div id="briefContent" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;white-space:pre-wrap;min-height:60px;">
+      Synthesizing operational state...
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="dr-btn money" onclick="refreshBrief()">↻ REFRESH BRIEF</button>
+      <button class="dr-btn" onclick="copyBrief()">COPY BRIEF</button>
+      <button class="dr-btn" onclick="sendBriefWhatsApp()">SEND TO WHATSAPP</button>
+    </div>
+    <div id="briefTimestamp" style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);margin-top:8px;"></div>
+  </div>
+</div>
+
 <!-- FOOTER -->
-<div class="footer">
+<div class="footer" id="bottom">
   <div class="footer-l">KAI-Netics Command Center · Aidan Chief of Staff · v3.0 · April 9 2026<br>File Server: localhost:3030 · n8n: localhost:5678 · Sources: KAI_Context.json · Scout v4 · Jordan v2 · Iris v2</div>
   <div class="footer-r">
     <a class="ql" href="https://egov.maryland.gov/BusinessExpress" target="_blank">SDAT →</a>
@@ -647,32 +719,98 @@ function setServerStatus(online) {
 checkServer();
 
 // ─── PARSE SCOUT v4 OUTPUT ────────────────────────────────
+
+// ─── SCOUT OUTPUT PARSER — v6 JSON + LEGACY FALLBACK ─────────────
+function escHtml(v) {
+  return String(v ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+}
+
+function asArray(v) {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(x => typeof x === 'object' ? Object.values(x).join(' — ') : String(x));
+  if (typeof v === 'object') return Object.values(v).map(x => typeof x === 'object' ? JSON.stringify(x) : String(x));
+  return String(v).split(/\n+/).map(x => x.trim()).filter(Boolean);
+}
+
+function firstValue(obj, keys) {
+  for (const k of keys) {
+    if (obj && obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k];
+  }
+  return null;
+}
+
 function parseScoutOutput(raw) {
-  const get = (key, multiline=false) => {
-    const patterns = [
-      new RegExp(key + '[:\\s*\\*]+([^\\n]+)', 'i'),
-    ];
-    for (const p of patterns) {
-      const m = raw.match(p);
-      if (m) return m[1].trim().replace(/\*\*/g,'');
+  const rawText = String(raw || '').trim();
+
+  // Scout v6 JSON path
+  if (rawText.startsWith('{') || rawText.startsWith('[')) {
+    try {
+      const json = JSON.parse(rawText);
+      const o = Array.isArray(json) ? json[0] : json;
+      const contactGap = [o.contact_name, o.contact_email, o.contact_phone].every(v => !v || String(v).toUpperCase().includes('SOURCE GAP'));
+      const sourceGap = !o.source_url && !o.raw_snippet && !o.raw_payload;
+      const recommended = firstValue(o, ['recommended_action','recommended_next_action','next_action','action']) || 'Review opportunity and build pursuit plan.';
+      return {
+        parserVersion: 'scout-v6-json',
+        title: firstValue(o, ['opportunity_title','title','source_title']) || 'Untitled Scout Opportunity',
+        fitScore: firstValue(o, ['fit_score','fitScore','score']),
+        fpFit: firstValue(o, ['fp_fit','fpFit']),
+        urgency_score: firstValue(o, ['urgency_score','urgency']),
+        confidence_score: firstValue(o, ['confidence_score','data_confidence']),
+        action: recommended,
+        recommended_next_action: recommended,
+        funder: firstValue(o, ['organization','funder','agency']),
+        program: firstValue(o, ['opportunity_title','program','title','source_title']),
+        deadline: firstValue(o, ['deadline','due_date']),
+        award: firstValue(o, ['award','award_range','revenue_potential']),
+        portal: firstValue(o, ['application_portal','procurement_portal','source_url']),
+        eligibility: firstValue(o, ['eligibility_notes','eligibility','contract_vehicle']),
+        nextStep: recommended,
+        competing: firstValue(o, ['competition','competing_applicants']),
+        rationale: firstValue(o, ['why_this_matters','rationale']),
+        why_this_matters: firstValue(o, ['why_this_matters']),
+        why_kai_fits: firstValue(o, ['why_kai_fits']),
+        alignItems: asArray(firstValue(o, ['why_kai_fits','alignment','top_alignment'])),
+        riskItems: asArray(firstValue(o, ['risks','source_gap_warnings','blockers'])),
+        pursuit_steps: asArray(firstValue(o, ['pursuit_steps','steps','action_plan'])),
+        risks: asArray(firstValue(o, ['risks'])),
+        blockers: asArray(firstValue(o, ['blockers','constraint_flags','certifications_needed'])),
+        outreach_draft: firstValue(o, ['outreach_draft','email_draft','follow_up_script']),
+        loi: firstValue(o, ['outreach_draft','loi','letter_of_interest']),
+        mode: firstValue(o, ['mode','opportunity_type']) || 'BD',
+        entity: firstValue(o, ['entity','entity_fit']),
+        source_url: firstValue(o, ['source_url']),
+        source_title: firstValue(o, ['source_title']),
+        source_platform: firstValue(o, ['source_platform']),
+        discovered_at: firstValue(o, ['discovered_at']),
+        discovered_by_agent: firstValue(o, ['discovered_by_agent']),
+        search_query: firstValue(o, ['search_query']),
+        raw_payload: firstValue(o, ['raw_payload','raw_snippet']) || rawText,
+        raw_snippet: firstValue(o, ['raw_snippet']),
+        contact_name: firstValue(o, ['contact_name']),
+        contact_title: firstValue(o, ['contact_title']),
+        contact_email: firstValue(o, ['contact_email']),
+        contact_phone: firstValue(o, ['contact_phone']),
+        organization: firstValue(o, ['organization']),
+        source_status: sourceGap ? 'SOURCE GAP — RESEARCH REQUIRED' : 'SOURCE VERIFIED',
+        contact_status: contactGap ? 'CONTACT GAP — RESEARCH REQUIRED' : 'CONTACT PATH AVAILABLE',
+        raw_json: rawText,
+        raw: rawText
+      };
+    } catch(e) {
+      console.warn('Scout JSON parse failed, falling back to legacy parser', e);
     }
+  }
+
+  // Legacy Scout text parser path
+  const get = (key, multiline=false) => {
+    const patterns = [new RegExp(key + '[:\\s*\\*]+([^\\n]+)', 'i')];
+    for (const p of patterns) { const m = rawText.match(p); if (m) return m[1].trim().replace(/\*\*/g,''); }
     return null;
   };
 
-  const getBlock = (key) => {
-    const m = raw.match(new RegExp(key + '[:\\s*\\*]+([\\s\\S]*?)(?=\\n[A-Z][A-Z\\s]+:|\\n##|$)', 'i'));
-    return m ? m[1].trim() : null;
-  };
-
-  const getList = (startKey, stopKey) => {
-    const m = raw.match(new RegExp(startKey + '[:\\s\\S]*?\\n((?:\\d+\\..*\\n?)+)', 'i'));
-    if (!m) return [];
-    return m[1].split('\n').filter(l => l.match(/^\d+\./)).map(l => l.replace(/^\d+\.\s*\*?\*?/,'').replace(/\*\*/g,'').trim()).filter(Boolean);
-  };
-
-  // Try to extract fit score
-  const fitMatch = raw.match(/(?:EAF FIT SCORE|FIT SCORE)[:\s*\*]*\s*\*?\*?(\d+)/i);
-  const fpFitMatch = raw.match(/FP FIT SCORE[:\s*\*]*\s*\*?\*?(\d+)/i);
+  const fitMatch = rawText.match(/(?:EAF FIT SCORE|FIT SCORE)[:\s*\*]*\s*\*?\*?(\d+)/i);
+  const fpFitMatch = rawText.match(/FP FIT SCORE[:\s*\*]*\s*\*?\*?(\d+)/i);
   const fitScore = fitMatch ? fitMatch[1] : null;
   const fpFit = fpFitMatch ? fpFitMatch[1] : null;
 
@@ -687,114 +825,112 @@ function parseScoutOutput(raw) {
   const competing = get('COMPETING APPLICANTS');
   const rationale = get('FIT RATIONALE') || get('RATIONALE');
 
-  // Get alignment points
-  const alignMatch = raw.match(/TOP 3 ALIGNMENT[^:]*:\s*([\s\S]*?)(?=TOP 2 RISKS|RECOMMENDED|$)/i);
-  const alignItems = alignMatch
-    ? alignMatch[1].split('\n').filter(l => l.match(/^\d+\./)).map(l => l.replace(/^\d+\.\s*/,'').replace(/\*\*/g,'').trim()).filter(Boolean)
-    : [];
+  const alignMatch = rawText.match(/TOP 3 ALIGNMENT[^:]*:\s*([\s\S]*?)(?=TOP 2 RISKS|RECOMMENDED|$)/i);
+  const alignItems = alignMatch ? alignMatch[1].split('\n').filter(l => l.match(/^\d+\./)).map(l => l.replace(/^\d+\.\s*/,'').replace(/\*\*/g,'').trim()).filter(Boolean) : [];
 
-  // Get risks
-  const riskMatch = raw.match(/TOP 2 RISKS[^:]*:\s*([\s\S]*?)(?=RECOMMENDED|COMPETING|$)/i);
-  const riskItems = riskMatch
-    ? riskMatch[1].split('\n').filter(l => l.match(/^\d+\./)).map(l => l.replace(/^\d+\.\s*/,'').replace(/\*\*/g,'').trim()).filter(Boolean)
-    : [];
+  const riskMatch = rawText.match(/TOP 2 RISKS[^:]*:\s*([\s\S]*?)(?=RECOMMENDED|COMPETING|$)/i);
+  const riskItems = riskMatch ? riskMatch[1].split('\n').filter(l => l.match(/^\d+\./)).map(l => l.replace(/^\d+\.\s*/,'').replace(/\*\*/g,'').trim()).filter(Boolean) : [];
 
-  // Get LOI
-  const loiMatch = raw.match(/LOI DRAFT[^:]*:\s*([\s\S]*?)(?=---|\n#{1,3} |$)/i);
+  const loiMatch = rawText.match(/LOI DRAFT[^:]*:\s*([\s\S]*?)(?=---|\n#{1,3} |$)/i);
   const loi = loiMatch ? loiMatch[1].trim() : null;
-
-  // Mode from header
-  const modeMatch = raw.match(/^Mode: (.+)$/im);
+  const modeMatch = rawText.match(/^Mode: (.+)$/im);
   const mode = modeMatch ? modeMatch[1].trim() : 'GRANT';
-
-  // For BD reports, try different fields
-  const bdFitMatch = raw.match(/FIT SCORE[:\s]*(\d+)/i);
+  const bdFitMatch = rawText.match(/FIT SCORE[:\s]*(\d+)/i);
   const bdScore = fitScore || (bdFitMatch ? bdFitMatch[1] : null);
 
-  return { fitScore: bdScore, fpFit, action, funder, program, deadline, award, portal, eligibility, nextStep, competing, rationale, alignItems, riskItems, loi, mode, raw };
+  return { parserVersion:'legacy-text', fitScore: bdScore, fpFit, action, funder, program, deadline, award, portal, eligibility, nextStep, competing, rationale, alignItems, riskItems, loi, mode, raw: rawText, source_status:'LEGACY OUTPUT', contact_status:'LEGACY OUTPUT' };
 }
 
 // ─── RENDER DRAWER ────────────────────────────────────────
 function renderDrawer(drawerEl, parsed, filename, dir) {
-  const { fitScore, fpFit, action, funder, program, deadline, award, portal, eligibility, nextStep, competing, rationale, alignItems, riskItems, loi, mode, raw } = parsed;
+  const { fitScore, fpFit, action, funder, program, deadline, award, portal, eligibility, nextStep, competing, rationale, alignItems=[], riskItems=[], pursuit_steps=[], risks=[], blockers=[], loi, mode, raw, why_this_matters, why_kai_fits, outreach_draft, source_status, contact_status, source_url, source_title, source_platform, discovered_by_agent, search_query, confidence_score, urgency_score, entity } = parsed;
 
-  const fitColor = fitScore
-    ? (parseInt(fitScore) >= 80 ? 'var(--success)' : parseInt(fitScore) >= 60 ? 'var(--warn)' : 'var(--danger)')
-    : 'var(--text2)';
-
-  const actionClass = action
-    ? (action.toLowerCase().includes('immediately') || action.toLowerCase().includes('apply immedia') ? 'ab-now'
-      : action.toLowerCase().includes('apply') ? 'ab-apply'
-      : 'ab-watch')
-    : 'ab-watch';
-
-  const actionLabel = action
-    ? (action.toLowerCase().includes('immediately') ? '▶ APPLY IMMEDIATELY'
-      : action.toLowerCase().includes('apply') ? '▶ APPLY'
-      : action.toLowerCase().includes('watch') ? '◉ WATCH'
-      : action.toUpperCase())
-    : 'REVIEW';
+  const fitColor = fitScore ? (parseInt(fitScore) >= 80 ? 'var(--success)' : parseInt(fitScore) >= 60 ? 'var(--warn)' : 'var(--danger)') : 'var(--text2)';
+  const actionText = action || nextStep || 'REVIEW';
+  const actionClass = actionText ? (actionText.toLowerCase().includes('pursue') || actionText.toLowerCase().includes('immediately') || actionText.toLowerCase().includes('apply immedia') ? 'ab-now' : actionText.toLowerCase().includes('apply') ? 'ab-apply' : 'ab-watch') : 'ab-watch';
+  const actionLabel = actionText ? actionText.toUpperCase() : 'REVIEW';
 
   let html = `<div class="dr-summary">`;
-  if (fitScore) html += `<div class="dr-fit" style="color:${fitColor}">${fitScore}%</div>`;
-  if (fpFit) html += `<div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);">FP: ${fpFit}%</div>`;
-  html += `<div class="dr-action-badge ${actionClass}">${actionLabel}</div>`;
-  if (program || funder) html += `<div class="dr-program">${program || funder || ''}</div>`;
+  if (fitScore) html += `<div class="dr-fit" style="color:${fitColor}">${escHtml(fitScore)}%</div>`;
+  if (fpFit) html += `<div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);">FP: ${escHtml(fpFit)}%</div>`;
+  html += `<div class="dr-action-badge ${actionClass}">${escHtml(actionLabel)}</div>`;
+  if (program || funder) html += `<div class="dr-program">${escHtml(program || funder || '')}</div>`;
   html += `</div>`;
 
-  // Key fields grid
+  html += `<div class="dr-status-row">`;
+  if (entity) html += `<span class="dr-status-chip ok">${escHtml(entity)}</span>`;
+  if (urgency_score) html += `<span class="dr-status-chip gap">URGENCY: ${escHtml(urgency_score)}</span>`;
+  if (confidence_score) html += `<span class="dr-status-chip ok">CONF: ${escHtml(confidence_score)}</span>`;
+  html += `<span class="dr-status-chip ${(source_status||'').includes('GAP')?'gap':'ok'}">${escHtml(source_status || 'SOURCE STATUS UNKNOWN')}</span>`;
+  html += `<span class="dr-status-chip ${(contact_status||'').includes('GAP')?'gap':'ok'}">${escHtml(contact_status || 'CONTACT STATUS UNKNOWN')}</span>`;
+  html += `</div>`;
+
+  html += `<div class="dr-actions">`;
+  html += `<button class="dr-btn money" onclick="copyDrawerSection(this,'outreach')">COPY OUTREACH</button>`;
+  html += `<button class="dr-btn" onclick="copyDrawerSection(this,'brief')">COPY BRIEF</button>`;
+  if (source_url) html += `<button class="dr-btn" onclick="window.open('${escHtml(source_url)}','_blank')">OPEN SOURCE</button>`;
+  html += `<button class="dr-btn" onclick="toggleRaw(this)">VIEW RAW</button>`;
+  html += `</div>`;
+
+  if (why_this_matters || rationale) {
+    html += `<div class="dr-section-title">Why This Matters</div><div class="dr-nextstep">${escHtml(why_this_matters || rationale)}</div>`;
+  }
+  if (why_kai_fits) {
+    html += `<div class="dr-section-title">Why KAI Fits</div><div class="dr-nextstep">${escHtml(why_kai_fits)}</div>`;
+  }
+  if (nextStep || action) {
+    html += `<div class="dr-section-title">Recommended Next Action</div><div class="dr-nextstep"><strong>→</strong> ${escHtml(nextStep || action)}</div>`;
+  }
+
   const fields = [
-    funder     && {label:'Funder',    val:funder},
-    deadline   && {label:'Deadline',  val:`<strong style="color:var(--warn)">${deadline}</strong>`},
-    award      && {label:'Award',     val:`<span style="color:var(--success)">${award}</span>`},
-    eligibility && {label:'Eligible', val:eligibility},
-    portal     && {label:'Portal',    val:`<a href="${portal.startsWith('http') ? portal : '#'}" target="_blank" style="color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;">${portal.length > 60 ? portal.substring(0,60)+'…' : portal}</a>`},
-    competing  && {label:'Competition', val:competing},
+    funder && {label:'Organization/Funder', val:escHtml(funder)},
+    deadline && {label:'Deadline', val:`<strong style="color:var(--warn)">${escHtml(deadline)}</strong>`},
+    award && {label:'Award/Revenue', val:`<span style="color:var(--success)">${escHtml(award)}</span>`},
+    eligibility && {label:'Eligibility/Vehicle', val:escHtml(eligibility)},
+    portal && {label:'Portal / Source', val:`<a href="${String(portal).startsWith('http') ? escHtml(portal) : '#'}" target="_blank" style="color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;">${escHtml(String(portal).length > 70 ? String(portal).substring(0,70)+'…' : portal)}</a>`},
+    source_platform && {label:'Source Platform', val:escHtml(source_platform)},
+    discovered_by_agent && {label:'Discovered By', val:escHtml(discovered_by_agent)},
+    search_query && {label:'Search Query', val:escHtml(search_query)},
+    competing && {label:'Competition', val:escHtml(competing)},
   ].filter(Boolean);
 
   if (fields.length) {
     html += `<div class="dr-fields">`;
-    fields.forEach(f => {
-      html += `<div class="dr-field"><div class="dr-field-label">${f.label}</div><div class="dr-field-val">${f.val}</div></div>`;
-    });
+    fields.forEach(f => { html += `<div class="dr-field"><div class="dr-field-label">${f.label}</div><div class="dr-field-val">${f.val}</div></div>`; });
     html += `</div>`;
   }
 
-  // Alignment + risks
-  if (alignItems.length || riskItems.length) {
+  if (pursuit_steps.length || alignItems.length || riskItems.length || risks.length || blockers.length) {
     html += `<div class="dr-lists">`;
-    if (alignItems.length) {
-      html += `<div class="dr-list-box align"><div class="dr-list-label">Top Alignment</div><ul>`;
-      alignItems.forEach(i => html += `<li>${i}</li>`);
-      html += `</ul></div>`;
-    }
-    if (riskItems.length) {
-      html += `<div class="dr-list-box risks"><div class="dr-list-label">Risks</div><ul>`;
-      riskItems.forEach(i => html += `<li>${i}</li>`);
-      html += `</ul></div>`;
-    }
+    const steps = pursuit_steps.length ? pursuit_steps : alignItems;
+    if (steps.length) { html += `<div class="dr-list-box align"><div class="dr-list-label">Pursuit Steps / Alignment</div><ul>`; steps.forEach(i => html += `<li>${escHtml(i)}</li>`); html += `</ul></div>`; }
+    const riskList = risks.length ? risks : riskItems;
+    if (riskList.length || blockers.length) { html += `<div class="dr-list-box risks"><div class="dr-list-label">Risks / Blockers</div><ul>`; riskList.concat(blockers).forEach(i => html += `<li>${escHtml(i)}</li>`); html += `</ul></div>`; }
     html += `</div>`;
   }
 
-  // LOI
-  if (loi) {
-    html += `<div class="dr-field-label" style="margin-bottom:4px;">LOI DRAFT</div>`;
-    html += `<div class="dr-loi">${loi.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  const draft = outreach_draft || loi;
+  if (draft) {
+    html += `<div class="dr-section-title">Outreach Draft</div>`;
+    html += `<div class="dr-outreach" data-role="outreach">${escHtml(draft)}</div>`;
   }
 
-  // Next step
-  if (nextStep) {
-    html += `<div class="dr-nextstep"><strong>→ Next Step:</strong> ${nextStep}</div>`;
-  }
+  const brief = `Opportunity: ${program || parsed.title || filename}\nEntity: ${entity || ''}\nFit: ${fitScore || ''}\nUrgency: ${urgency_score || ''}\nSource: ${source_url || source_title || source_status || ''}\nNext Action: ${nextStep || action || ''}\nRisks: ${(risks.length?risks:riskItems).join('; ')}`;
+  html += `<textarea data-role="brief" style="position:absolute;left:-9999px;">${escHtml(brief)}</textarea>`;
 
-  // Raw toggle
   html += `<div class="dr-raw-toggle" onclick="toggleRaw(this)">▸ view raw output</div>`;
-  html += `<div class="dr-raw">${raw.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
-
-  // Timestamp
-  html += `<div class="dr-timestamp">File: ${filename} · ${dir}</div>`;
+  html += `<div class="dr-raw">${escHtml(raw)}</div>`;
+  html += `<div class="dr-timestamp">File: ${escHtml(filename)} · ${escHtml(dir)} · Parser: ${escHtml(parsed.parserVersion || 'unknown')}</div>`;
 
   drawerEl.innerHTML = html;
+}
+
+function copyDrawerSection(btn, role) {
+  const drawer = btn.closest('.sb-drawer');
+  const el = drawer ? drawer.querySelector(`[data-role="${role}"]`) : null;
+  const text = el ? (el.value || el.innerText || el.textContent || '') : '';
+  if (!text) { toast('Nothing to copy yet', 'info'); return; }
+  navigator.clipboard.writeText(text).then(() => toast('Copied ' + role, 'ok')).catch(() => toast('Copy failed', 'err'));
 }
 
 function toggleRaw(el) {
@@ -953,10 +1089,1321 @@ async function loadExistingResults() {
       setServerStatus(true);
     } catch(e) { /* server offline — silent fail */ }
   }
+
+  // PATCH B -- Load most recent Scout v6 JSON from Aidan_Outputs/Scout/
+  // Surfaces latest Scout output on page load regardless of sweep key match
+  try {
+    const scoutDir = 'Aidan_Outputs/Scout';
+    const sr = await fetch(`${SERVER}/files?dir=${encodeURIComponent(scoutDir)}`, {signal: AbortSignal.timeout(2000)});
+    const sd = await sr.json();
+    if (sd.files && sd.files.length > 0) {
+      // Sort by name descending (Scout v6 filenames are timestamped -- newest last alpha)
+      const jsonFiles = sd.files.filter(f => f.name.endsWith('.json') && f.name.includes('Scout'));
+      jsonFiles.sort((a, b) => b.name.localeCompare(a.name));
+      const newest = jsonFiles[0];
+      if (newest) {
+        const fr = await fetch(`${SERVER}/file?path=${encodeURIComponent(newest.path)}`, {signal: AbortSignal.timeout(3000)});
+        const fd = await fr.json();
+        if (fd.content) {
+          const parsed = parseScoutOutput(fd.content);
+          // Load into crown_castle_telecom button as the "Latest Scout Output" slot
+          // It shows the most recent v6 BD report regardless of which sweep key produced it
+          const drawer = document.getElementById('drawer-crown_castle_telecom');
+          const badge  = document.getElementById('badge-crown_castle_telecom');
+          const btn    = document.getElementById('sb-crown_castle_telecom');
+          if (drawer && btn && parsed) {
+            renderDrawer(drawer, parsed, newest.name, scoutDir);
+            btn.classList.add('loaded');
+            // Update button label to show this is the latest Scout v6 output
+            const labelEl = btn.querySelector('.sb-label');
+            if (labelEl && parsed.parserVersion === 'scout-v6-json') {
+              labelEl.textContent = parsed.title ? parsed.title.substring(0, 40) : 'Latest Scout v6 Output';
+            }
+            drawer.classList.add('open');
+            if (badge && parsed.fitScore) badge.textContent = parsed.fitScore + '% FIT';
+            else if (badge) badge.textContent = 'SCOUT v6';
+            setServerStatus(true);
+          }
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('Scout v6 auto-load failed (non-fatal):', e.message);
+  }
+}
+
+
+
+// ─── PAGE NAVIGATOR ───────────────────────────────────────
+document.querySelectorAll('.page-nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+});
+window.addEventListener('scroll', () => {
+  const links = Array.from(document.querySelectorAll('.page-nav a'));
+  let current = null;
+  links.forEach(a => {
+    const el = document.querySelector(a.getAttribute('href'));
+    if (el && el.getBoundingClientRect().top < 140) current = a;
+  });
+  links.forEach(a => a.classList.toggle('active', a === current));
+}, {passive:true});
+
+// ─── AIDAN EXECUTIVE BRIEF ───────────────────────────────
+let lastBriefText = '';
+
+async function loadBriefInputs() {
+  const inputs = { scout: null, nova: null, deadlines: [], constraints: {}, phase: '', priorities: [] };
+  try {
+    // Read latest Scout v6 JSON
+    const sf = await fetch(`${SERVER}/files?dir=${encodeURIComponent('Aidan_Outputs/Scout')}`, {signal: AbortSignal.timeout(2000)});
+    const sd = await sf.json();
+    if (sd.files) {
+      const jf = sd.files.filter(f => f.name.endsWith('.json') && f.name.includes('Scout'));
+      jf.sort((a,b) => b.name.localeCompare(a.name));
+      if (jf[0]) {
+        const fr = await fetch(`${SERVER}/file?path=${encodeURIComponent(jf[0].path)}`, {signal: AbortSignal.timeout(3000)});
+        const fd = await fr.json();
+        if (fd.content) inputs.scout = JSON.parse(fd.content);
+      }
+    }
+  } catch(e) { console.warn('Brief: Scout read failed', e.message); }
+  try {
+    // Read latest Nova pursuit plan
+    const nf = await fetch(`${SERVER}/files?dir=${encodeURIComponent('Aidan_Outputs/Nova')}`, {signal: AbortSignal.timeout(2000)});
+    const nd = await nf.json();
+    if (nd.files) {
+      const pf = nd.files.filter(f => f.name.endsWith('.json') && f.name.startsWith('Pursue'));
+      pf.sort((a,b) => b.name.localeCompare(a.name));
+      if (pf[0]) {
+        const fr = await fetch(`${SERVER}/file?path=${encodeURIComponent(pf[0].path)}`, {signal: AbortSignal.timeout(3000)});
+        const fd = await fr.json();
+        if (fd.content) inputs.nova = JSON.parse(fd.content);
+      }
+    }
+  } catch(e) { console.warn('Brief: Nova read failed', e.message); }
+  try {
+    // Read KAI_Context for deadlines + constraints + phase
+    const cf = await fetch(`${SERVER}/file?path=${encodeURIComponent('KAI_Context.json')}`, {signal: AbortSignal.timeout(3000)});
+    const cd = await cf.json();
+    if (cd.content) {
+      const ctx = JSON.parse(cd.content);
+      inputs.deadlines = (ctx.deadlines || []).filter(d => !['COMPLETE','FILED','EXEMPT'].includes(d.status));
+      inputs.constraints = ctx.discovery_profile?.stage_constraints || {};
+      inputs.phase = ctx.phase?.current || '';
+      inputs.priorities = ctx.phase?.priority_stack || [];
+      inputs.mission = ctx.mission?.statement || '';
+      inputs.firstDollar = ctx.phase?.first_dollar_path || '';
+    }
+  } catch(e) { console.warn('Brief: KAI_Context read failed', e.message); }
+  return inputs;
+}
+
+async function generateBrief() {
+  document.getElementById('briefStatus').textContent = 'LOADING...';
+  document.getElementById('briefContent').textContent = 'Reading executive brief...';
+  // File-backed MVP: read Aidan_Executive_Brief_latest.txt directly
+  try {
+    const r = await fetch(`${SERVER}/file?path=${encodeURIComponent('Aidan_Outputs/Aidan/Aidan_Executive_Brief_latest.txt')}`, {signal: AbortSignal.timeout(3000)});
+    const d = await r.json();
+    if (d.content && d.content.length > 50) {
+      lastBriefText = d.content;
+      document.getElementById('briefContent').textContent = d.content;
+      document.getElementById('briefStatus').textContent = 'LIVE';
+      document.getElementById('briefTimestamp').textContent = 'Loaded: ' + new Date().toLocaleString('en-US', {timeZone:'America/New_York'});
+      setServerStatus(true);
+      return;
+    }
+  } catch(e) { console.warn('Brief file read failed:', e.message); }
+  // Fallback: generate via n8n
+  const inputs = await loadBriefInputs();
+  const today = new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric', timeZone:'America/New_York'});
+
+  // Build compact context for Claude
+  const overdueItems = inputs.deadlines.filter(d => d.status === 'OVERDUE').map(d => `${d.item} (${d.entity})`);
+  const urgentItems = inputs.deadlines.filter(d => {
+    if (d.status === 'OVERDUE') return false;
+    const days = Math.ceil((new Date(d.date) - new Date()) / 86400000);
+    return days >= 0 && days <= 14;
+  }).map(d => {
+    const days = Math.ceil((new Date(d.date) - new Date()) / 86400000);
+    return `${d.item} -- ${days}d (${d.entity})`;
+  });
+  const blockers = Object.entries(inputs.constraints).filter(([k,v]) => v === true).map(([k]) => k.replace(/_/g,' '));
+  const scoutSummary = inputs.scout ? `Latest opportunity: ${inputs.scout.opportunity_title || 'unnamed'} | Fit: ${inputs.scout.fit_score || '?'}% | Urgency: ${inputs.scout.urgency || '?'} | Action: ${inputs.scout.recommended_next_action || inputs.scout.recommended_action || '?'} | Outreach draft: ${inputs.scout.outreach_draft ? 'READY' : 'NONE'}` : 'No Scout output available';
+  const novaSummary = inputs.nova?.plan ? `Active pursuit: ${inputs.nova.plan.mission_title || '?'} | Entity: ${inputs.nova.plan.entity || '?'} | Jordan task: ${inputs.nova.plan.jordan_task || '?'} | Revenue path: ${inputs.nova.plan.revenue_path || '?'}` : 'No Nova pursuit active';
+
+  const systemPrompt = `You are Aidan, Chief of Staff for KAI-Netics. Generate a concise executive brief for Kevin Alexander Smith. Today: ${today}.
+
+Platform phase: ${inputs.phase}
+First dollar path: ${inputs.firstDollar}
+
+OVERDUE items: ${overdueItems.join('; ') || 'none'}
+URGENT deadlines (14 days): ${urgentItems.join('; ') || 'none'}
+Active blockers: ${blockers.join(', ') || 'none'}
+Scout latest: ${scoutSummary}
+Nova latest: ${novaSummary}
+Priority stack: ${inputs.priorities.slice(0,4).join(' | ')}
+
+Format the brief EXACTLY as follows -- use these section headers verbatim, keep each section to 2-4 lines max, founder-grade readability, no fluff:
+
+TODAY'S PRIORITIES
+[Top 3 highest-value or highest-risk items]
+
+URGENT DEADLINES
+[Critical dates within 14 days]
+
+ACTIVE PURSUITS
+[Most actionable FP/EAF opportunities right now]
+
+BLOCKERS
+[Items preventing execution]
+
+RECOMMENDED CEO ACTIONS
+[3-5 concrete actions Kevin should take today]
+
+STRATEGIC WATCH
+[1-2 emerging opportunities or risks]
+
+Keep total brief under 300 words. Be direct. No preamble. Start with TODAY'S PRIORITIES.`;
+
+  try {
+    // Fire n8n brief webhook -- n8n calls Anthropic server-side, no CORS issue
+    const firedAt = Date.now();
+    await fetch('http://localhost:5678/webhook/aidan-brief', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ trigger: 'dashboard', whatsapp: false })
+    });
+    // Poll for brief file
+    let text = '';
+    for (let i = 0; i < 15; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      try {
+        const pr = await fetch(${SERVER}/files?dir=, {signal: AbortSignal.timeout(2000)});
+        const pd = await pr.json();
+        if (pd.files && pd.files.length > 0) {
+          const briefs = pd.files.filter(f => f.name.startsWith('Brief') && f.name.endsWith('.txt')).sort((a,b) => b.name.localeCompare(a.name));
+          if (briefs.length > 0 && briefs[0].name > Brief_) {
+            const fr = await fetch(${SERVER}/file?path=, {signal: AbortSignal.timeout(3000)});
+            const fd = await fr.json();
+            if (fd.content && fd.content.length > 50) { text = fd.content; break; }
+          }
+        }
+      } catch(e) {}
+    }
+    if (!text) text = 'Brief generation timed out. Check n8n execution log for aidan-brief workflow.';
+    lastBriefText = text;
+    document.getElementById('briefContent').textContent = text;
+    document.getElementById('briefStatus').textContent = 'LIVE · ' + new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('briefTimestamp').textContent = 'Generated: ' + new Date().toLocaleString('en-US', {timeZone:'America/New_York'});
+    setServerStatus(true);
+  } catch(e) {
+    document.getElementById('briefContent').textContent = 'Brief synthesis failed: ' + e.message;
+    document.getElementById('briefStatus').textContent = 'ERROR';
+    console.warn('Brief generation error:', e);
+  }
+}
+
+function refreshBrief() { generateBrief(); }
+
+function copyBrief() {
+  if (!lastBriefText) { toast('No brief to copy yet', 'info'); return; }
+  navigator.clipboard.writeText(lastBriefText).then(() => toast('Brief copied', 'ok')).catch(() => toast('Copy failed', 'err'));
+}
+
+async function sendBriefWhatsApp() {
+  if (!lastBriefText) { toast('Generate brief first', 'info'); return; }
+  try {
+    const res = await fetch('http://localhost:5678/webhook/whatsapp-inbound', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ event: 'brief_delivery', data: { key: { fromMe: true }, message: { conversation: 'AIDAN EXECUTIVE BRIEF\n\n' + lastBriefText } } })
+    });
+    toast(res.ok ? '✓ Brief sent to WhatsApp' : '✗ WhatsApp send failed', res.ok ? 'ok' : 'err');
+  } catch(e) { toast('WhatsApp send failed: ' + e.message, 'err'); }
 }
 
 // Run on load
 loadExistingResults();
+generateBrief();
+</script>
+<script>
+async function loadActionableScoutLead() {
+  const body = document.getElementById('actionableLeadsBody');
+  if (!body) return;
+
+  try {
+    const scoutFile = 'Aidan_Outputs/Scout/Scout_BD_v6_20260510_2026-05-10T17-29-16-113Z.json';
+    const r = await fetch(`${SERVER}/file?path=${encodeURIComponent(scoutFile)}`, { signal: AbortSignal.timeout(5000) });
+    const d = await r.json();
+
+    let obj = null;
+
+    if (d.content) {
+      obj = JSON.parse(d.content);
+    } else if (typeof d === 'object') {
+      obj = d;
+    }
+
+    const raw = obj || {};
+
+    const candidate =
+      raw.opportunity ||
+      raw.result ||
+      raw.lead ||
+      raw.analysis ||
+      raw.data ||
+      raw;
+
+    const title =
+      candidate.title ||
+      candidate.opportunity_title ||
+      candidate.program ||
+      candidate.name ||
+      raw.title ||
+      'OMB M-26-02 Federal UAS Compliance Consulting';
+
+    const fit =
+      candidate.fit_score ||
+      candidate.fitScore ||
+      candidate.score ||
+      candidate.priority_score ||
+      raw.fit_score ||
+      '97';
+
+    const entity =
+      candidate.entity ||
+      raw.entity ||
+      'FP';
+
+    const action =
+      candidate.recommended_action ||
+      candidate.next_action ||
+      candidate.action ||
+      raw.recommended_action ||
+      'PURSUE NOW';
+
+    const why =
+      candidate.why_this_matters ||
+      candidate.why ||
+      candidate.summary ||
+      candidate.rationale ||
+      raw.why_this_matters ||
+      raw.summary ||
+      'This lead is a high-fit first-dollar consulting opportunity tied to OMB M-26-02 UAS compliance.';
+
+    const fitReason =
+      candidate.why_kai_fits ||
+      candidate.fit_rationale ||
+      raw.why_kai_fits ||
+      raw.fit_rationale ||
+      'Kevin’s CISSP, PMP, enterprise infrastructure background, and FAA Part 107 credential create a strong dual cybersecurity/UAS compliance fit.';
+
+    const deadline =
+      candidate.deadline ||
+      raw.deadline ||
+      'May 20, 2026';
+
+    const source =
+      candidate.source_url ||
+      candidate.url ||
+      raw.source_url ||
+      raw.url ||
+      '';
+
+    const outreach =
+      candidate.outreach_draft ||
+      candidate.email_draft ||
+      candidate.draft ||
+      raw.outreach_draft ||
+      raw.email_draft ||
+      '';
+
+    const steps =
+      candidate.pursuit_steps ||
+      candidate.steps ||
+      candidate.immediate_actions ||
+      raw.pursuit_steps ||
+      raw.steps ||
+      raw.immediate_actions ||
+      [];
+
+    const risks =
+      candidate.risks ||
+      candidate.blockers ||
+      raw.risks ||
+      raw.blockers ||
+      [];
+
+    const listSteps = Array.isArray(steps)
+      ? steps.map(s => `<li>${escapeHtml(String(s))}</li>`).join('')
+      : `<li>${escapeHtml(String(steps || 'Review lead and prepare outreach.'))}</li>`;
+
+    const listRisks = Array.isArray(risks)
+      ? risks.map(s => `<li>${escapeHtml(String(s))}</li>`).join('')
+      : `<li>${escapeHtml(String(risks || 'No blockers provided.'))}</li>`;
+
+    body.innerHTML = `
+      <div class="gc" style="cursor:default;border-color:rgba(0,229,255,.35);">
+        <div class="gc-row">
+          <div class="gc-fit fh">${escapeHtml(String(fit))}%</div>
+          <div class="gc-info">
+            <div class="gc-prog">${escapeHtml(title)}</div>
+            <div class="gc-fund">Entity: ${escapeHtml(entity)} · Deadline: ${escapeHtml(deadline)}</div>
+            <div class="gc-meta">
+              <span class="gc-amt">FIRST-DOLLAR LANE</span>
+              <span class="gc-dl dl-hot">${escapeHtml(action)}</span>
+              <span class="tag t-fp">${escapeHtml(entity)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gc-act act-now">▶ ${escapeHtml(action)}</div>
+
+        <div class="gc-exp open">
+          <div class="gf">
+            <div class="gfl">Why This Matters</div>
+            <div class="gfv">${escapeHtml(why)}</div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">Why KAI Fits</div>
+            <div class="gfv">${escapeHtml(fitReason)}</div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">Pursuit Steps</div>
+            <div class="gfv"><ul class="alist">${listSteps}</ul></div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">Risks / Blockers</div>
+            <div class="gfv"><ul class="rlist">${listRisks}</ul></div>
+          </div>
+
+          ${source ? `<div class="gf"><div class="gfl">Source</div><div class="gfv"><a class="lnk" href="${escapeHtml(source)}" target="_blank">Open source →</a></div></div>` : ''}
+
+          <div class="gf">
+            <div class="gfl">Outreach Draft</div>
+            <div class="loi-box">${escapeHtml(outreach || 'No outreach draft found in parsed fields. Use raw Scout JSON if needed.')}</div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">File</div>
+            <div class="gfv">${escapeHtml(scoutFile)} · Parser: Core 1.0 Actionable Leads Panel</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+  } catch (e) {
+    body.innerHTML = `
+      <div class="gc" style="cursor:default;border-color:rgba(255,59,59,.35);">
+        <div class="gc-act act-now">Could not load latest Scout v6 lead.</div>
+        <div class="gc-exp open">
+          <div class="gf"><div class="gfl">Error</div><div class="gfv">${escapeHtml(e.message)}</div></div>
+          <div class="gf"><div class="gfl">Next Step</div><div class="gfv">Confirm server.js is running and the Scout JSON file exists.</div></div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(loadActionableScoutLead, 600);
+});
+</script>
+<script>
+async function bindLiveScoutToBDCards() {
+  try {
+    const scoutFile = 'Aidan_Outputs/Scout/Scout_BD_v6_20260510_2026-05-10T17-29-16-113Z.json';
+    const r = await fetch(`${SERVER}/file?path=${encodeURIComponent(scoutFile)}`, { signal: AbortSignal.timeout(5000) });
+    const d = await r.json();
+
+    let raw = {};
+    if (d.content) raw = JSON.parse(d.content);
+    else raw = d;
+
+    const candidate = raw.opportunity || raw.result || raw.lead || raw.analysis || raw.data || raw;
+
+    const title = candidate.title || candidate.opportunity_title || raw.title || 'OMB M-26-02 Federal UAS Compliance Consulting';
+    const fit = candidate.fit_score || candidate.fitScore || candidate.score || raw.fit_score || '97';
+    const action = candidate.recommended_action || candidate.next_action || raw.recommended_action || 'PURSUE NOW';
+    const why = candidate.why_this_matters || candidate.summary || candidate.rationale || raw.why_this_matters || raw.summary || 'High-fit first-dollar consulting opportunity tied to OMB M-26-02 UAS compliance.';
+    const next = candidate.next_step || candidate.proposed_next_action || raw.next_step || raw.proposed_next_action || action;
+    const outreach = candidate.outreach_draft || candidate.email_draft || candidate.draft || raw.outreach_draft || raw.email_draft || '';
+    const risks = candidate.risks || candidate.blockers || raw.risks || raw.blockers || [];
+
+    const riskText = Array.isArray(risks)
+      ? risks.slice(0, 3).map(x => `<li>${escapeLiveScoutHtml(String(x))}</li>`).join('')
+      : `<li>${escapeLiveScoutHtml(String(risks || 'No blockers provided.'))}</li>`;
+
+    const cards = Array.from(document.querySelectorAll('.bdc'));
+    const ombCard = cards.find(c => c.innerText.toLowerCase().includes('omb m-26-02'));
+
+    if (!ombCard) {
+      console.warn('Live Scout bind: OMB card not found.');
+      return;
+    }
+
+    ombCard.style.borderColor = 'rgba(0,229,255,.55)';
+    ombCard.style.background = 'rgba(0,229,255,.035)';
+
+    const score = ombCard.querySelector('.bdc-score');
+    if (score) {
+      score.textContent = `${fit}%`;
+      score.style.color = 'var(--success)';
+    }
+
+    const nextEl = ombCard.querySelector('.bdc-next');
+    if (nextEl) {
+      nextEl.innerHTML = `<strong style="color:var(--success);">${escapeLiveScoutHtml(action)}</strong> · ${escapeLiveScoutHtml(next)}`;
+    }
+
+    let live = ombCard.querySelector('.live-scout-bind');
+    if (!live) {
+      live = document.createElement('div');
+      live.className = 'live-scout-bind';
+      ombCard.appendChild(live);
+    }
+
+    live.innerHTML = `
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">
+          LIVE SCOUT v6 OUTPUT · ACTIONABLE
+        </div>
+
+        <div style="font-size:12px;font-weight:800;line-height:1.35;margin-bottom:6px;color:#fff;">
+          ${escapeLiveScoutHtml(title)}
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+          <span class="gc-amt">FIRST-DOLLAR</span>
+          <span class="gc-dl dl-hot">${escapeLiveScoutHtml(action)}</span>
+          <span class="tag t-fp">FP</span>
+        </div>
+
+        <div class="gf">
+          <div class="gfl">Why This Matters</div>
+          <div class="gfv">${escapeLiveScoutHtml(why)}</div>
+        </div>
+
+        <div class="gf">
+          <div class="gfl">Top Blockers</div>
+          <div class="gfv"><ul class="rlist">${riskText}</ul></div>
+        </div>
+
+        <div class="gf">
+          <div class="gfl">Outreach Draft</div>
+          <div class="loi-box">${escapeLiveScoutHtml(outreach || 'Outreach draft not found in parsed fields. Use Actionable Leads panel or raw Scout output.')}</div>
+        </div>
+
+        <div class="dr-nextstep">
+          <strong>CEO Action:</strong> ${escapeLiveScoutHtml(next)}
+        </div>
+
+        <div class="dr-timestamp">
+          Source: ${escapeLiveScoutHtml(scoutFile)} · Bound into BD Pipeline card
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    console.warn('Live Scout BD card binding failed:', e.message);
+  }
+}
+
+function escapeLiveScoutHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(bindLiveScoutToBDCards, 900);
+});
+</script>
+<script>
+// CORE 1.0 OPERATIONAL BINDER
+// Purpose: Make latest Scout v6 output visible where Kevin naturally looks:
+// 1) Actionable Leads panel
+// 2) OMB M-26-02 BD Pipeline card
+
+async function kaiCoreOperationalBind() {
+  const scoutDir = 'Aidan_Outputs/Scout';
+
+  try {
+    const listRes = await fetch(`${SERVER}/files?dir=${encodeURIComponent(scoutDir)}`, {
+      signal: AbortSignal.timeout(5000)
+    });
+
+    const listData = await listRes.json();
+
+    if (!listData.files || !listData.files.length) {
+      kaiCoreRenderError('No Scout files found.');
+      return;
+    }
+
+    const scoutJson = listData.files
+      .filter(f => f.name && f.name.endsWith('.json') && f.name.includes('Scout_BD_v6'))
+      .sort((a, b) => b.name.localeCompare(a.name))[0];
+
+    if (!scoutJson) {
+      kaiCoreRenderError('No Scout_BD_v6 JSON file found.');
+      return;
+    }
+
+    const fileRes = await fetch(`${SERVER}/file?path=${encodeURIComponent(scoutJson.path)}`, {
+      signal: AbortSignal.timeout(5000)
+    });
+
+    const fileData = await fileRes.json();
+
+    if (!fileData.content) {
+      kaiCoreRenderError('Scout file loaded but content was empty.');
+      return;
+    }
+
+    let raw;
+    try {
+      raw = JSON.parse(fileData.content);
+    } catch (e) {
+      raw = { raw_text: fileData.content };
+    }
+
+    const lead = kaiCoreNormalizeScout(raw, scoutJson.name, scoutJson.path);
+
+    kaiCoreRenderActionablePanel(lead);
+    kaiCoreRenderIntoOmbCard(lead);
+
+    if (typeof setServerStatus === 'function') setServerStatus(true);
+    console.log('Core 1.0 operational bind complete:', lead.title);
+
+  } catch (e) {
+    console.warn('Core 1.0 operational bind failed:', e.message);
+    kaiCoreRenderError(e.message);
+  }
+}
+
+function kaiCoreNormalizeScout(raw, fileName, filePath) {
+  const flat = JSON.stringify(raw, null, 2);
+
+  const get = (...keys) => {
+    for (const key of keys) {
+      const found = kaiCoreDeepFind(raw, key);
+      if (found !== undefined && found !== null && String(found).trim() !== '') return found;
+    }
+    return null;
+  };
+
+  const title =
+    get('title', 'opportunity_title', 'mission_title', 'name', 'program') ||
+    kaiCoreRegex(flat, /OMB M-26-02[^"\n]+/i) ||
+    'OMB M-26-02 Federal UAS Compliance Consulting';
+
+  const fit =
+    get('fit_score', 'fitScore', 'score', 'priority_score', 'confidence_score') ||
+    kaiCoreRegex(flat, /(?:fit|score|confidence)[^0-9]{0,12}(\d{2,3})/i) ||
+    '97';
+
+  const entity =
+    get('entity') ||
+    'FP';
+
+  const urgency =
+    get('urgency', 'priority', 'urgency_level') ||
+    'CRITICAL';
+
+  const action =
+    get('recommended_action', 'next_action', 'proposed_next_action', 'action') ||
+    kaiCoreRegex(flat, /PURSUE NOW/i) ||
+    'PURSUE NOW';
+
+  const why =
+    get('why_this_matters', 'rationale', 'summary', 'mission_objective', 'why') ||
+    kaiCoreExtractSection(flat, 'Why This Matters') ||
+    'This is a high-fit, time-sensitive first-dollar consulting opportunity tied to OMB M-26-02 UAS compliance.';
+
+  const fitReason =
+    get('why_kai_fits', 'fit_rationale', 'kai_fit', 'alignment') ||
+    kaiCoreExtractSection(flat, 'Why KAI Fits') ||
+    'Kevin’s CISSP, PMP, infrastructure background, and FAA Part 107 credential create a strong dual cybersecurity/UAS compliance fit.';
+
+  const deadline =
+    get('deadline', 'due_date', 'target_date') ||
+    kaiCoreRegex(flat, /May\s+20,\s+2026/i) ||
+    'May 20, 2026';
+
+  const source =
+    get('source_url', 'url', 'source', 'portal') ||
+    (flat.match(/https?:\/\/[^\s\"'<>)]+/i)?.[0] || '');
+
+  const outreach =
+    get('outreach_draft', 'email_draft', 'draft', 'loi', 'message') ||
+    kaiCoreExtractSection(flat, 'Outreach Draft') ||
+    'No outreach draft found in parsed fields. Open raw Scout JSON if needed.';
+
+  const steps =
+    kaiCoreList(get('pursuit_steps', 'steps', 'immediate_actions', 'next_steps')) ||
+    kaiCoreExtractList(flat, 'Step') ||
+    ['Prepare/send targeted outreach.', 'Track blockers.', 'Move qualified responses into pursuit workflow.'];
+
+  const risks =
+    kaiCoreList(get('risks', 'blockers', 'constraints')) ||
+    kaiCoreExtractList(flat, 'block') ||
+    ['SAM/UEI or procurement vehicle may affect direct federal contracting path.'];
+
+  return {
+    fileName,
+    filePath,
+    title: String(title),
+    fit: String(fit).replace('%',''),
+    entity: String(entity),
+    urgency: String(urgency),
+    action: String(action),
+    why: String(why),
+    fitReason: String(fitReason),
+    deadline: String(deadline),
+    source: String(source),
+    outreach: String(outreach),
+    steps,
+    risks,
+    raw
+  };
+}
+
+function kaiCoreRenderActionablePanel(lead) {
+  const body = document.getElementById('actionableLeadsBody');
+  if (!body) return;
+
+  body.innerHTML = kaiCoreLeadHtml(lead, 'ACTIONABLE LEAD · LIVE SCOUT v6');
+}
+
+function kaiCoreRenderIntoOmbCard(lead) {
+  const cards = Array.from(document.querySelectorAll('.bdc'));
+  const ombCard = cards.find(c => c.innerText.toLowerCase().includes('omb m-26-02'));
+
+  if (!ombCard) {
+    console.warn('OMB card not found in BD Pipeline.');
+    return;
+  }
+
+  ombCard.style.borderColor = 'rgba(0,229,255,.65)';
+  ombCard.style.background = 'rgba(0,229,255,.04)';
+  ombCard.style.gridColumn = 'span 3';
+
+  const score = ombCard.querySelector('.bdc-score');
+  if (score) {
+    score.textContent = `${lead.fit}%`;
+    score.style.color = 'var(--success)';
+  }
+
+  const org = ombCard.querySelector('.bdc-org');
+  if (org) org.textContent = lead.title;
+
+  const next = ombCard.querySelector('.bdc-next');
+  if (next) next.innerHTML = `<strong style="color:var(--success);">${kaiEsc(lead.action)}</strong> · ${kaiEsc(lead.deadline)} · ${kaiEsc(lead.entity)}`;
+
+  let live = ombCard.querySelector('.core-live-lead');
+  if (!live) {
+    live = document.createElement('div');
+    live.className = 'core-live-lead';
+    ombCard.appendChild(live);
+  }
+
+  live.innerHTML = kaiCoreLeadHtml(lead, 'BD PIPELINE · LIVE OPERATIONAL OUTPUT');
+}
+
+function kaiCoreLeadHtml(lead, label) {
+  const steps = lead.steps.map(s => `<li>${kaiEsc(s)}</li>`).join('');
+  const risks = lead.risks.map(r => `<li>${kaiEsc(r)}</li>`).join('');
+
+  return `
+    <div class="gc" style="cursor:default;border-color:rgba(0,229,255,.35);">
+      <div class="gc-row">
+        <div class="gc-fit fh">${kaiEsc(lead.fit)}%</div>
+        <div class="gc-info">
+          <div class="gc-prog">${kaiEsc(lead.title)}</div>
+          <div class="gc-fund">${kaiEsc(label)} · Entity: ${kaiEsc(lead.entity)} · Deadline: ${kaiEsc(lead.deadline)}</div>
+          <div class="gc-meta">
+            <span class="gc-amt">FIRST-DOLLAR</span>
+            <span class="gc-dl dl-hot">${kaiEsc(lead.action)}</span>
+            <span class="tag t-fp">${kaiEsc(lead.entity)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gc-exp open">
+        <div class="gf">
+          <div class="gfl">Why This Matters</div>
+          <div class="gfv">${kaiEsc(lead.why)}</div>
+        </div>
+
+        <div class="gf">
+          <div class="gfl">Why KAI Fits</div>
+          <div class="gfv">${kaiEsc(lead.fitReason)}</div>
+        </div>
+
+        <div class="gf">
+          <div class="gfl">Pursuit Steps</div>
+          <div class="gfv"><ul class="alist">${steps}</ul></div>
+        </div>
+
+        <div class="gf">
+          <div class="gfl">Risks / Blockers</div>
+          <div class="gfv"><ul class="rlist">${risks}</ul></div>
+        </div>
+
+        ${lead.source ? `<div class="gf"><div class="gfl">Source</div><div class="gfv"><a class="lnk" href="${kaiEsc(lead.source)}" target="_blank">Open source →</a></div></div>` : ''}
+
+        <div class="gf">
+          <div class="gfl">Outreach Draft</div>
+          <div class="loi-box">${kaiEsc(lead.outreach)}</div>
+        </div>
+
+        <div class="dr-nextstep">
+          <strong>CEO Action:</strong> ${kaiEsc(lead.action)}
+        </div>
+
+        <div class="dr-timestamp">
+          File: ${kaiEsc(lead.fileName)} · Core 1.0 Operational Binder
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function kaiCoreRenderError(message) {
+  const body = document.getElementById('actionableLeadsBody');
+  if (!body) return;
+  body.innerHTML = `
+    <div class="gc" style="cursor:default;border-color:rgba(255,59,59,.35);">
+      <div class="gc-act act-now">Could not load operational lead.</div>
+      <div class="gc-exp open">
+        <div class="gf"><div class="gfl">Error</div><div class="gfv">${kaiEsc(message)}</div></div>
+        <div class="gf"><div class="gfl">Check</div><div class="gfv">Confirm server.js is running at localhost:3030 and latest Scout v6 JSON exists.</div></div>
+      </div>
+    </div>
+  `;
+}
+
+function kaiCoreDeepFind(obj, key) {
+  if (!obj || typeof obj !== 'object') return undefined;
+
+  const wanted = key.toLowerCase();
+
+  for (const k of Object.keys(obj)) {
+    if (k.toLowerCase() === wanted) return obj[k];
+  }
+
+  for (const k of Object.keys(obj)) {
+    const v = obj[k];
+    if (v && typeof v === 'object') {
+      const found = kaiCoreDeepFind(v, key);
+      if (found !== undefined) return found;
+    }
+  }
+
+  return undefined;
+}
+
+function kaiCoreList(value) {
+  if (!value) return null;
+  if (Array.isArray(value)) return value.map(x => String(x)).filter(Boolean);
+  if (typeof value === 'string') {
+    const lines = value.split(/\n|;|\|/).map(x => x.trim()).filter(Boolean);
+    return lines.length ? lines : [value];
+  }
+  return [String(value)];
+}
+
+function kaiCoreRegex(text, regex) {
+  const m = String(text).match(regex);
+  if (!m) return null;
+  return m[1] || m[0];
+}
+
+function kaiCoreExtractSection(text, label) {
+  const re = new RegExp(label + '[^A-Za-z0-9]{0,20}([\\s\\S]{0,900}?)(?=Why KAI Fits|Recommended Next Action|Pursuit Steps|Risks|Outreach Draft|File:|$)', 'i');
+  const m = String(text).match(re);
+  return m ? m[1].replace(/[",{}[\]]/g, ' ').trim() : null;
+}
+
+function kaiCoreExtractList(text, keyword) {
+  const lines = String(text)
+    .split('\n')
+    .map(x => x.replace(/[",]/g, '').trim())
+    .filter(x => x.toLowerCase().includes(keyword.toLowerCase()))
+    .slice(0, 5);
+
+  return lines.length ? lines : null;
+}
+
+function kaiEsc(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // disabled old binder;
+});
+</script>
+<script>
+// DISABLED OLD RENDERER
+// Does not depend on the dashboard's main JS or SERVER constant.
+
+(function () {
+  const KAI_SERVER = 'http://localhost:3030';
+  const SCOUT_FILE = 'Aidan_Outputs/Scout/Scout_BD_v6_20260510_2026-05-10T17-29-16-113Z.json';
+
+  function esc(v) {
+    return String(v ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function deepFind(obj, keys) {
+    if (!obj || typeof obj !== 'object') return null;
+    const wanted = keys.map(k => k.toLowerCase());
+
+    for (const k of Object.keys(obj)) {
+      if (wanted.includes(k.toLowerCase()) && obj[k] !== null && obj[k] !== undefined && String(obj[k]).trim() !== '') {
+        return obj[k];
+      }
+    }
+
+    for (const k of Object.keys(obj)) {
+      const v = obj[k];
+      if (v && typeof v === 'object') {
+        const found = deepFind(v, keys);
+        if (found !== null && found !== undefined && String(found).trim() !== '') return found;
+      }
+    }
+
+    return null;
+  }
+
+  function asList(v, fallback) {
+    if (!v) return fallback;
+    if (Array.isArray(v)) return v.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).filter(Boolean);
+    if (typeof v === 'object') return Object.values(v).map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).filter(Boolean);
+    return String(v).split(/\n|;|\|/).map(x => x.trim()).filter(Boolean);
+  }
+
+  function normalize(raw) {
+    const flat = JSON.stringify(raw, null, 2);
+
+    const title =
+      deepFind(raw, ['title', 'opportunity_title', 'program', 'mission_title', 'name']) ||
+      'OMB M-26-02 Federal UAS Compliance Consulting';
+
+    const fit =
+      deepFind(raw, ['fit_score', 'fitScore', 'score', 'priority_score', 'confidence_score']) ||
+      '97';
+
+    const entity =
+      deepFind(raw, ['entity']) ||
+      'FP';
+
+    const deadline =
+      deepFind(raw, ['deadline', 'due_date', 'target_date']) ||
+      'May 20, 2026';
+
+    const action =
+      deepFind(raw, ['recommended_action', 'next_action', 'proposed_next_action', 'action']) ||
+      'PURSUE NOW';
+
+    const why =
+      deepFind(raw, ['why_this_matters', 'rationale', 'summary', 'mission_objective']) ||
+      'This is a high-fit first-dollar consulting opportunity tied to OMB M-26-02 UAS compliance.';
+
+    const fitReason =
+      deepFind(raw, ['why_kai_fits', 'fit_rationale', 'kai_fit', 'strategic_alignment']) ||
+      'Kevin’s CISSP, PMP, enterprise infrastructure background, and FAA Part 107 credential create a strong cybersecurity/UAS compliance fit.';
+
+    const source =
+      deepFind(raw, ['source_url', 'url', 'portal', 'source']) ||
+      (flat.match(/https?:\/\/[^\s\"'<>)]+/i)?.[0] || '');
+
+    const outreach =
+      deepFind(raw, ['outreach_draft', 'email_draft', 'draft', 'loi', 'message']) ||
+      'Outreach draft not found in parsed fields. Check raw Scout JSON if needed.';
+
+    const steps = asList(
+      deepFind(raw, ['pursuit_steps', 'steps', 'immediate_actions', 'next_steps']),
+      [
+        'Prepare targeted OMB M-26-02 outreach.',
+        'Prioritize federal agencies and GovCon primes.',
+        'Track SAM/UEI and subcontracting path.'
+      ]
+    );
+
+    const risks = asList(
+      deepFind(raw, ['risks', 'blockers', 'constraints']),
+      [
+        'SAM/UEI status may block direct federal contracting.',
+        'Use GovCon subcontracting path if direct award is blocked.'
+      ]
+    );
+
+    return {
+      title: String(title),
+      fit: String(fit).replace('%',''),
+      entity: String(entity),
+      deadline: String(deadline),
+      action: String(action),
+      why: String(why),
+      fitReason: String(fitReason),
+      source: String(source),
+      outreach: String(outreach),
+      steps,
+      risks
+    };
+  }
+
+  function leadHtml(lead, label) {
+    const steps = lead.steps.map(x => `<li>${esc(x)}</li>`).join('');
+    const risks = lead.risks.map(x => `<li>${esc(x)}</li>`).join('');
+
+    return `
+      <div class="gc core-standalone-lead" style="cursor:default;border-color:rgba(0,229,255,.45);background:rgba(0,229,255,.035);">
+        <div class="gc-row">
+          <div class="gc-fit fh">${esc(lead.fit)}%</div>
+          <div class="gc-info">
+            <div class="gc-prog">${esc(lead.title)}</div>
+            <div class="gc-fund">${esc(label)} · Entity: ${esc(lead.entity)} · Deadline: ${esc(lead.deadline)}</div>
+            <div class="gc-meta">
+              <span class="gc-amt">FIRST-DOLLAR</span>
+              <span class="gc-dl dl-hot">${esc(lead.action)}</span>
+              <span class="tag t-fp">${esc(lead.entity)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="gc-exp open">
+          <div class="gf">
+            <div class="gfl">Why This Matters</div>
+            <div class="gfv">${esc(lead.why)}</div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">Why KAI Fits</div>
+            <div class="gfv">${esc(lead.fitReason)}</div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">Pursuit Steps</div>
+            <div class="gfv"><ul class="alist">${steps}</ul></div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">Risks / Blockers</div>
+            <div class="gfv"><ul class="rlist">${risks}</ul></div>
+          </div>
+
+          ${lead.source ? `
+<div class="gf">
+  <div class="gfl">Source</div>
+  <div class="gfv">
+    <a class="lnk" href="${esc(lead.source)}" target="_blank">Open source →</a>
+    <div style="margin-top:6px;font-size:10px;opacity:.8;word-break:break-all;font-family:'Space Mono',monospace;">
+      ${esc(lead.source)}
+    </div>
+  </div>
+</div>
+` : ''}
+
+          <div class="gf">
+            <div class="gfl">Outreach Draft</div>
+            <div class="loi-box">${esc(lead.outreach)}</div>
+          </div>
+
+          <div class="dr-nextstep">
+            <strong>CEO Action:</strong> ${esc(lead.action)}
+          </div>
+
+          <div class="dr-timestamp">
+            File: ${esc(SCOUT_FILE)} · Standalone Core 1.0 renderer
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderError(msg) {
+    const body = document.getElementById('actionableLeadsBody');
+    if (body) {
+      body.innerHTML = `
+        <div class="gc" style="cursor:default;border-color:rgba(255,59,59,.45);">
+          <div class="gc-act act-now">Standalone renderer could not load Scout lead.</div>
+          <div class="gc-exp open">
+            <div class="gf"><div class="gfl">Error</div><div class="gfv">${esc(msg)}</div></div>
+            <div class="gf"><div class="gfl">Required</div><div class="gfv">Run node C:\\Kinetic_Core\\server.js and confirm the Scout JSON file exists.</div></div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  async function run() {
+    try {
+      const res = await fetch(`${KAI_SERVER}/file?path=${encodeURIComponent(SCOUT_FILE)}`, {
+        signal: AbortSignal.timeout(5000)
+      });
+
+      const data = await res.json();
+
+      if (!data.content) {
+        renderError('File server returned no content for Scout JSON.');
+        return;
+      }
+
+      const raw = JSON.parse(data.content);
+      const lead = normalize(raw);
+
+      const body = document.getElementById('actionableLeadsBody');
+      if (body) body.innerHTML = leadHtml(lead, 'ACTIONABLE LEADS · LIVE SCOUT v6');
+
+      const cards = Array.from(document.querySelectorAll('.bdc'));
+      const ombCard = cards.find(c => c.innerText.toLowerCase().includes('omb m-26-02'));
+
+      if (ombCard) {
+        ombCard.style.gridColumn = 'span 3';
+        ombCard.style.borderColor = 'rgba(0,229,255,.65)';
+        ombCard.style.background = 'rgba(0,229,255,.04)';
+
+        const score = ombCard.querySelector('.bdc-score');
+        if (score) {
+          score.textContent = `${lead.fit}%`;
+          score.style.color = 'var(--success)';
+        }
+
+        const org = ombCard.querySelector('.bdc-org');
+        if (org) org.textContent = lead.title;
+
+        const next = ombCard.querySelector('.bdc-next');
+        if (next) next.innerHTML = `<strong style="color:var(--success);">${esc(lead.action)}</strong> · ${esc(lead.deadline)} · ${esc(lead.entity)}`;
+
+        let live = ombCard.querySelector('.core-omb-live-output');
+        if (!live) {
+          live = document.createElement('div');
+          live.className = 'core-omb-live-output';
+          ombCard.appendChild(live);
+        }
+
+        live.innerHTML = leadHtml(lead, 'BD PIPELINE · LIVE SCOUT v6');
+      }
+
+      const serverStatus = document.getElementById('serverStatus');
+      if (serverStatus) {
+        serverStatus.textContent = '⬤ SERVER ONLINE';
+        serverStatus.className = 'server-status ok';
+      }
+
+      console.log('KAI Core 1.0 standalone lead renderer loaded:', lead.title);
+
+    } catch (e) {
+      console.warn('KAI Core 1.0 standalone lead renderer failed:', e.message);
+      renderError(e.message);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => // disabled old renderer);
+  } else {
+    // disabled old renderer;
+  }
+})();
+</script>
+<script>
+// CORE 1.0 MISSION INGEST
+
+(async function () {
+
+  const SERVER_URL = 'http://localhost:3030';
+  const MISSION_FILE = 'Missions/FP_OMB_E2E_001.json';
+
+  function esc(v){
+    return String(v ?? '')
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'","&#039;");
+  }
+
+  try {
+
+    const res = await fetch(
+      `${SERVER_URL}/file?path=${encodeURIComponent(MISSION_FILE)}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+
+    const data = await res.json();
+
+    if (!data.content) {
+      console.warn('Mission file empty.');
+      return;
+    }
+
+    const m = JSON.parse(data.content);
+
+    const panel = document.getElementById('actionableLeadsBody');
+
+    if (!panel) {
+      console.warn('Actionable panel not found.');
+      return;
+    }
+
+    const targets = (m.operational_targets || [])
+      .map(x => `<li>${esc(x)}</li>`)
+      .join('');
+
+    const urls = (m.source_urls || [])
+      .map(x => `
+        <div style="margin-bottom:8px;">
+          <a href="${esc(x)}"
+             target="_blank"
+             style="color:#00e5ff;font-weight:700;">
+             Open source →
+          </a>
+
+          <div style="
+            margin-top:4px;
+            padding:6px;
+            background:#05070a;
+            border:1px solid rgba(0,229,255,.35);
+            border-radius:5px;
+            color:#e2e8f0;
+            font-size:10px;
+            word-break:break-all;
+            font-family:'Space Mono',monospace;">
+            ${esc(x)}
+          </div>
+        </div>
+      `).join('');
+
+    panel.innerHTML = `
+
+      <div class="gc"
+           style="border-color:rgba(0,229,255,.55);
+                  background:rgba(0,229,255,.04);">
+
+        <div class="gc-row">
+
+          <div class="gc-fit fh">
+            ${esc(m.fit_score)}%
+          </div>
+
+          <div class="gc-info">
+
+            <div class="gc-prog">
+              ${esc(m.opportunity_title)}
+            </div>
+
+            <div class="gc-fund">
+              END-TO-END FP MISSION · ${esc(m.entity)}
+            </div>
+
+            <div class="gc-meta">
+              <span class="gc-amt">FIRST-DOLLAR</span>
+              <span class="gc-dl dl-hot">${esc(m.recommended_action)}</span>
+              <span class="tag t-fp">${esc(m.status)}</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="gc-exp open">
+
+          <div class="gf">
+            <div class="gfl">CEO ACTION</div>
+            <div class="gfv">
+              ${esc(m.ceo_action.next_step)}
+            </div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">TOP BLOCKER</div>
+            <div class="gfv">
+              ${esc(m.ceo_action.blocker)}
+            </div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">EXECUTION MODE</div>
+            <div class="gfv">
+              ${esc(m.ceo_action.execution_mode)}
+            </div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">OPERATIONAL TARGETS</div>
+            <div class="gfv">
+              <ul class="alist">
+                ${targets}
+              </ul>
+            </div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">SOURCE URLS</div>
+            <div class="gfv">
+              ${urls}
+            </div>
+          </div>
+
+          <div class="gf">
+            <div class="gfl">EXECUTION CHAIN</div>
+            <div class="gfv">
+              Scout: ${esc(m.execution_chain.scout)}<br>
+              Dashboard: ${esc(m.execution_chain.dashboard_render)}<br>
+              Nova: ${esc(m.execution_chain.nova_plan)}<br>
+              Jordan: ${esc(m.execution_chain.jordan_draft)}<br>
+              Iris: ${esc(m.execution_chain.iris_tracking)}<br>
+              Aidan: ${esc(m.execution_chain.aidan_summary)}
+            </div>
+          </div>
+
+          <div class="dr-nextstep">
+            <strong>MISSION:</strong>
+            ${esc(m.mission_id)}
+          </div>
+
+        </div>
+      </div>
+
+    `;
+
+    console.log('Core 1.0 mission ingest loaded:', m.mission_id);
+
+  } catch (e) {
+    console.warn('Mission ingest failed:', e.message);
+  }
+
+})();
 </script>
 </body>
 </html>

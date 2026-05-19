@@ -1,24 +1,141 @@
-﻿# Sensitive files
-start_n8n.ps1
-*.env
-*.key
+﻿# =========================================
+# KAI-NETICS CORE — GIT IGNORE BASELINE
+# =========================================
 
-# Large output folders
+# -----------------------------------------
+# Secrets / Credentials
+# -----------------------------------------
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.crt
+secrets.json
+
+# -----------------------------------------
+# Node / Runtime
+# -----------------------------------------
+node_modules/
+runtime/
+temp/
+tmp/
+logs/
+debug/
+cache/
+
+# -----------------------------------------
+# Python
+# -----------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+
+# -----------------------------------------
+# Backups / Archives
+# -----------------------------------------
+Backups/
+Archive/
+backup/
+backups/
+
+# -----------------------------------------
+# Generated Operational Outputs
+# -----------------------------------------
 Aidan_Outputs/
 Atlas_Outputs/
-SBIR/
+Missions/
+Stage/
 MONK/
+SBIR/
 Maryland_Grants/
 
-# n8n internals
-.n8n/
+# -----------------------------------------
+# Supabase Runtime Internals
+# -----------------------------------------
+supabase/volumes/
+supabase/.temp/
+supabase/docker/
 
-# Logs
-*.log
-supabase/volumes/db/data/
-supabase/volumes/db_staging/
+# -----------------------------------------
+# Database / WAL
+# -----------------------------------------
 *.sqlite
 *.sqlite-wal
-Aidan_Outputs/
-Maryland_Grants/
-Atlas_Outputs/
+*.db
+*.wal
+
+# -----------------------------------------
+# Execution Artifacts
+# -----------------------------------------
+execution_*.json
+sage_execution_*.json
+*_latest*.json
+*_DISCOVERY_REPORT.json
+
+# -----------------------------------------
+# Workflow Dumps / Runtime Exports
+# -----------------------------------------
+all_workflows*.json
+scout_v6_live.json
+platform_file_discovery.txt
+
+# -----------------------------------------
+# Workflow ID temp files
+# -----------------------------------------
+*_workflow_id.txt
+
+# -----------------------------------------
+# Audit Temp
+# -----------------------------------------
+n8n_env_audit_*/
+
+# -----------------------------------------
+# Claude / MCP
+# -----------------------------------------
+.claude/
+
+# -----------------------------------------
+# ZIP / Archives
+# -----------------------------------------
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+
+# -----------------------------------------
+# OS Files
+# -----------------------------------------
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# -----------------------------------------
+# Temporary Patch Files
+# -----------------------------------------
+*.tmp
+*_patch*
+*_backup*
+*.bak
+
+# -----------------------------------------
+# Checkpoints / Scratch
+# -----------------------------------------
+*_CHECKPOINT*.txt
+HANDOFF_PATCH.txt
+
+# -----------------------------------------
+# IDE
+# -----------------------------------------
+.vscode/
+.idea/
+
+# -----------------------------------------
+# Keep Core Assets
+# -----------------------------------------
+!workflows/
+!src/
+!docs/
+!Documents/
+!supabase/*.sql

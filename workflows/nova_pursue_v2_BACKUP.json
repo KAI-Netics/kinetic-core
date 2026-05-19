@@ -1,0 +1,377 @@
+﻿{
+    "updatedAt":  "2026-05-10T19:26:38.301Z",
+    "createdAt":  "2026-05-10T17:45:53.886Z",
+    "id":  "iPEexj4SHAMe0erZ",
+    "name":  "Nova - Pursue Command Handler v2",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "nova-pursue",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "id":  "0c6b35a2-5061-4ec6-8292-6984d5d2221a",
+                      "name":  "Webhook Trigger",
+                      "webhookId":  "nova-pursue-v2"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// STEP 1 -- PARSE PURSUE COMMAND v2\nconst fs = require(\u0027fs\u0027);\nconst raw = $input.first().json;\nconst body = raw.body || raw;\nconst rawTitle = String(body.title || body.opportunity || body.text || \u0027\u0027).trim();\nconst source = String(body.source || \u0027manual\u0027).toLowerCase();\nconst kevinNote = String(body.note || body.kevin_note || \u0027\u0027).trim();\nconst entityHint = String(body.entity || \u0027\u0027).toUpperCase();\nconst beachheadHint = String(body.beachhead || \u0027\u0027).toUpperCase();\nlet kaiContext = {};\ntry { kaiContext = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) {}\nconst resolveEntity = (title, hint) =\u003e {\n  if (hint \u0026\u0026 [\u0027FP\u0027,\u0027EAF\u0027,\u0027MONK\u0027,\u0027MULTI\u0027].includes(hint)) return hint;\n  const t = title.toLowerCase();\n  if (t.includes(\u0027grant\u0027) || t.includes(\u0027workforce\u0027) || t.includes(\u0027nonprofit\u0027) || t.includes(\u0027earn\u0027) || t.includes(\u0027eaf\u0027) || t.includes(\u0027cako\u0027) || t.includes(\u0027fema preparedness\u0027) || t.includes(\u0027workforce\u0027)) return \u0027EAF\u0027;\n  if (t.includes(\u0027sbir\u0027) || t.includes(\u0027monk\u0027) || t.includes(\u0027r\u0026d\u0027) || t.includes(\u0027patent\u0027) || t.includes(\u0027licensing\u0027)) return \u0027MONK\u0027;\n  if (t.includes(\u0027inspection\u0027) || t.includes(\u0027contract\u0027) || t.includes(\u0027consulting\u0027) || t.includes(\u0027bd\u0027) || t.includes(\u0027rfp\u0027) || t.includes(\u0027utility\u0027) || t.includes(\u0027bridge\u0027) || t.includes(\u0027dfr\u0027) || t.includes(\u0027police\u0027) || t.includes(\u0027medical supply\u0027)) return \u0027FP\u0027;\n  return \u0027MULTI\u0027;\n};\nconst resolveType = (title) =\u003e {\n  const t = title.toLowerCase();\n  if (t.includes(\u0027sbir\u0027) || t.includes(\u0027sttr\u0027)) return \u0027sbir\u0027;\n  if (t.includes(\u0027grant\u0027) || t.includes(\u0027fema\u0027) || t.includes(\u0027earn\u0027) || t.includes(\u0027workforce\u0027)) return \u0027grant\u0027;\n  if (t.includes(\u0027contract\u0027) || t.includes(\u0027rfp\u0027) || t.includes(\u0027inspection\u0027) || t.includes(\u0027dfr\u0027)) return \u0027contract\u0027;\n  if (t.includes(\u0027consulting\u0027) || t.includes(\u0027advisory\u0027) || t.includes(\u0027omb m-26\u0027)) return \u0027consulting\u0027;\n  if (t.includes(\u0027licensing\u0027) || t.includes(\u0027oem\u0027) || t.includes(\u0027partnership\u0027)) return \u0027licensing\u0027;\n  if (t.includes(\u0027job\u0027) || t.includes(\u0027employment\u0027) || t.includes(\u0027ojt\u0027) || t.includes(\u0027position\u0027) || t.includes(\u0027hire\u0027)) return \u0027employment\u0027;\n  return \u0027contract\u0027;\n};\nconst entity = resolveEntity(rawTitle, entityHint);\nconst opportunityType = resolveType(rawTitle);\nconst triggerJordan = true;\nconst triggerIris = entity === \u0027EAF\u0027 || entity === \u0027MULTI\u0027;\nconst triggerAtlas = entity === \u0027MONK\u0027;\nreturn [{ json: {\n  title: rawTitle,\n  source,\n  kevinNote,\n  entity,\n  beachheadHint,\n  opportunityType,\n  triggerJordan,\n  triggerIris,\n  triggerAtlas,\n  timestamp: new Date().toISOString(),\n  founderName: (kaiContext.founder || {}).name || \u0027Kevin Alexander Smith\u0027,\n  founderCredentials: ((kaiContext.founder || {}).credentials || []).join(\u0027, \u0027)\n}}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       0
+                                   ],
+                      "id":  "aed8361f-2f50-44d4-906a-98ab6203c2a7",
+                      "name":  "Parse Command"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// STEP 2 -- UPSERT TO PIPELINE (v2 -- prevents duplicates)\n// Uses Supabase upsert with on_conflict=title,entity\n// If same title+entity already exists, updates status to pursuing\nconst https = require(\u0027https\u0027);\nconst input = $input.first().json;\nconst SUPABASE_URL = ($env.SUPABASE_URL || \u0027\u0027).replace(\u0027https://\u0027,\u0027\u0027).replace(\u0027http://\u0027,\u0027\u0027);\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_KEY || \u0027\u0027;\nconst record = {\n  title: input.title,\n  source: input.source,\n  entity: input.entity,\n  opportunity_type: input.opportunityType,\n  beachhead: input.beachheadHint || null,\n  status: \u0027pursuing\u0027,\n  kevin_note: input.kevinNote || null,\n  jordan_triggered: input.triggerJordan,\n  iris_triggered: input.triggerIris,\n  atlas_triggered: input.triggerAtlas,\n  discovered_by_agent: \u0027Nova-Pursue v2\u0027,\n  run_date: new Date().toISOString().slice(0,10)\n};\nlet pipelineId = null;\nlet writeStatus = \u0027failed\u0027;\nif (!SUPABASE_URL || !SUPABASE_KEY) {\n  writeStatus = \u0027skipped -- missing Supabase credentials\u0027;\n  return [{ json: { ...input, pipelineId, writeStatus } }];\n}\ntry {\n  const body = JSON.stringify(record);\n  const result = await new Promise((resolve, reject) =\u003e {\n    const req = https.request({\n      hostname: SUPABASE_URL,\n      port: 443,\n      // Upsert: if title+entity conflict exists, update instead of insert\n      path: \u0027/rest/v1/pipeline\u0027,\n      method: \u0027POST\u0027,\n      headers: {\n        \u0027Content-Type\u0027: \u0027application/json\u0027,\n        \u0027apikey\u0027: SUPABASE_KEY,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n        // merge-duplicates = upsert on any unique constraint (title+entity if defined)\n        \u0027Prefer\u0027: \u0027resolution=merge-duplicates,return=representation\u0027,\n        \u0027Content-Length\u0027: Buffer.byteLength(body)\n      }\n    }, (res) =\u003e { let d = \u0027\u0027; res.on(\u0027data\u0027, c =\u003e d += c); res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: d })); });\n    req.on(\u0027error\u0027, reject);\n    req.write(body);\n    req.end();\n  });\n  if (result.status === 201 || result.status === 200) {\n    writeStatus = \u0027saved\u0027;\n    try { pipelineId = JSON.parse(result.body)[0]?.id || null; } catch(e) {}\n  } else {\n    writeStatus = \u0027error_\u0027 + result.status + \u0027: \u0027 + result.body.substring(0, 200);\n  }\n} catch(e) {\n  writeStatus = \u0027error: \u0027 + e.message;\n}\nreturn [{ json: { ...input, pipelineId, writeStatus } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       0
+                                   ],
+                      "id":  "9f1381aa-73fa-4b5f-a831-841156531e11",
+                      "name":  "Upsert to Pipeline"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// STEP 3 -- NOVA PURSUIT PLAN (n8n-safe version)\n\nconst https = require(\u0027https\u0027);\nconst fs = require(\u0027fs\u0027);\n\nconst input = $input.first().json;\n\nlet kaiContext = {};\n\ntry {\n  kaiContext = JSON.parse(\n    fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)\n  );\n} catch (e) {}\n\nconst phase = kaiContext.phase || {};\nconst constraints = kaiContext.discovery_profile?.stage_constraints || {};\n\nconst constraintStr = Object.entries(constraints)\n  .filter(([k, v]) =\u003e v === true)\n  .map(([k]) =\u003e k)\n  .join(\u0027, \u0027);\n\nconst deadlines = (kaiContext.deadlines || [])\n  .filter(d =\u003e ![\u0027COMPLETE\u0027, \u0027FILED\u0027, \u0027EXEMPT\u0027].includes(d.status))\n  .slice(0, 5)\n  .map(d =\u003e `${d.item} | Due: ${d.date} | ${d.status}`)\n  .join(\u0027\\n\u0027);\n\nconst systemPrompt = `You are Nova, KAI-Netics Pursuit Orchestrator. When Kevin says to pursue something, you build the operational plan.\n\nFOUNDER: ${input.founderName} | ${input.founderCredentials}\nPHASE: ${phase.current}\nCONSTRAINTS: ${constraintStr || \u0027none\u0027}\nACTIVE DEADLINES:\n${deadlines}\n\nReturn STRICT JSON only -- no markdown, no preamble:\n{\n  \"mission_title\": \"string\",\n  \"entity\": \"FP | EAF | MONK | MULTI\",\n  \"opportunity_type\": \"string\",\n  \"mission_objective\": \"1 sentence\",\n  \"immediate_actions\": [\"action 1 -- specific with URL or contact\", \"action 2\", \"action 3\"],\n  \"jordan_task\": \"loi | capability_statement | sbir_narrative | capability_statement_and_loi\",\n  \"jordan_brief\": \"2-3 sentences telling Jordan exactly what to draft and why\",\n  \"iris_alert\": \"deadline or compliance flag for Iris to track, or null\",\n  \"blockers\": [\"any constraint flags\"],\n  \"timeline\": \"when this needs to be acted on\",\n  \"revenue_path\": \"how this becomes money for KAI-Netics\",\n  \"success_metric\": \"what does done look like\"\n}`;\n\nconst userPrompt = `Build pursuit plan for: ${input.title}\n\nEntity: ${input.entity}\nType: ${input.opportunityType}\nKevin note: ${input.kevinNote || \u0027none\u0027}\nToday: ${new Date().toLocaleDateString(\u0027en-US\u0027, {\n  timeZone: \u0027America/New_York\u0027\n})}\n\nReturn operational JSON only.`;\n\n// n8n-safe env handling\nconst anthropicKey =\n  (typeof $env !== \u0027undefined\u0027 \u0026\u0026 $env.ANTHROPIC_API_KEY)\n    ? $env.ANTHROPIC_API_KEY\n    : input.anthropicApiKey;\n\nif (!anthropicKey) {\n  throw new Error(\n    \u0027ANTHROPIC_API_KEY not available to Nova Pursuit Plan node\u0027\n  );\n}\n\nconst requestBody = JSON.stringify({\n  model: \u0027claude-sonnet-4-6\u0027,\n  max_tokens: 1000,\n  system: systemPrompt,\n  messages: [\n    {\n      role: \u0027user\u0027,\n      content: userPrompt\n    }\n  ]\n});\n\nconst result = await new Promise((resolve, reject) =\u003e {\n\n  const req = https.request({\n\n    hostname: \u0027api.anthropic.com\u0027,\n    port: 443,\n    path: \u0027/v1/messages\u0027,\n    method: \u0027POST\u0027,\n\n    headers: {\n      \u0027Content-Type\u0027: \u0027application/json\u0027,\n      \u0027x-api-key\u0027: anthropicKey,\n      \u0027anthropic-version\u0027: \u00272023-06-01\u0027,\n      \u0027Content-Length\u0027: Buffer.byteLength(requestBody)\n    }\n\n  }, (res) =\u003e {\n\n    let d = \u0027\u0027;\n\n    res.on(\u0027data\u0027, c =\u003e d += c);\n\n    res.on(\u0027end\u0027, () =\u003e {\n      resolve({\n        status: res.statusCode,\n        body: d\n      });\n    });\n\n  });\n\n  req.on(\u0027error\u0027, reject);\n\n  req.write(requestBody);\n\n  req.end();\n\n});\n\nlet plan = {\n\n  mission_title: input.title,\n\n  entity: input.entity,\n\n  opportunity_type: input.opportunityType,\n\n  mission_objective: \u0027Pursue \u0027 + input.title,\n\n  immediate_actions: [\n    \u0027Review opportunity\u0027,\n    \u0027Contact Jordan for draft\u0027,\n    \u0027Set Iris deadline alert\u0027\n  ],\n\n  jordan_task:\n    input.entity === \u0027EAF\u0027\n      ? \u0027loi\u0027\n      : input.entity === \u0027MONK\u0027\n      ? \u0027sbir_narrative\u0027\n      : \u0027capability_statement\u0027,\n\n  jordan_brief:\n    \u0027Draft initial outreach for \u0027 + input.title,\n\n  iris_alert: null,\n\n  blockers: [],\n\n  timeline: \u0027ASAP\u0027,\n\n  revenue_path: \u0027TBD\u0027,\n\n  success_metric: \u0027Draft submitted\u0027\n\n};\n\ntry {\n\n  const rawText =\n    JSON.parse(result.body)?.content?.[0]?.text || \u0027\u0027;\n\n  const clean = rawText\n    .replace(/^```json\\s*/, \u0027\u0027)\n    .replace(/^```\\s*/, \u0027\u0027)\n    .replace(/\\s*```$/, \u0027\u0027)\n    .trim();\n\n  try {\n\n    plan = JSON.parse(clean);\n\n  } catch (e) {\n\n    const first = clean.indexOf(\u0027{\u0027);\n    const last = clean.lastIndexOf(\u0027}\u0027);\n\n    if (first !== -1 \u0026\u0026 last \u003e first) {\n\n      try {\n\n        plan = JSON.parse(\n          clean.substring(first, last + 1)\n        );\n\n      } catch (e2) {}\n\n    }\n\n  }\n\n} catch (e) {}\n\n// Save plan to file\n\nconst dateStr = new Date()\n  .toISOString()\n  .replace(/[:.]/g, \u0027-\u0027)\n  .slice(0, 19);\n\nconst planPath =\n  `/data/Aidan_Outputs/Nova/Pursue_${dateStr}.json`;\n\nfs.mkdirSync(\u0027/data/Aidan_Outputs/Nova\u0027, {\n  recursive: true\n});\n\nfs.writeFileSync(\n\n  planPath,\n\n  JSON.stringify({\n    meta: {\n      title: input.title,\n      entity: input.entity,\n      timestamp: input.timestamp,\n      pipelineId: input.pipelineId,\n      writeStatus: input.writeStatus\n    },\n    plan\n  }, null, 2),\n\n  \u0027utf8\u0027\n\n);\n\nreturn [{\n\n  json: {\n\n    ...input,\n\n    plan,\n\n    planPath,\n\n    jordanTask: plan.jordan_task,\n\n    jordanBrief: plan.jordan_brief,\n\n    irisAlert: plan.iris_alert,\n\n    immediateActions: plan.immediate_actions,\n\n    revenuePath: plan.revenue_path\n\n  }\n\n}];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       672,
+                                       0
+                                   ],
+                      "id":  "aa49c873-9da0-4826-85e1-83d8608f04f0",
+                      "name":  "Nova Pursuit Plan"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// STEP 4 -- FIRE DOWNSTREAM AGENTS\nconst http = require(\u0027http\u0027);\nconst input = $input.first().json;\nconst fireWebhook = async (path, payload) =\u003e {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(bodyStr) } };\n  return new Promise(r =\u003e { const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(bodyStr); req.end(); });\n};\nconst jordanPayload = {\n  trigger: \u0027pursue_command\u0027,\n  pipeline_id: input.pipelineId,\n  opportunity: input.title,\n  entity: input.entity,\n  opportunity_type: input.opportunityType,\n  task: input.jordanTask || \u0027capability_statement\u0027,\n  kevin_note: input.kevinNote || \u0027\u0027,\n  jordan_brief: input.jordanBrief || \u0027\u0027,\n  founder_credentials: input.founderCredentials\n};\nawait fireWebhook(\u0027/webhook/grant-writer\u0027, jordanPayload);\nif (input.triggerIris \u0026\u0026 input.irisAlert) {\n  await fireWebhook(\u0027/webhook/iris-monitor\u0027, {\n    trigger: \u0027pursue_command\u0027,\n    pipeline_id: input.pipelineId,\n    opportunity: input.title,\n    entity: input.entity,\n    note: input.irisAlert\n  });\n}\nif (input.triggerAtlas) {\n  await fireWebhook(\u0027/webhook/atlas-architect\u0027, {\n    command: \u0027Pipeline MONK prep\u0027,\n    detail: input.title + \u0027 -- SBIR/R\u0026D technical narrative needed\u0027,\n    pipeline_id: input.pipelineId\n  });\n}\nreturn [{ json: { ...input, agentsFired: [\u0027Jordan\u0027, ...(input.triggerIris \u0026\u0026 input.irisAlert ? [\u0027Iris\u0027] : []), ...(input.triggerAtlas ? [\u0027Atlas\u0027] : [])] } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       880,
+                                       0
+                                   ],
+                      "id":  "4f8a9290-81d5-45d2-917c-110c30eb5f88",
+                      "name":  "Fire Downstream Agents"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// STEP 5 -- CONFIRM TO KEVIN VIA WHATSAPP\nconst http = require(\u0027http\u0027);\nconst input = $input.first().json;\nconst entityLabel = { \u0027FP\u0027: \u0027For-Profit\u0027, \u0027EAF\u0027: \u0027Nonprofit\u0027, \u0027MONK\u0027: \u0027R\u0026D/IP\u0027, \u0027MULTI\u0027: \u0027Multi-entity\u0027 }[input.entity] || input.entity;\nconst taskLabel = {\n  \u0027loi\u0027: \u0027LOI draft\u0027,\n  \u0027capability_statement\u0027: \u0027capability statement\u0027,\n  \u0027sbir_narrative\u0027: \u0027SBIR narrative\u0027,\n  \u0027capability_statement_and_loi\u0027: \u0027cap statement + LOI\u0027\n}[input.jordanTask] || \u0027draft\u0027;\nconst dbIcon = input.writeStatus === \u0027saved\u0027 ? \u0027✓\u0027 : \u0027⚠\u0027;\nconst agents = (input.agentsFired || []).join(\u0027 + \u0027);\nconst actions = (input.immediateActions || []).slice(0, 3).map((a, i) =\u003e `${i+1}. ${a.substring(0, 120)}`).join(\u0027\\n\u0027);\nlet msg = `NOVA PURSUIT CONFIRMED\\n\\n`;\nmsg += `Mission: ${input.title}\\n`;\nmsg += `Entity: ${entityLabel} [${input.entity}]\\n`;\nmsg += `Type: ${input.opportunityType}\\n`;\nif (input.kevinNote) msg += `Your note: ${input.kevinNote}\\n`;\nmsg += `\\nPipeline: ${dbIcon} ${input.writeStatus}\\n`;\nmsg += `Agents fired: ${agents}\\n`;\nmsg += `Jordan drafting: ${taskLabel}\\n`;\nif (input.revenuePath \u0026\u0026 input.revenuePath !== \u0027TBD\u0027) msg += `\\nRevenue path: ${input.revenuePath}\\n`;\nif (actions) msg += `\\nImmediate actions:\\n${actions}\\n`;\nmsg += `\\nDraft ready ~60 seconds.\\nCheck Dashboard pipeline tab.`;\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: msg } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(r =\u003e { const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\nconst cbBody = JSON.stringify({ agent: \u0027Nova\u0027, subagent: \u0027Pursue v2\u0027, opportunity: input.title, entity: input.entity, pipelineId: input.pipelineId, writeStatus: input.writeStatus, agentsFired: input.agentsFired, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,()=\u003e{}); }); cbReq.on(\u0027error\u0027,()=\u003e{}); cbReq.write(cbBody); cbReq.end();\nreturn [{ json: { success: true, opportunity: input.title, entity: input.entity, pipelineId: input.pipelineId, agentsFired: input.agentsFired } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1104,
+                                       0
+                                   ],
+                      "id":  "498eb3cf-63ac-4248-971d-74f7fa2f5a29",
+                      "name":  "Confirm to Kevin"
+                  }
+              ],
+    "connections":  {
+                        "Webhook Trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Parse Command",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Parse Command":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Upsert to Pipeline",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Upsert to Pipeline":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Nova Pursuit Plan",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Nova Pursuit Plan":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Fire Downstream Agents",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Fire Downstream Agents":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Confirm to Kevin",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  {
+
+                },
+    "versionId":  "c7ad3db1-1665-4059-b822-ffed2b080f36",
+    "activeVersionId":  "ae40876f-8a16-4f1c-b6cb-e6df294a60bf",
+    "versionCounter":  7,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-10T17:45:53.895Z",
+                       "createdAt":  "2026-05-10T17:45:53.895Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "iPEexj4SHAMe0erZ",
+                       "projectId":  "K3DGgPNFR6LzijgM",
+                       "project":  {
+                                       "updatedAt":  "2026-04-20T23:37:47.167Z",
+                                       "createdAt":  "2026-04-06T21:13:31.724Z",
+                                       "id":  "K3DGgPNFR6LzijgM",
+                                       "name":  "Kevin A Smith \u003ckas@kevin-llc.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                   }
+                   }
+               ],
+    "tags":  [
+                 {
+                     "updatedAt":  "2026-04-07T01:42:36.347Z",
+                     "createdAt":  "2026-04-07T01:42:36.347Z",
+                     "id":  "4GdpfuL6OhWIXCXO",
+                     "name":  "KAI-Netics"
+                 },
+                 {
+                     "updatedAt":  "2026-05-03T22:51:57.425Z",
+                     "createdAt":  "2026-05-03T22:51:57.425Z",
+                     "id":  "FY5p0cqvSVQ64SUy",
+                     "name":  "Pipeline"
+                 },
+                 {
+                     "updatedAt":  "2026-04-21T22:13:30.381Z",
+                     "createdAt":  "2026-04-21T22:13:30.381Z",
+                     "id":  "J2QzCkM7UAmoAr6b",
+                     "name":  "Nova"
+                 },
+                 {
+                     "updatedAt":  "2026-05-03T22:51:57.384Z",
+                     "createdAt":  "2026-05-03T22:51:57.384Z",
+                     "id":  "nQwYmahCDjdYb1hG",
+                     "name":  "Pursue"
+                 },
+                 {
+                     "updatedAt":  "2026-05-10T16:39:28.444Z",
+                     "createdAt":  "2026-05-10T16:39:28.444Z",
+                     "id":  "ome4pmyEMJ7Ysxfu",
+                     "name":  "v2"
+                 }
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-05-10T17:45:58.000Z",
+                          "createdAt":  "2026-05-10T17:45:53.897Z",
+                          "versionId":  "ae40876f-8a16-4f1c-b6cb-e6df294a60bf",
+                          "workflowId":  "iPEexj4SHAMe0erZ",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "nova-pursue",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ],
+                                            "id":  "0c6b35a2-5061-4ec6-8292-6984d5d2221a",
+                                            "name":  "Webhook Trigger",
+                                            "webhookId":  "nova-pursue-v2"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// STEP 1 -- PARSE PURSUE COMMAND v2\nconst fs = require(\u0027fs\u0027);\nconst raw = $input.first().json;\nconst body = raw.body || raw;\nconst rawTitle = String(body.title || body.opportunity || body.text || \u0027\u0027).trim();\nconst source = String(body.source || \u0027manual\u0027).toLowerCase();\nconst kevinNote = String(body.note || body.kevin_note || \u0027\u0027).trim();\nconst entityHint = String(body.entity || \u0027\u0027).toUpperCase();\nconst beachheadHint = String(body.beachhead || \u0027\u0027).toUpperCase();\nlet kaiContext = {};\ntry { kaiContext = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) {}\nconst resolveEntity = (title, hint) =\u003e {\n  if (hint \u0026\u0026 [\u0027FP\u0027,\u0027EAF\u0027,\u0027MONK\u0027,\u0027MULTI\u0027].includes(hint)) return hint;\n  const t = title.toLowerCase();\n  if (t.includes(\u0027grant\u0027) || t.includes(\u0027workforce\u0027) || t.includes(\u0027nonprofit\u0027) || t.includes(\u0027earn\u0027) || t.includes(\u0027eaf\u0027) || t.includes(\u0027cako\u0027) || t.includes(\u0027fema preparedness\u0027) || t.includes(\u0027workforce\u0027)) return \u0027EAF\u0027;\n  if (t.includes(\u0027sbir\u0027) || t.includes(\u0027monk\u0027) || t.includes(\u0027r\u0026d\u0027) || t.includes(\u0027patent\u0027) || t.includes(\u0027licensing\u0027)) return \u0027MONK\u0027;\n  if (t.includes(\u0027inspection\u0027) || t.includes(\u0027contract\u0027) || t.includes(\u0027consulting\u0027) || t.includes(\u0027bd\u0027) || t.includes(\u0027rfp\u0027) || t.includes(\u0027utility\u0027) || t.includes(\u0027bridge\u0027) || t.includes(\u0027dfr\u0027) || t.includes(\u0027police\u0027) || t.includes(\u0027medical supply\u0027)) return \u0027FP\u0027;\n  return \u0027MULTI\u0027;\n};\nconst resolveType = (title) =\u003e {\n  const t = title.toLowerCase();\n  if (t.includes(\u0027sbir\u0027) || t.includes(\u0027sttr\u0027)) return \u0027sbir\u0027;\n  if (t.includes(\u0027grant\u0027) || t.includes(\u0027fema\u0027) || t.includes(\u0027earn\u0027) || t.includes(\u0027workforce\u0027)) return \u0027grant\u0027;\n  if (t.includes(\u0027contract\u0027) || t.includes(\u0027rfp\u0027) || t.includes(\u0027inspection\u0027) || t.includes(\u0027dfr\u0027)) return \u0027contract\u0027;\n  if (t.includes(\u0027consulting\u0027) || t.includes(\u0027advisory\u0027) || t.includes(\u0027omb m-26\u0027)) return \u0027consulting\u0027;\n  if (t.includes(\u0027licensing\u0027) || t.includes(\u0027oem\u0027) || t.includes(\u0027partnership\u0027)) return \u0027licensing\u0027;\n  if (t.includes(\u0027job\u0027) || t.includes(\u0027employment\u0027) || t.includes(\u0027ojt\u0027) || t.includes(\u0027position\u0027) || t.includes(\u0027hire\u0027)) return \u0027employment\u0027;\n  return \u0027contract\u0027;\n};\nconst entity = resolveEntity(rawTitle, entityHint);\nconst opportunityType = resolveType(rawTitle);\nconst triggerJordan = true;\nconst triggerIris = entity === \u0027EAF\u0027 || entity === \u0027MULTI\u0027;\nconst triggerAtlas = entity === \u0027MONK\u0027;\nreturn [{ json: {\n  title: rawTitle,\n  source,\n  kevinNote,\n  entity,\n  beachheadHint,\n  opportunityType,\n  triggerJordan,\n  triggerIris,\n  triggerAtlas,\n  timestamp: new Date().toISOString(),\n  founderName: (kaiContext.founder || {}).name || \u0027Kevin Alexander Smith\u0027,\n  founderCredentials: ((kaiContext.founder || {}).credentials || []).join(\u0027, \u0027)\n}}];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             224,
+                                                             0
+                                                         ],
+                                            "id":  "aed8361f-2f50-44d4-906a-98ab6203c2a7",
+                                            "name":  "Parse Command"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// STEP 2 -- UPSERT TO PIPELINE (v2 -- prevents duplicates)\n// Uses Supabase upsert with on_conflict=title,entity\n// If same title+entity already exists, updates status to pursuing\nconst https = require(\u0027https\u0027);\nconst input = $input.first().json;\nconst SUPABASE_URL = ($env.SUPABASE_URL || \u0027\u0027).replace(\u0027https://\u0027,\u0027\u0027).replace(\u0027http://\u0027,\u0027\u0027);\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_KEY || \u0027\u0027;\nconst record = {\n  title: input.title,\n  source: input.source,\n  entity: input.entity,\n  opportunity_type: input.opportunityType,\n  beachhead: input.beachheadHint || null,\n  status: \u0027pursuing\u0027,\n  kevin_note: input.kevinNote || null,\n  jordan_triggered: input.triggerJordan,\n  iris_triggered: input.triggerIris,\n  atlas_triggered: input.triggerAtlas,\n  discovered_by_agent: \u0027Nova-Pursue v2\u0027,\n  run_date: new Date().toISOString().slice(0,10)\n};\nlet pipelineId = null;\nlet writeStatus = \u0027failed\u0027;\nif (!SUPABASE_URL || !SUPABASE_KEY) {\n  writeStatus = \u0027skipped -- missing Supabase credentials\u0027;\n  return [{ json: { ...input, pipelineId, writeStatus } }];\n}\ntry {\n  const body = JSON.stringify(record);\n  const result = await new Promise((resolve, reject) =\u003e {\n    const req = https.request({\n      hostname: SUPABASE_URL,\n      port: 443,\n      // Upsert: if title+entity conflict exists, update instead of insert\n      path: \u0027/rest/v1/pipeline\u0027,\n      method: \u0027POST\u0027,\n      headers: {\n        \u0027Content-Type\u0027: \u0027application/json\u0027,\n        \u0027apikey\u0027: SUPABASE_KEY,\n        \u0027Authorization\u0027: \u0027Bearer \u0027 + SUPABASE_KEY,\n        // merge-duplicates = upsert on any unique constraint (title+entity if defined)\n        \u0027Prefer\u0027: \u0027resolution=merge-duplicates,return=representation\u0027,\n        \u0027Content-Length\u0027: Buffer.byteLength(body)\n      }\n    }, (res) =\u003e { let d = \u0027\u0027; res.on(\u0027data\u0027, c =\u003e d += c); res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: d })); });\n    req.on(\u0027error\u0027, reject);\n    req.write(body);\n    req.end();\n  });\n  if (result.status === 201 || result.status === 200) {\n    writeStatus = \u0027saved\u0027;\n    try { pipelineId = JSON.parse(result.body)[0]?.id || null; } catch(e) {}\n  } else {\n    writeStatus = \u0027error_\u0027 + result.status + \u0027: \u0027 + result.body.substring(0, 200);\n  }\n} catch(e) {\n  writeStatus = \u0027error: \u0027 + e.message;\n}\nreturn [{ json: { ...input, pipelineId, writeStatus } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             448,
+                                                             0
+                                                         ],
+                                            "id":  "9f1381aa-73fa-4b5f-a831-841156531e11",
+                                            "name":  "Upsert to Pipeline"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// STEP 3 -- NOVA PURSUIT PLAN (new in v2)\n// Nova synthesizes a pursuit plan using Claude before firing downstream agents\n// This gives Kevin an operationalized plan immediately, not just a pipeline record\nconst https = require(\u0027https\u0027);\nconst fs = require(\u0027fs\u0027);\nconst input = $input.first().json;\nlet kaiContext = {};\ntry { kaiContext = JSON.parse(fs.readFileSync(\u0027/data/KAI_Context.json\u0027, \u0027utf8\u0027)); } catch(e) {}\nconst phase = kaiContext.phase || {};\nconst constraints = kaiContext.discovery_profile?.stage_constraints || {};\nconst constraintStr = Object.entries(constraints).filter(([k,v]) =\u003e v === true).map(([k]) =\u003e k).join(\u0027, \u0027);\nconst deadlines = (kaiContext.deadlines || []).filter(d =\u003e ![\u0027COMPLETE\u0027,\u0027FILED\u0027,\u0027EXEMPT\u0027].includes(d.status)).slice(0, 5).map(d =\u003e `${d.item} | Due: ${d.date} | ${d.status}`).join(\u0027\\n\u0027);\nconst systemPrompt = `You are Nova, KAI-Netics Pursuit Orchestrator. When Kevin says to pursue something, you build the operational plan.\n\nFOUNDER: ${input.founderName} | ${input.founderCredentials}\nPHASE: ${phase.current}\nCONSTRAINTS: ${constraintStr || \u0027none\u0027}\nACTIVE DEADLINES:\\n${deadlines}\n\nReturn STRICT JSON only -- no markdown, no preamble:\n{\n  \"mission_title\": \"string\",\n  \"entity\": \"FP | EAF | MONK | MULTI\",\n  \"opportunity_type\": \"string\",\n  \"mission_objective\": \"1 sentence\",\n  \"immediate_actions\": [\"action 1 -- specific with URL or contact\", \"action 2\", \"action 3\"],\n  \"jordan_task\": \"loi | capability_statement | sbir_narrative | capability_statement_and_loi\",\n  \"jordan_brief\": \"2-3 sentences telling Jordan exactly what to draft and why\",\n  \"iris_alert\": \"deadline or compliance flag for Iris to track, or null\",\n  \"blockers\": [\"any constraint flags\"],\n  \"timeline\": \"when this needs to be acted on\",\n  \"revenue_path\": \"how this becomes money for KAI-Netics\",\n  \"success_metric\": \"what does done look like\"\n}`;\nconst userPrompt = `Build pursuit plan for: ${input.title}\n\nEntity: ${input.entity}\nType: ${input.opportunityType}\nKevin note: ${input.kevinNote || \u0027none\u0027}\nToday: ${new Date().toLocaleDateString(\u0027en-US\u0027, { timeZone: \u0027America/New_York\u0027 })}\n\nReturn operational JSON only.`;\nconst requestBody = JSON.stringify({ model: \u0027claude-sonnet-4-6\u0027, max_tokens: 1000, system: systemPrompt, messages: [{ role: \u0027user\u0027, content: userPrompt }] });\nconst result = await new Promise((resolve, reject) =\u003e {\n  const req = https.request({\n    hostname: \u0027api.anthropic.com\u0027, port: 443, path: \u0027/v1/messages\u0027, method: \u0027POST\u0027,\n    headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027x-api-key\u0027: process.env.ANTHROPIC_API_KEY, \u0027anthropic-version\u0027: \u00272023-06-01\u0027, \u0027Content-Length\u0027: Buffer.byteLength(requestBody) }\n  }, (res) =\u003e { let d = \u0027\u0027; res.on(\u0027data\u0027, c =\u003e d += c); res.on(\u0027end\u0027, () =\u003e resolve({ status: res.statusCode, body: d })); });\n  req.on(\u0027error\u0027, reject); req.write(requestBody); req.end();\n});\nlet plan = {\n  mission_title: input.title,\n  entity: input.entity,\n  opportunity_type: input.opportunityType,\n  mission_objective: \u0027Pursue \u0027 + input.title,\n  immediate_actions: [\u0027Review opportunity\u0027, \u0027Contact Jordan for draft\u0027, \u0027Set Iris deadline alert\u0027],\n  jordan_task: input.entity === \u0027EAF\u0027 ? \u0027loi\u0027 : input.entity === \u0027MONK\u0027 ? \u0027sbir_narrative\u0027 : \u0027capability_statement\u0027,\n  jordan_brief: \u0027Draft initial outreach for \u0027 + input.title,\n  iris_alert: null,\n  blockers: [],\n  timeline: \u0027ASAP\u0027,\n  revenue_path: \u0027TBD\u0027,\n  success_metric: \u0027Draft submitted\u0027\n};\ntry {\n  const rawText = JSON.parse(result.body)?.content?.[0]?.text || \u0027\u0027;\n  const clean = rawText.replace(/^```json\\s*/,\u0027\u0027).replace(/^```\\s*/,\u0027\u0027).replace(/\\s*```$/,\u0027\u0027).trim();\n  try { plan = JSON.parse(clean); } catch(e) {\n    const first = clean.indexOf(\u0027{\u0027); const last = clean.lastIndexOf(\u0027}\u0027);\n    if (first !== -1 \u0026\u0026 last \u003e first) { try { plan = JSON.parse(clean.substring(first, last+1)); } catch(e2) {} }\n  }\n} catch(e) {}\n// Save plan to file\nconst fs2 = require(\u0027fs\u0027);\nconst dateStr = new Date().toISOString().replace(/[:.]/g,\u0027-\u0027).slice(0,19);\nconst planPath = `/data/Aidan_Outputs/Nova/Pursue_${dateStr}.json`;\nfs2.mkdirSync(\u0027/data/Aidan_Outputs/Nova\u0027, { recursive: true });\nfs2.writeFileSync(planPath, JSON.stringify({ meta: { title: input.title, entity: input.entity, timestamp: input.timestamp, pipelineId: input.pipelineId, writeStatus: input.writeStatus }, plan }, null, 2), \u0027utf8\u0027);\nreturn [{ json: { ...input, plan, planPath, jordanTask: plan.jordan_task, jordanBrief: plan.jordan_brief, irisAlert: plan.iris_alert, immediateActions: plan.immediate_actions, revenuePath: plan.revenue_path } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             672,
+                                                             0
+                                                         ],
+                                            "id":  "aa49c873-9da0-4826-85e1-83d8608f04f0",
+                                            "name":  "Nova Pursuit Plan"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// STEP 4 -- FIRE DOWNSTREAM AGENTS\nconst http = require(\u0027http\u0027);\nconst input = $input.first().json;\nconst fireWebhook = async (path, payload) =\u003e {\n  const bodyStr = JSON.stringify(payload);\n  const opts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(bodyStr) } };\n  return new Promise(r =\u003e { const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(bodyStr); req.end(); });\n};\nconst jordanPayload = {\n  trigger: \u0027pursue_command\u0027,\n  pipeline_id: input.pipelineId,\n  opportunity: input.title,\n  entity: input.entity,\n  opportunity_type: input.opportunityType,\n  task: input.jordanTask || \u0027capability_statement\u0027,\n  kevin_note: input.kevinNote || \u0027\u0027,\n  jordan_brief: input.jordanBrief || \u0027\u0027,\n  founder_credentials: input.founderCredentials\n};\nawait fireWebhook(\u0027/webhook/grant-writer\u0027, jordanPayload);\nif (input.triggerIris \u0026\u0026 input.irisAlert) {\n  await fireWebhook(\u0027/webhook/iris-monitor\u0027, {\n    trigger: \u0027pursue_command\u0027,\n    pipeline_id: input.pipelineId,\n    opportunity: input.title,\n    entity: input.entity,\n    note: input.irisAlert\n  });\n}\nif (input.triggerAtlas) {\n  await fireWebhook(\u0027/webhook/atlas-architect\u0027, {\n    command: \u0027Pipeline MONK prep\u0027,\n    detail: input.title + \u0027 -- SBIR/R\u0026D technical narrative needed\u0027,\n    pipeline_id: input.pipelineId\n  });\n}\nreturn [{ json: { ...input, agentsFired: [\u0027Jordan\u0027, ...(input.triggerIris \u0026\u0026 input.irisAlert ? [\u0027Iris\u0027] : []), ...(input.triggerAtlas ? [\u0027Atlas\u0027] : [])] } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             880,
+                                                             0
+                                                         ],
+                                            "id":  "4f8a9290-81d5-45d2-917c-110c30eb5f88",
+                                            "name":  "Fire Downstream Agents"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// STEP 5 -- CONFIRM TO KEVIN VIA WHATSAPP\nconst http = require(\u0027http\u0027);\nconst input = $input.first().json;\nconst entityLabel = { \u0027FP\u0027: \u0027For-Profit\u0027, \u0027EAF\u0027: \u0027Nonprofit\u0027, \u0027MONK\u0027: \u0027R\u0026D/IP\u0027, \u0027MULTI\u0027: \u0027Multi-entity\u0027 }[input.entity] || input.entity;\nconst taskLabel = {\n  \u0027loi\u0027: \u0027LOI draft\u0027,\n  \u0027capability_statement\u0027: \u0027capability statement\u0027,\n  \u0027sbir_narrative\u0027: \u0027SBIR narrative\u0027,\n  \u0027capability_statement_and_loi\u0027: \u0027cap statement + LOI\u0027\n}[input.jordanTask] || \u0027draft\u0027;\nconst dbIcon = input.writeStatus === \u0027saved\u0027 ? \u0027✓\u0027 : \u0027⚠\u0027;\nconst agents = (input.agentsFired || []).join(\u0027 + \u0027);\nconst actions = (input.immediateActions || []).slice(0, 3).map((a, i) =\u003e `${i+1}. ${a.substring(0, 120)}`).join(\u0027\\n\u0027);\nlet msg = `NOVA PURSUIT CONFIRMED\\n\\n`;\nmsg += `Mission: ${input.title}\\n`;\nmsg += `Entity: ${entityLabel} [${input.entity}]\\n`;\nmsg += `Type: ${input.opportunityType}\\n`;\nif (input.kevinNote) msg += `Your note: ${input.kevinNote}\\n`;\nmsg += `\\nPipeline: ${dbIcon} ${input.writeStatus}\\n`;\nmsg += `Agents fired: ${agents}\\n`;\nmsg += `Jordan drafting: ${taskLabel}\\n`;\nif (input.revenuePath \u0026\u0026 input.revenuePath !== \u0027TBD\u0027) msg += `\\nRevenue path: ${input.revenuePath}\\n`;\nif (actions) msg += `\\nImmediate actions:\\n${actions}\\n`;\nmsg += `\\nDraft ready ~60 seconds.\\nCheck Dashboard pipeline tab.`;\nconst msgBody = JSON.stringify({ number: \u002714432576836@s.whatsapp.net\u0027, textMessage: { text: msg } });\nconst opts = { hostname: \u0027host.docker.internal\u0027, port: 8081, path: \u0027/message/sendText/Aidan\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027apikey\u0027: \u0027Kevin2026\u0027, \u0027Content-Length\u0027: Buffer.byteLength(msgBody) } };\nawait new Promise(r =\u003e { const req = http.request(opts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,r); }); req.on(\u0027error\u0027,r); req.write(msgBody); req.end(); });\nconst cbBody = JSON.stringify({ agent: \u0027Nova\u0027, subagent: \u0027Pursue v2\u0027, opportunity: input.title, entity: input.entity, pipelineId: input.pipelineId, writeStatus: input.writeStatus, agentsFired: input.agentsFired, timestamp: new Date().toISOString() });\nconst cbOpts = { hostname: \u0027host.docker.internal\u0027, port: 5678, path: \u0027/webhook/aidan-callback\u0027, method: \u0027POST\u0027, headers: { \u0027Content-Type\u0027: \u0027application/json\u0027, \u0027Content-Length\u0027: Buffer.byteLength(cbBody) } };\nconst cbReq = http.request(cbOpts, res =\u003e { res.on(\u0027data\u0027,()=\u003e{}); res.on(\u0027end\u0027,()=\u003e{}); }); cbReq.on(\u0027error\u0027,()=\u003e{}); cbReq.write(cbBody); cbReq.end();\nreturn [{ json: { success: true, opportunity: input.title, entity: input.entity, pipelineId: input.pipelineId, agentsFired: input.agentsFired } }];"
+                                                           },
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1104,
+                                                             0
+                                                         ],
+                                            "id":  "498eb3cf-63ac-4248-971d-74f7fa2f5a29",
+                                            "name":  "Confirm to Kevin"
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Webhook Trigger":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Parse Command",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Parse Command":  {
+                                                                    "main":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "Upsert to Pipeline",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                                },
+                                              "Upsert to Pipeline":  {
+                                                                         "main":  [
+                                                                                      [
+                                                                                          {
+                                                                                              "node":  "Nova Pursuit Plan",
+                                                                                              "type":  "main",
+                                                                                              "index":  0
+                                                                                          }
+                                                                                      ]
+                                                                                  ]
+                                                                     },
+                                              "Nova Pursuit Plan":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "Fire Downstream Agents",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    },
+                                              "Fire Downstream Agents":  {
+                                                                             "main":  [
+                                                                                          [
+                                                                                              {
+                                                                                                  "node":  "Confirm to Kevin",
+                                                                                                  "type":  "main",
+                                                                                                  "index":  0
+                                                                                              }
+                                                                                          ]
+                                                                                      ]
+                                                                         }
+                                          },
+                          "authors":  "Kevin A Smith",
+                          "name":  "Version ae40876f",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-05-10T17:45:58.333Z",
+                                                             "id":  641,
+                                                             "workflowId":  "iPEexj4SHAMe0erZ",
+                                                             "versionId":  "ae40876f-8a16-4f1c-b6cb-e6df294a60bf",
+                                                             "event":  "activated",
+                                                             "userId":  "b6277c83-a628-41ec-ba80-3e2e35c4b99e"
+                                                         }
+                                                     ]
+                      }
+}

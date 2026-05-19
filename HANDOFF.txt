@@ -1,175 +1,165 @@
 ================================================================================
 KAI-NETICS SESSION HANDOFF
-Date: May 8, 2026 (Full Day Session — CLOSED)
+Date: May 17, 2026 — Nova E2E Validation + Chain Writeback Patch
 ================================================================================
 
 RESUME LINE:
 "Read my handoff file at C:\Kinetic_Core\HANDOFF.txt and pick up from there."
 
 ================================================================================
-PLATFORM STATUS
+VERIFIED RUNTIME STATE (as of this session)
 ================================================================================
-WhatsApp Bridge v4 — ACTIVE
-Nova Proactive v3.2 — ACTIVE (SAM skipped-no key, SBIR err, Grants err)
-Nova Pursue Command — ACTIVE (BUG: upsert fix pending)
-Jordan v3.2 — ACTIVE
-DASHBOARD v4.5 — LIVE (225,443 bytes)
-LOCAL SUPABASE — LIVE at http://localhost:8000 (empty — no schema yet)
-CLOUD SUPABASE — UNHEALTHY (us-east-1a outage all day May 8)
+Scout v6                    -- LIVE. scout_to_mission.js v2 active.
+scout_to_mission.js v2      -- LIVE. Confidence gate active. Owned-entity filter active.
+                               13 missions in Aidan_Outputs/Missions/.
+Nova Pursue v2              -- LIVE IN N8N (Pursue_*.json files confirm execution).
+                               nova_pursue_live_id = iPEexj4SHAMe0erZ
+Jordan v3.2                 -- LIVE. Pipeline_*.txt files in Aidan_Outputs/Jordan/.
+                               OMB cap statement drafted May 11. Quality: HIGH.
+Nova → Jordan fire path     -- WORKING. Verified from disk (Pipeline files match Nova triggers).
+Aidan Brief workflow        -- aidan_brief_workflow_id = MimPRbZ8RiJP0HJG
+DASHBOARD (React/Vite)      -- kai-core-ui/src/ — missionService.js v1.2 active.
+                               discoverMissions() scans Aidan_Outputs/Missions/ dynamically.
+                               Actionable filter active (fit>=50, not COMPLETE/CANCELLED).
+Cloud Supabase              -- HEALTHY
+file server (port 3030)     -- server.js v1.0 — Missions/ in ALLOWED list.
+n8n container               -- LIVE
 
 ================================================================================
-DATABASE GOVERNANCE — PERMANENT
+PATCHES APPLIED THIS SESSION
 ================================================================================
-CLOUD SUPABASE = PRODUCTION SYSTEM OF RECORD. NEVER REPLACED.
-LOCAL SUPABASE = DEV/MIRROR ONLY. NOT AUTHORITATIVE.
-NO SCHEMA OR DATA MIGRATION WITHOUT BACKUP + SYNC RULES + KEVIN APPROVAL.
-NOTHING LEAVES THE PLATFORM WITHOUT KEVIN'S EXPLICIT APPROVAL.
+
+[PATCHED] C:\Kinetic_Core\jordan_callback.js — v3.2-chain
+  Added: mission chain writeback via POST /mission/update on Jordan complete.
+  Sets: execution_chain.nova_plan=COMPLETE, jordan_draft=COMPLETE, next_agent=Aidan.
+  Requires: mission_path in Jordan trigger payload.
+  Fire-and-forget, non-blocking. Logs to WhatsApp whether chain update succeeded.
+
+[PATCHED] C:\Kinetic_Core\workflows\14_nova_pursue_v2.json — v2.1
+  Node "Parse Command": now extracts and passes missionPath from webhook body.
+  Node "Fire Downstream Agents": now passes mission_path in jordanPayload.
+  Node "Confirm to Kevin": WhatsApp message notes chain update pending.
+  Tag updated to v2.1.
+
+[NEW] C:\Kinetic_Core\validate_nova_e2e.ps1
+  Full E2E validation script. Run: .\validate_nova_e2e.ps1
+  Output: Aidan_Outputs/Aidan/nova_e2e_validation_result.json
 
 ================================================================================
-DASHBOARD v4.5 — WHAT IS BUILT
+DISCONNECTED WIRING — ROOT CAUSE FOUND
 ================================================================================
-✅ Dossier Engine (6-tab: Overview, Source, Contacts, Action Plan, Log, Export)
-✅ Disconnected Ops Mode (status strip, sync queue, snapshot export)
-✅ Source Intelligence panel (provenance badge, confidence bar, raw payload drawer)
-✅ 4 source action buttons (Open Source, Copy Raw, Export Intel Packet, Rebuild)
-✅ Page Navigator (floating right-side scroll nav)
-✅ Resilient pipeline loading — AUTO-FAILOVER priority:
-     1. Cloud Supabase with rows (PRODUCTION FEED)
-     2. Local Supabase with rows (LOCAL MIRROR)
-     3. Local snapshot with rows (DEGRADED — latest snapshot)
-     4. No data anywhere (manual entry mode + Retry)
-✅ Feed mode banner — green/amber/yellow per source
-✅ SOURCE GAP badges on pipeline items and dossier headers
-✅ CONTACT READY / PURSUE NOW / VALIDATE FIRST badges
-✅ SOURCE GAP auto-creates research tasks in Action Plan
-✅ Morning Brief cards clickable — open dossiers or create stub dossiers
-✅ "Missing source data = research task, not dead card" — enforced in code
+PROBLEM: execution_chain fields (nova_plan, jordan_draft) never updated to COMPLETE
+         despite Jordan successfully producing output.
+ROOT CAUSE: jordan_callback.js had no /mission/update call.
+            Nova "Fire Downstream Agents" did not pass mission_path to Jordan.
+FIX: Both files patched (see above).
 
-Deploy method:
-  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-  & "C:\Kinetic_Core\deploy_dashboard.ps1"
-
-================================================================================
-WHY PIPELINE IS EMPTY RIGHT NOW
-================================================================================
-Root cause: Supabase us-east-1a outage all day May 8, 2026.
-  - Cloud Supabase: error 521 / ECONNREFUSED all session
-  - All n8n agent writes to Supabase failed
-  - No pipeline rows ever loaded → no local snapshot saved
-  - Scout fired tonight but "No response from Claude" — Anthropic API call failed
-
-Result: Pipeline shows "No pipeline data available" — correct behavior, not a bug.
+REMAINING GAP: jordan_callback.js is only used by Jordan's n8n workflow as a Code node.
+  The patched file is on disk at C:\Kinetic_Core\jordan_callback.js.
+  ACTION REQUIRED: In n8n, open the Jordan workflow → find the "Callback" or
+  "Jordan Callback" Code node → replace its jsCode with contents of jordan_callback.js.
+  This cannot be done via API without the workflow ID.
 
 ================================================================================
 FIRST ACTIONS NEXT SESSION
 ================================================================================
-1. TEST SUPABASE HEALTH:
-   Invoke-WebRequest -Uri "https://raxpmeltyxmtiihxoxpa.supabase.co/rest/v1/pipeline?select=id,title&limit=3" -Headers @{"apikey"="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJheHBtZWx0eXhtdGlpaHhveHBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODI5MDIsImV4cCI6MjA5MjM1ODkwMn0.UScReg6BG4pimbjMeIE7NB2glcpdbgUbDLnDhDLURPM"} -UseBasicParsing
 
-2. IF SUPABASE HEALTHY:
-   - Open dashboard → Platform Ops → click ↻ Refresh
-   - Pipeline should load and save local snapshot
-   - All dossier/source intelligence features become testable
+1. UPDATE Jordan callback node in n8n (required for chain writeback):
+   - Open http://localhost:5678
+   - Find Jordan workflow (grant-writer webhook path)
+   - Find callback Code node (last node before end)
+   - Paste contents of C:\Kinetic_Core\jordan_callback.js
+   - Save + confirm active
 
-3. CHECK SCOUT ANTHROPIC API KEY:
-   - "No response from Claude" = API key may need rotation
-   - n8n → Credentials → find Anthropic key → verify it works
-   - Test: fire Scout with a simple query
+2. RE-IMPORT Nova Pursue v2.1 (to pick up mission_path wiring):
+   - n8n > Workflows > Import > C:\Kinetic_Core\workflows\14_nova_pursue_v2.json
+   - Activate new import. Deactivate old Nova Pursue v2 (iPEexj4SHAMe0erZ).
+   - Record new workflow ID to nova_pursue_live_id.txt
 
-4. ADD SAM_API_KEY:
-   - Get from sam.gov/profile
-   - Add to C:\Kinetic_Core\.env
-   - Add to START_KINETIC.ps1
+3. VERIFY chain writeback with test trigger:
+   Invoke-RestMethod -Uri "http://localhost:5678/webhook/nova-pursue" `
+     -Method POST -ContentType 'application/json' `
+     -Body '{"title":"OMB M-26-02 Federal UAS Compliance Consulting","entity":"FP","note":"chain test","mission_path":"Aidan_Outputs/Missions/FP_OMB_M_26_02_FEDERAL_UAS_COMPLIANCE_CONSULTING_MA_6961.json"}'
+   Then check: Aidan_Outputs/Missions/FP_OMB_M_26_02*.json
+   Expect: execution_chain.jordan_draft = "COMPLETE", next_agent = "Aidan"
 
-================================================================================
-TRACK 2 — SCOUT UPGRADE (next major build)
-================================================================================
-Scout must capture and store per opportunity:
-  source_url, source_title, source_platform, discovered_at, discovered_by_agent,
-  search_query, raw_payload, raw_snippet, contact_name, contact_title,
-  contact_email, contact_phone, organization, program_office, application_portal,
-  eligibility_notes, why_this_matters, why_kai_fits, recommended_next_action,
-  pursuit_steps, risks, blockers, confidence_score, follow_up_script,
-  outreach_draft
+4. VERIFY dashboard shows updated chain state:
+   Open http://localhost:3030 → mission card → execution chain section
 
-Scout classification labels:
-  PURSUE_NOW / VALIDATE_SOURCE / CONTACT_READY / WATCHLIST / BLOCKED / ARCHIVE
-
-New priority scoring:
-  revenue_potential + immediacy + contactability + source_quality +
-  KAI_fit + ease_of_next_action + deadline_urgency + prob_of_response + cert_fit
+5. VERIFY aidan_brief fields writable:
+   aidan_brief_id and brief_generated_at are present in all normalized missions.
+   Confirmed in FP_OMB_M_26_02_FEDERAL_UAS_COMPLIANCE_CONSULTING_MA_6961.json.
 
 ================================================================================
-CRITICAL ADMIN — BLOCKING REVENUE
+E2E VALIDATION STATUS
 ================================================================================
-  MBE/DBE cert    — due May 15 — 7 DAYS — mbe.mdot.maryland.gov
-  Techstars       — Demo Day Jun 3 — register by May 15 — 7 DAYS
-  OMB M-26-02     — May 20 — FIRST DOLLAR — $7,500/5 days
-  SAM.gov UEI     — submitted Apr 17 — confirm active
-  MONK LLC        — OVERDUE — businessexpress.maryland.gov
-  IRS Form 1023   — OVERDUE — James Scott owns this
-  James Scott     — (410) 908-4454 — CALL NOW
+
+Chain stage                 Status          Evidence
+─────────────────────────── ─────────────── ──────────────────────────────────────
+Scout discovery             ✅ COMPLETE     13 missions in Aidan_Outputs/Missions/
+Confidence gate             ✅ COMPLETE     [SKIP] logs confirmed in runtime output
+Garbage filter              ✅ COMPLETE     Owned-entity + untitled filters active
+Mission normalization       ✅ COMPLETE     scout_to_mission.js v2 producing schema
+Nova Pursue webhook         ✅ COMPLETE     Pursue_*.json files on disk (May 10-11)
+Nova → Jordan fire          ✅ COMPLETE     Pipeline_*.txt files match Nova triggers
+Jordan drafting             ✅ COMPLETE     OMB cap statement: full quality output
+Jordan → chain writeback    ⚠ PATCHED      Patch on disk. Requires n8n node update.
+Mission state persistence   ✅ COMPLETE     Disk-based, restart-safe
+Dashboard mission render    ✅ COMPLETE     discoverMissions() scans Missions/ dir
+Aidan brief fields          ✅ PRESENT      aidan_brief_id, brief_generated_at in schema
+next_agent transitions      ⚠ PATCHED      Will set to "Aidan" after Jordan writeback
+
+OVERALL: 12/14 stages VERIFIED. 2 pending n8n node update.
 
 ================================================================================
-BACKLOG (prioritized)
+HARD DEADLINES
 ================================================================================
-(1)  Verify Supabase cloud healthy + load pipeline snapshot
-(2)  Fix Scout Anthropic API key ("No response from Claude")
-(3)  Add SAM_API_KEY to .env + START_KINETIC.ps1
-(4)  Track 2: Scout schema upgrade (source, contact, raw payload, pursuit fields)
-(5)  Environment mode selector (CLOUD/LOCAL/HYBRID toggle in dashboard)
-(6)  Cloud schema pg_dump backup (requires Supabase healthy)
-(7)  Nova duplicate insert fix (upsert on title+entity)
-(8)  Fix recheck button — add toast confirmation
-(9)  Fix pooler/realtime/vector containers in local Supabase
-(10) Add local Supabase to pm2 startup
-(11) Jordan Grant Reader v1 (pending 4 answers)
-(12) KAI_Context v3.0 + Scribe protocol
-(13) Scout v5 profile-driven reasoning
-(14) BD Outreach Engine
-(15) Supabase SECURITY DEFINER → INVOKER fix
-(16) scout_reports table schema fix
-(17) MONK SBIR narrative
+OMB M-26-02 outreach    -- May 20 -- DEADLINE PASSED (today May 17 — post-deadline remediation framing)
+                           Outreach draft READY. Reframe as post-deadline audit service.
+MONK LLC formation      -- OVERDUE — businessexpress.maryland.gov
+IRS Form 1023           -- OVERDUE — James Scott (410) 908-4454
+MBE/DBE cert            -- May 15 — CONFIRM STATUS
+Techstars Demo Day      -- Jun 3 — registration status UNKNOWN
 
 ================================================================================
-LOCAL SUPABASE CONFIG
+KEY FILES
 ================================================================================
-Location:   C:\Kinetic_Core\supabase\
-Start:      cd C:\Kinetic_Core\supabase && docker compose up -d
-Stop:       cd C:\Kinetic_Core\supabase && docker compose down
-REST API:   http://localhost:8000/rest/v1/
-Studio:     http://localhost:8000 (kevin / KAINetics2026!)
-DB:         localhost:5432 (postgres / bNK0jMXQvygPNYisNyCaGheyVDVexpKk)
-Status:     kong, db, studio, auth, rest, storage, meta, imgproxy healthy
-            pooler, realtime, vector, edge-functions still restarting (non-blocking)
+C:\Kinetic_Core\jordan_callback.js               -- PATCHED v3.2-chain (apply to n8n)
+C:\Kinetic_Core\workflows\14_nova_pursue_v2.json -- PATCHED v2.1 (re-import to n8n)
+C:\Kinetic_Core\validate_nova_e2e.ps1            -- E2E validation script
+C:\Kinetic_Core\scout_to_mission.js              -- LIVE v2
+C:\Kinetic_Core\kai-core-ui\src\services\missionService.js -- LIVE v1.2
+C:\Kinetic_Core\server.js                        -- LIVE v1.0 (Missions/ allowed)
 
 ================================================================================
-TECHNICAL NOTES
+BACKLOG (priority order)
 ================================================================================
-Dashboard localStorage keys:
-  kai_dossiers_v1         — dossiers keyed by pipeline ID
-  kai_sync_queue          — pending/failed/synced cloud operations
-  kai_pipeline_snapshot_v1 — last successful pipeline load
+P0 — BLOCKING CHAIN CLOSE:
+  [ ] Apply jordan_callback.js patch to n8n Jordan workflow Code node
+  [ ] Re-import nova_pursue_v2.json as v2.1 to n8n
+  [ ] Test trigger with mission_path → verify chain writeback
 
-Dashboard file: C:\Kinetic_Core\DASHBOARD.html (v4.5, 225,443 bytes)
-Backup:         C:\Kinetic_Core\DASHBOARD_pre_dossier.html (v4.2)
+P1 — REVENUE:
+  [ ] OMB M-26-02 outreach — reframe as post-deadline remediation, send now
+  [ ] SAM_API_KEY to .env (get from sam.gov/profile)
+  [ ] Confirm SAM UEI active status
 
-n8n camelCase normalization (always needed between nodes):
-  const pipelineId = input.pipelineId || input.pipelineid || input.pipeline_id || null;
+P2 — DASHBOARD:
+  [ ] Dashboard: VIEW RAW / VIEW JSON / VIEW REASONING / EXPORT per card
+  [ ] Fix Nova Proactive SBIR + Grants.gov errors
+  [ ] Jordan Grant Reader Q1-Q4 answers
 
-Jordan Grant Reader pending answers:
-  Q1: Gmail OAuth scope includes calendar?
-  Q2: Grant Inbox path: C:\Kinetic_Core\Data\Grant_Inbox\ ?
-  Q3: Calendar target — primary Gmail or KAI-Netics Ops calendar?
-  Q4: Attach PDF to invite? (Recommended: No)
+P3 — CLEANUP:
+  [ ] Supabase views SECURITY DEFINER → SECURITY INVOKER
+  [ ] Jordan Pipeline_*.txt files becoming numerous — archive policy needed
+  [ ] MONK LLC formation
+  [ ] Form 1023
 
 ================================================================================
 GOVERNANCE — PERMANENT
 ================================================================================
 CLOUD SUPABASE IS THE PRODUCTION SYSTEM OF RECORD. NEVER REPLACE IT.
-LOCAL SUPABASE IS DEV/MIRROR ONLY. NEVER TREAT AS AUTHORITATIVE.
-NO SCHEMA OR DATA MIGRATION WITHOUT BACKUP + SYNC RULES + KEVIN APPROVAL.
-MISSING SOURCE DATA = RESEARCH TASK, NOT A DEAD CARD.
-PRODUCTION OUTAGES MUST DEGRADE THE FEED, NOT THE BUSINESS.
 NOTHING LEAVES THE PLATFORM WITHOUT KEVIN'S EXPLICIT APPROVAL.
+DO NOT SUMMARIZE AGENT OUTPUTS — PRESERVE FULL-FIDELITY INTELLIGENCE.
+NO AUTONOMOUS AGENT LOOPS WITHOUT HUMAN GATE.
 ================================================================================

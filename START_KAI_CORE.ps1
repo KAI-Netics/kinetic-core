@@ -1,0 +1,1 @@
+powershell -ExecutionPolicy Bypass -File C:\Kinetic_Core\START_KAI_CORE.ps1

@@ -1,0 +1,356 @@
+KAI-NETICS CORE — N8N WORKFLOW REFERENCE
+Generated: 2026-05-13T00:36:13.934Z
+Total workflows: 48 | Active: 19 | Inactive: 29
+================================================================================
+
+PLATFORM CONTEXT
+----------------
+Owner: Kevin Alexander Smith, CEO & Founder, KAI-Netics
+n8n version: 2.14.2 (Docker: kinetic-core-n8n)
+n8n base URL: http://localhost:5678
+Webhook base: http://localhost:5678/webhook/
+WhatsApp Bridge: EvolutionAPI port 8081 (instance: Aidan)
+Supabase (cloud production): https://raxpmeltyxmtiihxoxpa.supabase.co
+GitHub: https://github.com/KAI-Netics/kinetic-core
+Workflows on disk: C:\Kinetic_Core\workflows\
+
+AGENT MODEL ASSIGNMENTS
+-----------------------
+Aidan brief synthesis:  claude-opus-4-6 (once daily, highest-judgment only)
+Scout, Jordan, Nova, Atlas, Iris, Sage, Scribe: claude-sonnet-4-6
+Jordan review only:     gemini-flash (sanitized input, no full KAI_Context)
+DeepSeek:               NEVER (data sovereignty hard no)
+ChatGPT free:           AVOID (trains on input)
+
+================================================================================
+## AIDAN WORKFLOWS
+------------------------------------------------------------
+
+Workflow: Aidan - WhatsApp Bridge v4 (CANONICAL)
+ID:       VDP2rWBDfv7N7mcN
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/whatsapp-inbound
+Nodes (4): Webhook Trigger, Intent Router v4, WhatsApp Sender, Respond
+Flow:     Webhook -> Intent Router v4 -> WhatsApp Sender -> Respond
+
+Workflow: Aidan - WhatsApp Bridge v4 OLD
+ID:       xaudETlzVkcZPvCQ | Status: INACTIVE
+
+Workflow: Aidan - WhatsApp Bridge v3
+ID:       28hWhOijXtIEBDzj | Status: INACTIVE
+
+Workflow: Aidan - WhatsApp Bridge v2
+ID:       2hIt4A3sZUqObtjV | Status: INACTIVE
+
+Workflow: Aidan - Executive Brief v2
+ID:       HWKl9xv7XZEyiwkH
+Status:   ACTIVE
+Trigger:  Daily 7AM cron
+Nodes:    Brief Composer, Supabase Fetch, Aidan Deliver
+Flow:     Daily Trigger -> Supabase Fetch -> Brief Composer -> Aidan Deliver
+
+Workflow: Aidan - Callback Consolidator
+ID:       GDEkrPv1ShL9biXJ
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/aidan-callback
+Notes:    Receives callbacks from all agents, routes summary to Kevin via WhatsApp
+
+Workflow: Aidan - Orchestra Fan Out
+ID:       VSMBeuQeSBUiETNf
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/aidan-orchestrate
+Notes:    Fans out commands to multiple agents in parallel
+
+================================================================================
+## ATLAS WORKFLOWS
+------------------------------------------------------------
+
+Workflow: Atlas - Technical Architect v3 (CANONICAL)
+ID:       77X87gGAUXagxHSD
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/atlas-architect
+Nodes (7): Webhook, Load KAI_Context, Build Architecture Prompt,
+           Call Claude (Sonnet), Parse + Validate Response, Save Output, Aidan Callback
+Flow:     Webhook -> Load KAI_Context -> Build Architecture Prompt
+          -> Call Claude -> Parse + Validate -> Save Output -> Aidan Callback
+
+Workflow: Atlas - Technical Architect v2 OLD
+ID:       7Wp5VXtD7mf0G8eB | Status: INACTIVE
+
+================================================================================
+## IRIS WORKFLOWS
+------------------------------------------------------------
+
+Workflow: Iris - Compliance Monitor v3
+ID:       ICIFC9FQo2ctSScE
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/iris-compliance
+Nodes (7): Webhook Trigger, Load Deadline Registry, Compliance Reasoning (Sonnet),
+           Flag Critical Items, Build Alert, Log to Supabase, WhatsApp Alert
+Flow:     Webhook -> Load Deadline Registry -> Compliance Reasoning
+          -> Flag Critical Items -> Build Alert -> Log to Supabase -> WhatsApp Alert
+
+================================================================================
+## JORDAN WORKFLOWS
+------------------------------------------------------------
+
+Workflow: Jordan - Grant Writer v3
+ID:       3HQ5ByZCzrHI41mw
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/jordan-grant
+Nodes (9): Webhook Trigger, Load Grant File, Load KAI_Context, Build Grant Prompt,
+           Jordan Brain (Sonnet), Gemini Review (Flash), Format Output,
+           Save Draft, Aidan Callback
+Flow:     Webhook -> Load Grant File -> Load KAI_Context -> Build Grant Prompt
+          -> Jordan Brain (Sonnet) -> Gemini Review (Flash)
+          -> Format Output -> Save Draft -> Aidan Callback
+Notes:    Gemini Flash review uses sanitized input only — no full KAI_Context passed
+
+Workflow: Jordan - Send Pursuit Email
+ID:       5yxslywKlJMjBCHm
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/jordan-send-email
+Nodes (6): Webhook Trigger, Load Draft, Gmail OAuth Send, Log Sent,
+           Update Pipeline, Aidan Callback
+Flow:     Webhook -> Load Draft -> Gmail OAuth Send -> Log Sent
+          -> Update Pipeline -> Aidan Callback
+Notes:    Gmail OAuth connected to kas42869@gmail.com
+
+Workflow: Jordan - Grant Reader v1
+ID:       L8qf3ODF8eEsYAQ3
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/jordan-reader
+Notes:    Reads grant inbox, parses PDFs, creates calendar events
+
+================================================================================
+## NOVA WORKFLOWS
+------------------------------------------------------------
+
+Workflow: Nova - Proactive Intelligence Engine v3.2 (CANONICAL)
+ID:       MimPRbZ8RiJP0HJG
+Status:   ACTIVE
+Trigger:  Daily 9AM cron + Webhook
+Webhook:  /webhook/nova-proactive
+Nodes (11):
+  1. Daily 9AM Trigger
+  2. Webhook Trigger
+  3. Load Context
+  4. Derive Targets (Regulatory + Business)
+  5. Structured API Sweep
+  6. Nova Reasoning Engine
+  7. Brave Search Execution
+  8. Score + Route
+  9. Regulatory Activation Handler
+  10. Log All Tiers to Supabase
+  11. Deliver to Aidan
+Flow:
+  Daily 9AM Trigger -> Load Context
+  Webhook Trigger -> Load Context
+  Load Context -> Derive Targets -> Structured API Sweep
+  -> Nova Reasoning Engine -> Brave Search Execution
+  -> Score + Route -> Regulatory Activation Handler
+  -> Log All Tiers to Supabase -> Deliver to Aidan
+
+Workflow: Nova - Pursue Command Handler v2 (CANONICAL)
+ID:       iPEexj4SHAMe0erZ
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/nova-pursue
+Nodes (6): Webhook Trigger, Parse Command, Upsert to Pipeline,
+           Nova Pursuit Plan, Fire Downstream Agents, Confirm to Kevin
+Flow:     Webhook -> Parse Command -> Upsert to Pipeline -> Nova Pursuit Plan
+          -> Fire Downstream Agents -> Confirm to Kevin
+
+Workflow: Nova - Pursue Command Handler v2 (OLD)
+ID:       0ycth6pKFd7l0jMg | Status: INACTIVE
+
+Workflow: Nova - RFP Intelligence Agent
+ID:       1LxWWYu7PxLyy50E
+Status:   ACTIVE
+Trigger:  Webhook
+Nodes (7): Webhook Trigger, Parse RFP Input, Deduplicate Check,
+           Score RFP (Sonnet), Draft Response (Opus), Save + Log to Supabase,
+           WhatsApp Alert + Callback
+Flow:     Webhook -> Parse RFP Input -> Deduplicate Check
+          -> Score RFP (Sonnet) -> Draft Response (Opus)
+          -> Save + Log to Supabase -> WhatsApp Alert + Callback
+
+Workflow: Nova - Proactive Intelligence Engine v3 OLD
+ID:       1nk5lrbsv0tgUSi4 | Status: INACTIVE
+
+================================================================================
+## SAGE WORKFLOWS
+------------------------------------------------------------
+
+Workflow: Sage - Newsletter Automation v3 (CANONICAL)
+ID:       N33i7pPWBklU4llM
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/sage-newsletter
+Nodes:    Load Template, Load Board Contacts, Compose (Sonnet),
+          Review Draft, Send via Gmail, Log Sent
+Flow:     Webhook -> Load Template -> Load Board Contacts -> Compose (Sonnet)
+          -> Review Draft -> Send via Gmail -> Log Sent
+Notes:    Board distribution: jlslaw@yahoo.com, keithrmillard@gmail.com, bjet.1234@yahoo.com
+          CC: kas@kevin-llc.com
+
+Workflow: Sage - Newsletter Automation OLD v2
+ID:       39TQ25SQLjsnD0dR | Status: INACTIVE
+
+Workflow: Sage - Send Email (BL-002)
+ID:       saIQgqplVF9zUo8H
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/sage-send
+
+================================================================================
+## SCOUT WORKFLOWS
+------------------------------------------------------------
+
+Workflow: Scout - BD Research v6 (BD Analyst) (CANONICAL)
+ID:       e9PFzT7A3DJBawvT
+Status:   ACTIVE
+Trigger:  Daily 7AM cron (0 0 11 * * 1-5) + Webhook
+Webhook:  /webhook/scout-research
+Nodes (11):
+  1. Daily 7AM Trigger
+  2. Webhook Trigger
+  3. Route + Build Task v6
+  4. Strategic Discovery v1 (v2 code installed May 12 2026)
+  5. Split Opportunities
+  6. Brave Search v6
+  7. Web Fetch + Fallback v6
+  8. Scout Brain v6
+  9. Mission Transform + Lifecycle v1
+  10. Log to Supabase v6
+  11. Aidan Callback v6
+Flow:
+  Daily 7AM Trigger -> Route + Build Task v6
+  Webhook Trigger -> Route + Build Task v6
+  Route + Build Task v6 -> Strategic Discovery v1
+  Strategic Discovery v1 -> Split Opportunities
+  Split Opportunities [has items] -> Brave Search v6
+  Brave Search v6 -> Web Fetch + Fallback v6
+  Web Fetch + Fallback v6 -> Scout Brain v6
+  Scout Brain v6 -> Mission Transform + Lifecycle v1
+  Mission Transform + Lifecycle v1 -> Log to Supabase v6
+  Log to Supabase v6 -> Split Opportunities [loop back]
+  Split Opportunities [done] -> Aidan Callback v6
+
+Key behaviors:
+  - Strategic Discovery runs theme-based Brave searches (Week A/B rotation Mon-Fri)
+  - Strategic Discovery v2 code: no hardcoded org names, template-driven queries
+  - Each opportunity spawns a full Brave search + web fetch + Claude analysis
+  - Mission files written to C:\Kinetic_Core\Aidan_Outputs\Missions\
+  - Dedup logic: url match > org+title match > title similarity (85%) > content hash
+  - Lifecycle states: NEW, UPDATED, SUPPRESSED (5-day window), REACTIVATED
+  - Supabase: pipeline table + scout_reports table
+  - WhatsApp: summary + outreach draft sent to 14432576836@s.whatsapp.net
+
+Theme rotation (Route + Build Task v6):
+  Week A Mon: federal_compliance_consulting
+  Week A Tue: maryland_grants_workforce
+  Week A Wed: utility_infrastructure_inspection
+  Week A Thu: federal_uas_contracts
+  Week A Fri: defense_prime_teaming
+  Week B Mon: public_safety_dfr
+  Week B Tue: medical_delivery_logistics
+  Week B Wed: nonprofit_stem_workforce
+  Week B Thu: warehouse_autonomous_ops
+  Week B Fri: broad_sweep
+
+================================================================================
+## SCRIBE WORKFLOWS
+------------------------------------------------------------
+
+Workflow: Scribe - ECL Directive Sync
+ID:       sEZ0Nf4sfXxmBror
+Status:   ACTIVE
+Trigger:  Webhook
+Webhook:  /webhook/scribe-sync
+Notes:    Patches KAI_Context.json with end-of-session updates from Kevin via WhatsApp
+          Version increments on every write. Kevin never manually edits JSON.
+
+================================================================================
+## PULSE / UTILITY WORKFLOWS
+------------------------------------------------------------
+
+Workflow: Pulse - Platform Health Monitor
+ID:       pTtmJVyLl5LwXJy7
+Status:   ACTIVE
+Trigger:  Scheduled (every 30 min)
+Notes:    Monitors agent health, logs to agent_health Supabase table
+
+Workflow: Network Watchdog
+ID:       w66ZnFuWWclFxiZX
+Status:   ACTIVE
+Trigger:  Scheduled
+Notes:    Monitors container + service health, alerts Aidan on failure
+
+Workflow: Queue Router
+ID:       SVzmB2AzqiyGtsJF
+Status:   ACTIVE
+Trigger:  Webhook
+Notes:    Routes incoming webhook commands to correct agent
+
+================================================================================
+WEBHOOK QUICK REFERENCE (active paths only)
+--------------------------------------------
+/webhook/whatsapp-inbound    -> Aidan WhatsApp Bridge v4      (VDP2rWBDfv7N7mcN)
+/webhook/aidan-callback      -> Aidan Callback Consolidator   (GDEkrPv1ShL9biXJ)
+/webhook/aidan-orchestrate   -> Aidan Orchestra Fan Out       (VSMBeuQeSBUiETNf)
+/webhook/atlas-architect     -> Atlas Technical Architect v3  (77X87gGAUXagxHSD)
+/webhook/scout-research      -> Scout BD Research v6          (e9PFzT7A3DJBawvT)
+/webhook/nova-proactive      -> Nova Proactive Intelligence   (MimPRbZ8RiJP0HJG)
+/webhook/nova-pursue         -> Nova Pursue Command Handler   (iPEexj4SHAMe0erZ)
+/webhook/jordan-grant        -> Jordan Grant Writer v3        (3HQ5ByZCzrHI41mw)
+/webhook/jordan-send-email   -> Jordan Send Pursuit Email     (5yxslywKlJMjBCHm)
+/webhook/jordan-reader       -> Jordan Grant Reader v1        (L8qf3ODF8eEsYAQ3)
+/webhook/iris-compliance     -> Iris Compliance Monitor v3    (ICIFC9FQo2ctSScE)
+/webhook/sage-newsletter     -> Sage Newsletter Automation v3 (N33i7pPWBklU4llM)
+/webhook/sage-send           -> Sage Send Email               (saIQgqplVF9zUo8H)
+/webhook/scribe-sync         -> Scribe ECL Directive Sync     (sEZ0Nf4sfXxmBror)
+
+================================================================================
+SUPABASE TABLES (cloud production)
+------------------------------------
+pipeline              - BD opportunities (Scout + Nova output)
+scout_reports         - Scout run log + per-execution metadata
+agent_health          - Pulse health monitoring (every 30 min)
+grant_pipeline_summary - EAF grant tracking (VIEW — SECURITY DEFINER, pending fix)
+pipeline_summary       - Opportunity pipeline (VIEW — SECURITY DEFINER, pending fix)
+agent_health_7d        - 7-day health view (VIEW — SECURITY DEFINER, pending fix)
+
+================================================================================
+FILE OUTPUT LOCATIONS (inside Docker volume C:\Kinetic_Core -> /data)
+-----------------------------------------------------------------------
+Scout BD reports:     /data/Aidan_Outputs/Scout/
+Mission files:        /data/Aidan_Outputs/Missions/
+Grant intelligence:   /data/Maryland_Grants/
+Strategic discovery:  /data/Aidan_Outputs/Scout/StrategicDiscovery_YYYY-MM-DD.json
+Atlas outputs:        /data/Atlas_Outputs/
+Nova source registry: /data/Nova/source_registry.json
+KAI Context:          /data/KAI_Context.json (v3.2)
+Workflow exports:     /data/workflows/
+
+================================================================================
+GOVERNANCE RULES (permanent)
+------------------------------
+- NOTHING leaves the platform without Kevin explicit approval
+- Cloud Supabase is production. Never replace with local.
+- No email to board members without Kevin WhatsApp approval (HITL gate)
+- Agent model assignments are fixed — do not change without Atlas review
+- DeepSeek never receives strategic context (data sovereignty)
+- Full-fidelity output always: never summarize agent JSON
+- Sync n8n edits to disk after every change: sync_workflows.ps1
+================================================================================
+END OF REFERENCE — KAI-NETICS CORE N8N WORKFLOW MAP
+================================================================================

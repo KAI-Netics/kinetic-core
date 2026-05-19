@@ -1,0 +1,173 @@
+{
+  "name": "Aidan - Calendar Gateway v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aidan-calendar-gateway",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "id": "cal-gw-001",
+      "name": "Calendar Gateway Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Validate and enrich incoming calendar request ──────────────────────────\nconst body = $input.first().json.body || $input.first().json;\n\nconst required = ['mission_id', 'mission_title', 'entity', 'requested_by_agent', 'scheduling_reason'];\nconst missing = required.filter(k => !body[k]);\nif (missing.length) {\n  return [{ json: { ok: false, error: 'Missing required fields: ' + missing.join(', '), body } }];\n}\n\n// Derive a suggested start time if not provided\n// Default: next business day at 9AM Eastern\nfunction nextBusinessDay9AM() {\n  const now = new Date();\n  const est = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));\n  let d = new Date(est);\n  d.setDate(d.getDate() + 1);\n  while (d.getDay() === 0 || d.getDay() === 6) { d.setDate(d.getDate() + 1); }\n  d.setHours(9, 0, 0, 0);\n  return d.toISOString();\n}\n\nconst duration = body.preferred_duration_minutes || 60;\nconst suggestedStart = body.suggested_time_window || nextBusinessDay9AM();\nconst suggestedEnd   = new Date(new Date(suggestedStart).getTime() + duration * 60000).toISOString();\n\nconst priorityLabel = {\n  CRITICAL: '🔴 CRITICAL',\n  HIGH:     '🟠 HIGH',\n  MEDIUM:   '🟡 MEDIUM',\n  LOW:      '🟢 LOW',\n}[body.priority] || body.priority || 'MEDIUM';\n\nconst eventTitle = '[KAI] ' + body.entity + ' · ' + body.mission_title.slice(0, 60);\nconst eventDescription = [\n  'Mission ID: ' + body.mission_id,\n  'Requested by: ' + body.requested_by_agent + ' → Aidan',\n  'Entity: ' + body.entity,\n  'Priority: ' + priorityLabel,\n  'Reason: ' + body.scheduling_reason,\n  body.deadline ? 'Deadline: ' + body.deadline : null,\n].filter(Boolean).join('\\n');\n\nreturn [{ json: {\n  ok: true,\n  mission_id:        body.mission_id,\n  mission_title:     body.mission_title,\n  entity:            body.entity,\n  requested_by_agent: body.requested_by_agent,\n  scheduling_reason: body.scheduling_reason,\n  priority:          body.priority || 'MEDIUM',\n  deadline:          body.deadline || null,\n  preferred_duration_minutes: duration,\n  suggested_start:   suggestedStart,\n  suggested_end:     suggestedEnd,\n  event_title:       eventTitle,\n  event_description: eventDescription,\n  calendar_id:       'primary',\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "id": "cal-gw-002",
+      "name": "Validate + Enrich Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 0],
+      "id": "cal-gw-003",
+      "name": "Valid Request?"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "calendarId": "primary",
+        "start": "={{ $json.suggested_start }}",
+        "end": "={{ $json.suggested_end }}",
+        "additionalFields": {
+          "summary": "={{ $json.event_title }}",
+          "description": "={{ $json.event_description }}",
+          "colorId": "={{ $json.priority === 'CRITICAL' ? '11' : $json.priority === 'HIGH' ? '6' : '1' }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [660, -80],
+      "id": "cal-gw-004",
+      "name": "Create Calendar Event"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Build calendar_block object for mission mutation ────────────────────────\nconst input    = $('Validate + Enrich Request').first().json;\nconst calEvent = $input.first().json;\n\nconst calBlock = {\n  mission_id:          input.mission_id,\n  agent_requesting:    input.requested_by_agent,\n  purpose:             input.scheduling_reason,\n  scheduled_start:     calEvent.start?.dateTime || input.suggested_start,\n  scheduled_end:       calEvent.end?.dateTime   || input.suggested_end,\n  duration_minutes:    input.preferred_duration_minutes,\n  calendar_event_id:   calEvent.id || null,\n  calendar_status:     calEvent.id ? 'SCHEDULED' : 'PENDING',\n  scheduling_notes:    calEvent.htmlLink ? 'Event created: ' + calEvent.htmlLink : 'Event created',\n  follow_up_required:  true,\n  created_by:          'Aidan',\n  created_at:          new Date().toISOString(),\n};\n\nreturn [{ json: {\n  ok:                  true,\n  mission_id:          input.mission_id,\n  calendar_status:     calBlock.calendar_status,\n  calendar_event_id:   calBlock.calendar_event_id,\n  scheduled_start:     calBlock.scheduled_start,\n  scheduled_end:       calBlock.scheduled_end,\n  scheduling_notes:    calBlock.scheduling_notes,\n  calendar_block:      calBlock,\n  // For mission mutation\n  mission_update: {\n    calendar_blocks: [calBlock],\n  },\n  mission_event: {\n    agent:     'Aidan',\n    action:    'calendar_block_created',\n    note:      'Block: ' + calBlock.scheduled_start.slice(0,16) + ' · ' + input.scheduling_reason.slice(0,60) + ' · via ' + input.requested_by_agent,\n    timestamp: new Date().toISOString(),\n  },\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, -80],
+      "id": "cal-gw-005",
+      "name": "Build Calendar Block"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3030/mission/update",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"mission_id\": \"{{ $json.mission_id }}\",\n  \"path\": \"Aidan_Outputs/Missions/{{ $json.mission_id }}.json\",\n  \"updates\": {{ JSON.stringify($json.mission_update) }},\n  \"event\": {{ JSON.stringify($json.mission_event) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, -80],
+      "id": "cal-gw-006",
+      "name": "Write Back to Mission"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Compose final success response ──────────────────────────────────────────\nconst block  = $('Build Calendar Block').first().json;\nconst write  = $input.first().json;\n\nreturn [{ json: {\n  ok:                true,\n  mission_id:        block.mission_id,\n  calendar_status:   block.calendar_status,\n  calendar_event_id: block.calendar_event_id,\n  scheduled_start:   block.scheduled_start,\n  scheduled_end:     block.scheduled_end,\n  scheduling_notes:  block.scheduling_notes,\n  mission_updated:   write.ok === true,\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, -80],
+      "id": "cal-gw-007",
+      "name": "Build Success Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Validate + Enrich Request').first().json;\nreturn [{ json: {\n  ok:              false,\n  mission_id:      input.mission_id || null,\n  calendar_status: 'ERROR',\n  calendar_event_id: null,\n  scheduled_start:   null,\n  scheduled_end:     null,\n  scheduling_notes:  input.error || 'Validation failed',\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 100],
+      "id": "cal-gw-008",
+      "name": "Build Error Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": { "responseCode": 200 }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1540, -80],
+      "id": "cal-gw-009",
+      "name": "Respond Success"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": { "responseCode": 400 }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [880, 100],
+      "id": "cal-gw-010",
+      "name": "Respond Error"
+    }
+  ],
+  "connections": {
+    "Calendar Gateway Webhook": {
+      "main": [[{ "node": "Validate + Enrich Request", "type": "main", "index": 0 }]]
+    },
+    "Validate + Enrich Request": {
+      "main": [[{ "node": "Valid Request?", "type": "main", "index": 0 }]]
+    },
+    "Valid Request?": {
+      "main": [
+        [{ "node": "Create Calendar Event",  "type": "main", "index": 0 }],
+        [{ "node": "Build Error Response",   "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Calendar Event": {
+      "main": [[{ "node": "Build Calendar Block", "type": "main", "index": 0 }]]
+    },
+    "Build Calendar Block": {
+      "main": [[{ "node": "Write Back to Mission", "type": "main", "index": 0 }]]
+    },
+    "Write Back to Mission": {
+      "main": [[{ "node": "Build Success Response", "type": "main", "index": 0 }]]
+    },
+    "Build Success Response": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    },
+    "Build Error Response": {
+      "main": [[{ "node": "Respond Error", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["aidan", "calendar", "gateway", "v1"]
+}

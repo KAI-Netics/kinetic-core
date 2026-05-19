@@ -1,9 +1,9 @@
-{
+﻿{
     "meta":  {
-                 "version":  "3.2",
-                 "updated":  "2026-05-09",
+                 "version":  "3.4",
+                 "updated":  "2026-05-17",
                  "owner":  "Kevin Alexander Smith",
-                 "changelog":  "v3.2 -- Added CCIE, DBA, Data Scientist to founder credentials. Expanded credential descriptions. All agent API keys consolidated to single env var."
+                 "changelog":  "v3.4 -- Added CW-009 (KAI-Netics.com, FP, expires 2027-10-17) and CW-010 (kaineticscodeschool.org, EAF, expires 2027-10-17). Both co-expire -- renew together. CW-001 (kevin-llc.com) separate expiry 2027-11-03."
              },
     "mission":  {
                     "statement":  "KAI-Netics is building a business that provides for Kevin\u0027s family today and leaves a legacy for his grandson MONK tomorrow. Starting at net zero, bootstrapped, lean, and growth-focused. The short game funds the long game. The long game builds the platform. The platform builds the legacy.",
@@ -65,6 +65,162 @@
                                      ],
                   "first_dollar_path":  "OMB M-26-02 federal drone compliance consulting. Every federal contractor operating drones must comply by May 20, 2026. Kevin\u0027s CISSP + Part 107 combination is uniquely qualified to audit and advise. No flight hours required. This is a consulting engagement, not an inspection service. Rate: $150-250/hour or $5,000-15,000 fixed engagement."
               },
+    "compliance_watchlist":  {
+                                 "description":  "Critical expiry and renewal dates Iris must surface in every board report and every quarterly compliance report. These are not one-time deadlines -- they recur until resolved or renewed.",
+                                 "iris_rules":  [
+                                                    "Include ALL items in this watchlist in the first board report",
+                                                    "Include ALL items in every quarterly compliance report (Q1/Q2/Q3/Q4)",
+                                                    "Flag any item within 90 days of expiry as URGENT",
+                                                    "Flag any item within 30 days of expiry as CRITICAL",
+                                                    "Flag any item that has already expired as EXPIRED -- escalate immediately",
+                                                    "Do not suppress or omit any watchlist item from board or quarterly reports regardless of status"
+                                                ],
+                                 "items":  [
+                                               {
+                                                   "id":  "CW-001",
+                                                   "item":  "Primary email and domain -- kas@kevin-llc.com / kevin-llc.com",
+                                                   "entity":  "FP",
+                                                   "expiry_date":  "2027-11-03",
+                                                   "action_required":  "Renew domain and email hosting before this date. All board communications, contracts, and external correspondence route through this address. Lapse = complete communication failure.",
+                                                   "renewal_lead_time":  "90 days -- begin renewal process by 2027-08-04",
+                                                   "status":  "ACTIVE",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "CRITICAL -- primary business identity"
+                                               },
+                                               {
+                                                   "id":  "CW-002",
+                                                   "item":  "FAA Part 107 Remote Pilot Certificate -- Kevin Alexander Smith #5250157",
+                                                   "entity":  "FP",
+                                                   "expiry_date":  "2027-12-31",
+                                                   "action_required":  "Complete FAA Part 107 recurrent knowledge test before expiry. Certificate lapse = all commercial drone operations halt immediately.",
+                                                   "renewal_lead_time":  "90 days -- begin recurrent test prep by 2027-10-01",
+                                                   "status":  "ACTIVE",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "CRITICAL -- revenue operations dependency"
+                                               },
+                                               {
+                                                   "id":  "CW-003",
+                                                   "item":  "Maryland LLC Annual Report -- Kevin Alexander International LLC dba KAI-Netics (FP)",
+                                                   "entity":  "FP",
+                                                   "expiry_date":  "2026-06-30",
+                                                   "action_required":  "File annual report with Maryland SDAT. Extension filed -- confirm submission before extended deadline.",
+                                                   "status":  "EXTENSION FILED",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "HIGH"
+                                               },
+                                               {
+                                                   "id":  "CW-004",
+                                                   "item":  "Maryland Annual Report -- KAI-Netics (KAL retail entity)",
+                                                   "entity":  "KAL",
+                                                   "expiry_date":  "2026-06-30",
+                                                   "action_required":  "File annual report with Maryland SDAT. Extension filed -- confirm submission.",
+                                                   "status":  "EXTENSION FILED",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "HIGH"
+                                               },
+                                               {
+                                                   "id":  "CW-005",
+                                                   "item":  "IRS 501(c)(3) Determination -- EAF Form 1023",
+                                                   "entity":  "EAF",
+                                                   "expiry_date":  null,
+                                                   "action_required":  "File Form 1023 or 1023-EZ immediately. Blocks all grant funding, Google for Nonprofits, and Microsoft for Nonprofits until approved. Owner: James L. Scott.",
+                                                   "status":  "OVERDUE",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "CRITICAL -- blocks all grant revenue"
+                                               },
+                                               {
+                                                   "id":  "CW-006",
+                                                   "item":  "MBE/DBE Certification -- MDOT",
+                                                   "entity":  "FP",
+                                                   "expiry_date":  "2026-05-15",
+                                                   "action_required":  "Confirm submission status. MBE active = access to Maryland state contracting preference and DBE federal set-asides.",
+                                                   "status":  "PENDING",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "HIGH"
+                                               },
+                                               {
+                                                   "id":  "CW-007",
+                                                   "item":  "SAM.gov UEI + CAGE Registration",
+                                                   "entity":  "FP",
+                                                   "expiry_date":  null,
+                                                   "action_required":  "Confirm UEI active at SAM.gov. Submitted April 17. Annual renewal required once active -- set calendar reminder.",
+                                                   "status":  "IN PROGRESS",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "HIGH -- blocks all federal contracting"
+                                               },
+                                               {
+                                                   "id":  "CW-008",
+                                                   "item":  "MONK LLC Formation",
+                                                   "entity":  "MONK",
+                                                   "expiry_date":  null,
+                                                   "action_required":  "File MONK LLC at businessexpress.maryland.gov. Owner: James L. Scott. IP is unprotected until this entity exists.",
+                                                   "status":  "OVERDUE",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "HIGH -- IP protection gap"
+                                               },
+                                               {
+                                                   "id":  "CW-009",
+                                                   "item":  "Primary brand domain -- KAI-Netics.com",
+                                                   "entity":  "FP",
+                                                   "expiry_date":  "2027-10-17",
+                                                   "action_required":  "Renew KAI-Netics.com before expiry. Public-facing brand domain for all FP commercial operations, BD outreach, and marketing. Lapse = brand identity offline. Renew together with kaineticscodeschool.org (CW-010) -- same expiry date.",
+                                                   "renewal_lead_time":  "90 days -- begin renewal by 2027-07-18",
+                                                   "status":  "ACTIVE",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "CRITICAL -- primary FP brand identity",
+                                                   "co_expiry":  "CW-010 kaineticscodeschool.org expires same date -- renew both together"
+                                               },
+                                               {
+                                                   "id":  "CW-010",
+                                                   "item":  "EAF program domain -- kaineticscodeschool.org",
+                                                   "entity":  "EAF",
+                                                   "expiry_date":  "2027-10-17",
+                                                   "action_required":  "Renew kaineticscodeschool.org before expiry. EAF public identity domain used for CAKO program outreach, grant applications, and nonprofit credibility. Lapse = EAF web presence and program email offline. Renew together with KAI-Netics.com (CW-009) -- same expiry date.",
+                                                   "renewal_lead_time":  "90 days -- begin renewal by 2027-07-18",
+                                                   "status":  "ACTIVE",
+                                                   "report_in":  [
+                                                                     "board_report",
+                                                                     "quarterly_compliance"
+                                                                 ],
+                                                   "priority":  "HIGH -- EAF nonprofit identity and grant credibility",
+                                                   "co_expiry":  "CW-009 KAI-Netics.com expires same date -- renew both together"
+                                               }
+                                           ],
+                                 "quarterly_report_schedule":  {
+                                                                   "Q1":  "January 15",
+                                                                   "Q2":  "April 15",
+                                                                   "Q3":  "July 15",
+                                                                   "Q4":  "October 15",
+                                                                   "note":  "Iris generates compliance summary on each quarterly date. All watchlist items included regardless of status. Kevin reviews and approves before any board distribution."
+                                                               }
+                             },
     "beachheads":  {
                        "description":  "Seven beachhead positions that define the KAI-Netics attack plan. Nova advances each beachhead by deriving opportunity sources and reasoning about new lanes. Scout sweeps those sources. Every morning brief includes beachhead status -- not just opportunity list.",
                        "advance_officer":  "Nova",
@@ -522,6 +678,13 @@
                           "status":  "PENDING",
                           "entity":  "EAF",
                           "notes":  "25% match required. CAKO anchor program. $50K-$500K."
+                      },
+                      {
+                          "item":  "Domain + Email Renewal -- kas@kevin-llc.com / kevin-llc.com",
+                          "date":  "2027-11-03",
+                          "status":  "ACTIVE -- renewal required before expiry",
+                          "entity":  "FP",
+                          "notes":  "Primary business email and domain. All board comms and contracts route through this address. Begin renewal process by 2027-08-04 (90-day lead). See compliance_watchlist CW-001."
                       }
                   ],
     "technology":  {
@@ -749,7 +912,7 @@
                                        "Atlas":  "Chief Architect -- owns reference architecture, cost model, version registry, drift detection, replication engine",
                                        "Scout":  "BD Execution Agent -- sweeps active sources in Nova source_registry.json on schedule. Scores opportunities against KAI_Context discovery_profile using profile-driven reasoning. Returns JSON + WhatsApp summary. Does not self-direct source selection.",
                                        "Jordan":  "Grant Writer -- federal/state funding, LOIs, eligibility analysis",
-                                       "Iris":  "Compliance Officer -- deadlines, regulatory calendar, risk flags",
+                                       "Iris":  "Compliance Officer -- deadlines, regulatory calendar, risk flags. Reads compliance_watchlist on every run. Surfaces all watchlist items in board reports and quarterly compliance reports without exception.",
                                        "Nova":  "Beachhead Advance Officer -- owns KAI-Netics opportunity landscape. Reasons from beachhead positions, regulatory triggers, funding flows, and capability unlocks to derive where opportunities exist. Maintains C:\\Kinetic_Core\\Nova\\source_registry.json (75+ sources, 7 beachheads). Scout sweeps what Nova says to sweep. Nova monitors: FAA docket FAA-2022-1258 (daily Part 108 trigger), Safer Skies Act implementation, USASpending.gov buyer map, Congress appropriations.",
                                        "Sage":  "Communications Director -- newsletter, external narrative, board communications",
                                        "Pulse":  "Operations Analyst -- platform health, metrics, system status",
